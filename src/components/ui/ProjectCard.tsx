@@ -58,40 +58,35 @@ export function ProjectCard({
       whileHover={{ y: -8 }}
       className="group relative rounded-[40px] overflow-hidden bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-all duration-500 flex flex-col h-full"
     >
-      {/* Project Image */}
-      <div className="h-64 w-full bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
-        {currentSrc ? (
+      {/* Project Image — only rendered when an image is available */}
+      {currentSrc && (
+        <div className="h-64 w-full bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
           <img
             src={currentSrc}
             alt={title}
             onError={() => setImgIndex(i => i + 1)}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center">
-            <span className="text-slate-300 dark:text-slate-600 font-bold tracking-tighter text-sm">No Preview</span>
-          </div>
-        )}
+        </div>
+      )}
 
-        {/* Category Overlay */}
-        <div className="absolute top-6 left-6 z-20 flex flex-wrap gap-2">
+      <div className="p-8 flex flex-col flex-1">
+        {/* Category badges */}
+        <div className="flex flex-wrap gap-2 mb-4">
           {(Array.isArray(category) ? category : [category]).filter(Boolean).map(cat => (
             <span
               key={cat}
-              className="px-4 py-2 text-xs font-bold tracking-wider bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm text-brand-primary rounded-full shadow-md border-2 border-brand-primary/10 dark:border-brand-primary/30"
+              className="px-3 py-1 text-xs font-bold tracking-wider bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary rounded-full border border-brand-primary/20 dark:border-brand-primary/30"
             >
               {cat}
             </span>
           ))}
           {isFork && (
-            <span className="px-4 py-2 text-xs font-bold tracking-wider bg-amber-50/95 dark:bg-amber-900/60 backdrop-blur-sm text-amber-600 dark:text-amber-400 rounded-full shadow-md border-2 border-amber-200/50 dark:border-amber-600/30 flex items-center gap-1">
+            <span className="px-3 py-1 text-xs font-bold tracking-wider bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full border border-amber-200/50 dark:border-amber-600/30 flex items-center gap-1">
               <GitFork size={11} /> Forked
             </span>
           )}
         </div>
-      </div>
-
-      <div className="p-8 flex flex-col flex-1">
         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight group-hover:text-brand-primary transition-colors leading-none">
           {title}
         </h3>
