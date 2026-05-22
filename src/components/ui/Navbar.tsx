@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sparkles } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+
+const THEME_HINT_KEY = 'theme-hint-seen';
 
 const navItems = [
   { num: '01.', name: 'About', href: '#about' },
@@ -17,6 +19,7 @@ const navItems = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showThemeHint, setShowThemeHint] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -24,6 +27,85 @@ export function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Show "Try [other] mode" tooltip once per visitor — fires only after 10s of idle
+  // (no mouse / key / touch) AND only while the user is still in the hero/header area
+  // (hasn't scrolled past one viewport). If they leave the hero, the hint is dropped.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(THEME_HINT_KEY)) return;
+    } catch { /* localStorage blocked — show the hint anyway */ }
+
+    let idleTimer: ReturnType<typeof setTimeout>;
+    let hideTimer: ReturnType<typeof setTimeout>;
+    let shown = false;
+    let cancelled = false;
+
+    const persistSeen = () => {
+      try { localStorage.setItem(THEME_HINT_KEY, '1'); } catch { /* ignore */ }
+    };
+
+    const show = () => {
+      if (shown || cancelled) return;
+      // Final guard — don't surface the hint if the user has scrolled past the hero
+      if (window.scrollY > window.innerHeight * 0.5) return;
+      shown = true;
+      setShowThemeHint(true);
+      // Auto-dismiss 10s after it appears
+      hideTimer = setTimeout(() => {
+        setShowThemeHint(false);
+        persistSeen();
+      }, 10000);
+    };
+
+    const resetIdle = () => {
+      if (shown || cancelled) return;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(show, 10000);
+    };
+
+    const onScroll = () => {
+      // Scrolling past ~half the viewport = user has left the hero region.
+      // Cancel the hint permanently for this session.
+      if (window.scrollY > window.innerHeight * 0.5) {
+        cancelled = true;
+        clearTimeout(idleTimer);
+        if (shown) {
+          // Already showing — just dismiss it
+          clearTimeout(hideTimer);
+          setShowThemeHint(false);
+        }
+        persistSeen();
+        return;
+      }
+      // Still in hero — count this as activity (reset idle countdown)
+      resetIdle();
+    };
+
+    // Start the idle countdown
+    resetIdle();
+
+    const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'touchstart', 'click'];
+    activityEvents.forEach(ev => window.addEventListener(ev, resetIdle, { passive: true }));
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      clearTimeout(idleTimer);
+      clearTimeout(hideTimer);
+      activityEvents.forEach(ev => window.removeEventListener(ev, resetIdle));
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  const dismissHint = () => {
+    setShowThemeHint(false);
+    try { localStorage.setItem(THEME_HINT_KEY, '1'); } catch { /* ignore */ }
+  };
+
+  const handleToggleTheme = () => {
+    dismissHint();
+    toggleTheme();
+  };
 
   const hidden = false;
 
@@ -91,27 +173,97 @@ export function Navbar() {
             Resume
           </motion.a>
 
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="ml-2 w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </motion.button>
+          <div className="relative ml-2">
+            <motion.button
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              onClick={handleToggleTheme}
+              aria-label="Toggle theme"
+              className="relative w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+
+              {/* Pulse ring while the hint is showing — draws attention to the toggle */}
+              <AnimatePresence>
+                {showThemeHint && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute inset-0 rounded border border-brand-primary/60 animate-ping"
+                  />
+                )}
+              </AnimatePresence>
+            </motion.button>
+
+            {/* Tooltip — first-visit nudge */}
+            <AnimatePresence>
+              {showThemeHint && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 top-full mt-3 z-50"
+                >
+                  <div className="relative flex items-center gap-2 px-3 py-2 rounded-md bg-brand-primary text-white text-[12px] font-mono shadow-xl shadow-brand-primary/40 whitespace-nowrap">
+                    <Sparkles size={13} />
+                    Try {theme === 'dark' ? 'light' : 'dark'} mode
+                    <button
+                      onClick={dismissHint}
+                      aria-label="Dismiss"
+                      className="ml-1 -mr-1 w-4 h-4 flex items-center justify-center rounded hover:bg-white/20 transition-colors"
+                    >
+                      <X size={11} />
+                    </button>
+                    {/* Caret pointing up to the toggle */}
+                    <span className="absolute -top-1 right-3 w-2 h-2 bg-brand-primary rotate-45" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Mobile controls */}
         <div className="md:hidden flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary"
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
+          <div className="relative">
+            <button
+              onClick={handleToggleTheme}
+              aria-label="Toggle theme"
+              className="relative w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              <AnimatePresence>
+                {showThemeHint && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute inset-0 rounded border border-brand-primary/60 animate-ping"
+                  />
+                )}
+              </AnimatePresence>
+            </button>
+            <AnimatePresence>
+              {showThemeHint && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 top-full mt-2 z-50"
+                >
+                  <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white text-[11px] font-mono shadow-xl shadow-brand-primary/40 whitespace-nowrap">
+                    <Sparkles size={11} />
+                    Try {theme === 'dark' ? 'light' : 'dark'} mode
+                    <span className="absolute -top-1 right-3 w-2 h-2 bg-brand-primary rotate-45" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <button
             onClick={() => setMobileOpen(o => !o)}
             aria-label="Menu"

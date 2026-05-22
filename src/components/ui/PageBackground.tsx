@@ -12,12 +12,12 @@ export function PageBackground() {
       <motion.div
         animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
         transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-[10%] -left-40 w-[520px] h-[520px] rounded-full bg-brand-primary/[0.07] dark:bg-brand-primary/[0.09] blur-[140px]"
+        className="absolute top-[10%] -left-40 w-[520px] h-[520px] rounded-full bg-brand-primary/[0.12] dark:bg-brand-primary/[0.14] blur-[140px]"
       />
       <motion.div
         animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
         transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-        className="absolute top-[40%] -right-40 w-[440px] h-[440px] rounded-full bg-brand-primary/[0.05] dark:bg-brand-primary/[0.07] blur-[140px]"
+        className="absolute top-[40%] -right-40 w-[440px] h-[440px] rounded-full bg-brand-primary/[0.10] dark:bg-brand-primary/[0.12] blur-[140px]"
       />
 
       {/* Quiet floating dots */}

@@ -170,7 +170,9 @@ export function Hero() {
           {/* Soft glow behind the robot */}
           <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-[100px] scale-90 pointer-events-none" />
 
-          <div className="relative w-full aspect-square max-w-[480px] mx-auto">
+          {/* The Spline canvas renders its own dark background. In light mode that reads as a black
+              rectangle, so we soft-mask it. In dark mode the canvas blends with the page bg, no mask needed. */}
+          <div className="relative w-full aspect-square max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
             <Suspense
               fallback={
                 <div className="w-full h-full flex items-center justify-center">

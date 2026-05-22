@@ -247,8 +247,7 @@ export function Projects() {
                     rel="noopener noreferrer"
                     className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} row-start-1 z-0`}
                   >
-                    <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-slate-200 dark:bg-slate-900 shadow-xl">
-                      <div className="absolute inset-0 bg-brand-primary/50 mix-blend-multiply group-hover:bg-transparent transition-colors duration-300 z-10" />
+                    <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
                       <img
                         src={repoImage(repo.name)}
                         alt={repo.name}
@@ -257,7 +256,7 @@ export function Projects() {
                           const fallback = `https://opengraph.githubassets.com/1/MacroMaster101/${repo.name}?cb=${OG_CACHE_BUST}`;
                           if (img.src !== fallback) img.src = fallback;
                         }}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                   </a>

@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 interface Skill {
   name: string;
   slug?: string; // simple-icons slug (cdn.simpleicons.org)
-  color?: string; // hex without #, falls back to brand color
+  color?: string; // hex without # — used in dark mode (also used in light if lightColor not set)
+  lightColor?: string; // optional override hex for light mode (useful when `color` is white)
   url?: string; // full URL override — used when simple-icons doesn't have the logo
 }
 
@@ -35,7 +36,7 @@ const groups: SkillGroup[] = [
     items: [
       { name: 'React', slug: 'react', color: '61DAFB' },
       { name: 'React Native', slug: 'react', color: '61DAFB' },
-      { name: 'Expo', slug: 'expo', color: 'FFFFFF' },
+      { name: 'Expo', slug: 'expo', color: 'FFFFFF', lightColor: '000020' },
       { name: 'Vite', slug: 'vite', color: '646CFF' },
       { name: 'Tailwind CSS', slug: 'tailwindcss', color: '06B6D4' },
       { name: 'HTML', slug: 'html5', color: 'E34F26' },
@@ -47,7 +48,7 @@ const groups: SkillGroup[] = [
     items: [
       { name: 'Node.js', slug: 'nodedotjs', color: '5FA04E' },
       { name: 'Express', url: devicon('express') },
-      { name: 'Flask', slug: 'flask', color: 'FFFFFF' },
+      { name: 'Flask', slug: 'flask', color: 'FFFFFF', lightColor: '000000' },
       { name: 'Spring Boot', slug: 'springboot', color: '6DB33F' },
       { name: 'REST APIs', slug: 'fastapi', color: '009688' },
       { name: 'JWT', slug: 'jsonwebtokens', color: 'D63AFF' },
@@ -78,7 +79,7 @@ const groups: SkillGroup[] = [
     title: 'Tools',
     items: [
       { name: 'Git', slug: 'git', color: 'F05032' },
-      { name: 'GitHub', slug: 'github', color: 'FFFFFF' },
+      { name: 'GitHub', slug: 'github', color: 'FFFFFF', lightColor: '181717' },
       { name: 'VS Code', url: devicon('vscode') },
       { name: 'IntelliJ IDEA', url: devicon('intellij') },
       { name: 'Postman', slug: 'postman', color: 'FF6C37' },
@@ -89,18 +90,19 @@ const groups: SkillGroup[] = [
     title: 'Media & Design',
     items: [
       { name: 'Premiere Pro', url: devicon('premierepro') },
-      { name: 'DaVinci Resolve', slug: 'davinciresolve', color: 'FFFFFF' },
-      { name: 'OBS Studio', slug: 'obsstudio', color: 'FFFFFF' },
+      { name: 'DaVinci Resolve', slug: 'davinciresolve', color: 'FFFFFF', lightColor: '233A51' },
+      { name: 'OBS Studio', slug: 'obsstudio', color: 'FFFFFF', lightColor: '302E31' },
       { name: 'Canva', url: devicon('canva') },
     ],
   },
 ];
 
-function logoUrl(skill: Skill) {
+function logoUrl(skill: Skill, mode: 'dark' | 'light' = 'dark') {
   if (skill.url) return skill.url;
   if (!skill.slug) return '';
-  return skill.color
-    ? `https://cdn.simpleicons.org/${skill.slug}/${skill.color}`
+  const color = mode === 'light' ? (skill.lightColor ?? skill.color) : skill.color;
+  return color
+    ? `https://cdn.simpleicons.org/${skill.slug}/${color}`
     : `https://cdn.simpleicons.org/${skill.slug}`;
 }
 
@@ -133,15 +135,25 @@ export function Skills() {
                   className="group flex flex-col items-center justify-center gap-2 p-3 rounded-md bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/60 hover:shadow-[0_8px_20px_-12px] hover:shadow-brand-primary/40 transition-all"
                 >
                   <div className="w-9 h-9 flex items-center justify-center">
+                    {/* Light-mode variant (hidden in dark) */}
                     <img
-                      src={logoUrl(skill)}
+                      src={logoUrl(skill, 'light')}
                       alt={`${skill.name} logo`}
                       loading="lazy"
                       onError={(e) => {
-                        // Hide broken logo so card still shows the name cleanly.
                         e.currentTarget.style.display = 'none';
                       }}
-                      className="w-8 h-8 object-contain group-hover:scale-110 transition-transform"
+                      className="w-8 h-8 object-contain group-hover:scale-110 transition-transform block dark:hidden"
+                    />
+                    {/* Dark-mode variant */}
+                    <img
+                      src={logoUrl(skill, 'dark')}
+                      alt={`${skill.name} logo`}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      className="w-8 h-8 object-contain group-hover:scale-110 transition-transform hidden dark:block"
                     />
                   </div>
                   <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 text-center group-hover:text-brand-primary transition-colors">

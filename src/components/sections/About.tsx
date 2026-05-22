@@ -78,13 +78,13 @@ export function About() {
             {/* Offset border frame */}
             <div className="absolute inset-0 translate-x-4 translate-y-4 border-2 border-brand-primary rounded transition-transform duration-300 group-hover:translate-x-3 group-hover:translate-y-3" />
 
-            {/* Image with indigo overlay */}
+            {/* Image with subtle brand tint on hover */}
             <div className="relative rounded overflow-hidden">
-              <div className="absolute inset-0 bg-brand-primary/40 mix-blend-multiply group-hover:bg-transparent transition-colors duration-300 z-10" />
+              <div className="absolute inset-0 bg-brand-primary/25 dark:bg-brand-primary/35 mix-blend-multiply group-hover:bg-transparent transition-colors duration-300 z-10" />
               <img
                 src={`${import.meta.env.BASE_URL}image.jpg`}
                 alt="Kavisha Liyanage"
-                className="block w-full h-auto rounded grayscale group-hover:grayscale-0 transition-all duration-300"
+                className="block w-full h-auto rounded group-hover:scale-[1.02] transition-transform duration-300"
               />
             </div>
 
@@ -92,7 +92,7 @@ export function About() {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-3 -left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+              className="absolute -top-3 -left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
               <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">React</span>
@@ -101,7 +101,7 @@ export function About() {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute top-1/4 -right-6 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+              className="absolute top-1/4 -right-6 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
               <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" className="w-3.5 h-3.5" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Python</span>
@@ -110,7 +110,7 @@ export function About() {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute bottom-1/4 -left-7 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+              className="absolute bottom-1/4 -left-7 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
               <img src="https://cdn.simpleicons.org/nodedotjs/5FA04E" alt="Node.js" className="w-3.5 h-3.5" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Node.js</span>
