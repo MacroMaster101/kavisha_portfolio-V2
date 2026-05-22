@@ -68,11 +68,18 @@ const FEATURED_NAMES = [
 // Optional per-repo image overrides. Keys are lowercased repo names.
 // Drop a file in public/projects/ and reference it as `${BASE_URL}projects/filename.ext`.
 // If a repo isn't listed here, falls back to GitHub's social preview / OG image.
+//
+// Why use local overrides at all? GitHub's opengraph CDN caches social previews for
+// ~6+ hours and is slow to pick up new uploads. Local images update instantly.
 const IMAGE_OVERRIDES: Record<string, string> = {
-  // 'kavisha_portfolio-v2': `${import.meta.env.BASE_URL}projects/kavisha_portfolio-V2.png`,
+  'discord-youtube-status-bot': `${import.meta.env.BASE_URL}projects/discord-youtube-status-bot.jpg`,
+  'kavisha_portfolio-v2': `${import.meta.env.BASE_URL}projects/kavisha_portfolio-V2.png`,
+  'kavisha_portfolio': `${import.meta.env.BASE_URL}projects/kavisha_portfolio.png`,
+  // Add more here as you save images to public/projects/:
   // 'travel_genie': `${import.meta.env.BASE_URL}projects/travel_genie.png`,
   // 'travel_genie_app': `${import.meta.env.BASE_URL}projects/travel_genie_app.png`,
   // 'web-voting-system': `${import.meta.env.BASE_URL}projects/web-voting-system.png`,
+  // 'denguerisk': `${import.meta.env.BASE_URL}projects/denguerisk.png`,
 };
 
 // GitHub's OG image CDN caches for ~6 hours. Bump this string after uploading a
