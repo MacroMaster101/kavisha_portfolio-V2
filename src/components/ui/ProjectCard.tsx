@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { Github, ExternalLink, Star, GitFork } from 'lucide-react';
+import { ExternalLink, Star, GitFork, ArrowUpRight, Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from './Button';
+import { Github } from './BrandIcons';
 
 interface ProjectCardProps {
   title: string;
@@ -19,7 +19,6 @@ interface ProjectCardProps {
   allLanguages?: string[];
 }
 
-// Fallback chain: local jpg → local png → github opengraph → null (placeholder)
 function buildFallbacks(repoName?: string, opengraph?: string): string[] {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   const list: string[] = [];
@@ -48,115 +47,120 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const fallbacks = buildFallbacks(repoName, image);
   const [imgIndex, setImgIndex] = useState(0);
+  const [imgFailed, setImgFailed] = useState(false);
   const currentSrc = fallbacks[imgIndex];
+  const cats = (Array.isArray(category) ? category : [category]).filter(Boolean);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
+    <motion.article
+      initial={false}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
-      whileHover={{ y: -8 }}
-      className="group relative rounded-[40px] overflow-hidden bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-all duration-500 flex flex-col h-full"
+      transition={{ delay: Math.min(index * 0.05, 0.4), duration: 0.5 }}
+      whileHover={{ y: -4 }}
+      className="group relative rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/70 hover:border-brand-primary/40 hover:shadow-xl hover:shadow-brand-primary/5 transition-all overflow-hidden flex flex-col"
     >
-      {/* Project Image — only rendered when an image is available */}
-      {currentSrc && (
-        <div className="h-64 w-full bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
+      {/* Image */}
+      <div className="aspect-[16/9] w-full bg-white dark:bg-slate-900 overflow-hidden relative">
+        {currentSrc && !imgFailed ? (
           <img
             src={currentSrc}
             alt={title}
-            onError={() => setImgIndex(i => i + 1)}
+            onError={() => {
+              if (imgIndex < fallbacks.length - 1) setImgIndex(i => i + 1);
+              else setImgFailed(true);
+            }}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
+            <ImageIcon size={32} />
+          </div>
+        )}
+        {isFork && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100/90 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 backdrop-blur">
+            <GitFork size={10} /> Forked
+          </span>
+        )}
+      </div>
 
-      <div className="p-8 flex flex-col flex-1">
-        {/* Category badges */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {(Array.isArray(category) ? category : [category]).filter(Boolean).map(cat => (
-            <span
-              key={cat}
-              className="px-3 py-1 text-xs font-bold tracking-wider bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary rounded-full border border-brand-primary/20 dark:border-brand-primary/30"
-            >
-              {cat}
-            </span>
-          ))}
-          {isFork && (
-            <span className="px-3 py-1 text-xs font-bold tracking-wider bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full border border-amber-200/50 dark:border-amber-600/30 flex items-center gap-1">
-              <GitFork size={11} /> Forked
-            </span>
-          )}
-        </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight group-hover:text-brand-primary transition-colors leading-none">
+      <div className="p-6 flex flex-col flex-1">
+        {/* Categories */}
+        {cats.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {cats.slice(0, 2).map(c => (
+              <span key={c} className="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-brand-primary/10 dark:bg-brand-primary/15 text-brand-primary tracking-wide uppercase">
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight mb-2 group-hover:text-brand-primary transition-colors">
           {title}
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 mb-6 font-normal line-clamp-3 leading-relaxed">
+
+        <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-5 line-clamp-2">
           {description}
         </p>
 
-        <div className="flex flex-wrap gap-2 mb-8 mt-auto">
-          {tags.map(tag => (
-            <span
-              key={tag}
-              className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-primary/30 transition-all duration-300"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-
         {/* Languages */}
         {allLanguages.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {allLanguages.map(lang => (
-              <span key={lang} className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-primary flex-shrink-0" />
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mb-4 text-[11px] text-slate-500 dark:text-slate-500">
+            {allLanguages.slice(0, 4).map(lang => (
+              <span key={lang} className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
                 {lang}
               </span>
             ))}
           </div>
         )}
 
-        {/* Stats bar */}
-        {(stars !== undefined || forks !== undefined) && (
-          <div className="flex items-center gap-4 mb-6 text-xs text-slate-400 dark:text-slate-500 font-medium">
-            {stars !== undefined && (
-              <span className="flex items-center gap-1">
-                <Star size={12} /> {stars}
-              </span>
-            )}
-            {forks !== undefined && (
-              <span className="flex items-center gap-1">
-                <GitFork size={12} /> {forks}
-              </span>
-            )}
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mb-5 text-[11px] text-slate-400 dark:text-slate-600">
+            {tags.slice(0, 4).map(tag => (
+              <span key={tag}>#{tag}</span>
+            ))}
           </div>
         )}
 
-        <div className="flex gap-4">
-          {demoUrl && (
-            <Button
-              size="sm"
-              className="bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full px-6 transition-all duration-300 shadow-[0_0_20px_var(--brand-primary-glow)]"
-              onClick={() => window.open(demoUrl, '_blank')}
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Demo
-            </Button>
-          )}
-          {githubUrl && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-full px-6 transition-all duration-300 border-2"
-              onClick={() => window.open(githubUrl, '_blank')}
-            >
-              <Github className="w-4 h-4 mr-2" />
-              Code
-            </Button>
-          )}
+        {/* Footer */}
+        <div className="mt-auto pt-4 border-t border-slate-200/70 dark:border-slate-800/70 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500">
+            {stars !== undefined && stars > 0 && (
+              <span className="flex items-center gap-1"><Star size={11} /> {stars}</span>
+            )}
+            {forks !== undefined && forks > 0 && (
+              <span className="flex items-center gap-1"><GitFork size={11} /> {forks}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {githubUrl && (
+              <a
+                href={githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-brand-primary transition-colors"
+                aria-label="View source"
+              >
+                <Github size={15} />
+              </a>
+            )}
+            {demoUrl && (
+              <a
+                href={demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:gap-2 transition-all"
+              >
+                <ExternalLink size={12} /> Live
+                <ArrowUpRight size={11} />
+              </a>
+            )}
+          </div>
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }

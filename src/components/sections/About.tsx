@@ -1,86 +1,145 @@
-import { Section } from '../ui/Section';
-import { Code2, Layers, Cpu, GitMerge } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Section } from '../ui/Section';
 
-const interests = [
-  {
-    icon: Cpu,
-    label: 'AI & Machine Learning',
-    desc: 'Developing intelligent systems that learn from real-world data',
-  },
-  {
-    icon: Layers,
-    label: 'Full Stack Development',
-    desc: 'Building end-to-end web applications from database to UI',
-  },
-  {
-    icon: Code2,
-    label: 'Software Engineering',
-    desc: 'Engineering robust systems through clean code and best practices',
-  },
-  {
-    icon: GitMerge,
-    label: 'Open Source & Collaboration',
-    desc: 'Contributing to collaborative projects and building in public on GitHub',
-  },
+const stats = [
+  { value: '5+', label: 'Projects shipped' },
+  { value: '2nd', label: 'Year @ SLIIT' },
+  { value: 'AI', label: 'Specialization' },
+  { value: 'LK', label: 'Based in Sri Lanka' },
 ];
+
+const skills = ['Java', 'Python', 'JavaScript', 'React', 'Node.js', 'PostgreSQL'];
 
 export function About() {
   return (
-    <Section id="about" className="transition-colors duration-300">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">About Me</h2>
-        <div className="h-2 w-24 bg-brand-primary mx-auto rounded-full" />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-16 lg:gap-24 items-start">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="space-y-6 text-slate-600 dark:text-slate-400 leading-relaxed text-lg"
-        >
-          <p className="font-semibold text-slate-900 dark:text-white">
-            I am <span className="text-brand-primary">J.L. Kavisha Lakshan Liyanage</span>, a passionate{' '}
-            <span className="text-brand-primary">Information Technology undergraduate</span> at the Sri Lanka
-            Institute of Information Technology (SLIIT), specializing in{' '}
-            <span className="text-brand-primary">Artificial Intelligence</span>.
+    <Section id="about" num="01." title="About Me">
+      <div className="grid md:grid-cols-[3fr_2fr] gap-12 md:gap-16 items-start">
+        {/* Left column: prose + tags + stats + skills */}
+        <div className="space-y-5 text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
+          <p>
+            Hello! My name is Kavisha and I&apos;m a software engineering &amp; AI intern candidate based in Nittambuwa, Sri Lanka.
+            I enjoy building things that live on the web and on mobile — whether that&apos;s a slick UI,
+            a secure backend, or a prediction model that turns raw data into something useful.
           </p>
           <p>
-            I thrive on building full-stack web applications and exploring AI/ML solutions that
-            solve real-world problems. From crafting responsive front-ends with React to designing
-            robust back-end APIs with Java and Node.js — I love every part of the development
-            lifecycle.
-          </p>
-          <p>
-            As an <strong className="text-slate-700 dark:text-slate-300">IEEE Student Member</strong>, I
-            actively engage with the tech community and stay current with emerging technologies.
-            I&apos;m focused on building a strong project portfolio and am currently seeking
-            internship opportunities where I can contribute and grow.
-          </p>
-          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-brand-primary/10 dark:bg-brand-primary/20 border border-brand-primary/30 text-brand-primary font-semibold text-sm tracking-wide">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse" />
-            Available for Internships
-          </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {interests.map((item, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5 }}
-              transition={{ duration: 0.4, delay: idx * 0.1 }}
-              className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/30 hover:shadow-xl hover:shadow-brand-primary/5 transition-all group"
+            I&apos;m pursuing a <span className="text-slate-900 dark:text-slate-100">B.Sc. (Hons) in Information Technology</span> at{' '}
+            <a
+              href="https://sliit.lk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-primary hover:underline underline-offset-4"
             >
-              <item.icon className="w-10 h-10 text-brand-primary mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">{item.label}</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed">{item.desc}</p>
+              SLIIT
+            </a>
+            , specializing in Artificial Intelligence. Along the way I&apos;ve shipped projects like{' '}
+            <span className="text-brand-primary">TravelGenie</span> (full-stack web + mobile travel planner),{' '}
+            <span className="text-brand-primary">DengueRisk</span> (ML for public health), and a{' '}
+            <span className="text-brand-primary">secure campus E-Voting system</span>.
+          </p>
+          <p>
+            Right now I&apos;m actively looking for a first internship where I can contribute to a real engineering team,
+            keep learning, and help ship things people actually use.
+          </p>
+
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+            {stats.map((s, idx) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+                className="p-3 rounded-md bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/50 transition-colors text-center"
+              >
+                <p className="font-mono text-xl md:text-2xl font-bold text-brand-primary leading-none">{s.value}</p>
+                <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Skills strip */}
+          <div className="pt-4">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-2">A few technologies I&apos;ve been working with recently:</p>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px] font-mono text-slate-600 dark:text-slate-400">
+              {skills.map(s => (
+                <li key={s} className="flex items-center gap-2">
+                  <span className="text-brand-primary text-xs">▹</span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Right column: portrait with floating tech badges */}
+        <div className="relative w-full max-w-[320px] mx-auto md:mx-0 md:justify-self-end pt-6 pb-10 px-6">
+          <div className="group relative">
+            {/* Offset border frame */}
+            <div className="absolute inset-0 translate-x-4 translate-y-4 border-2 border-brand-primary rounded transition-transform duration-300 group-hover:translate-x-3 group-hover:translate-y-3" />
+
+            {/* Image with indigo overlay */}
+            <div className="relative rounded overflow-hidden">
+              <div className="absolute inset-0 bg-brand-primary/40 mix-blend-multiply group-hover:bg-transparent transition-colors duration-300 z-10" />
+              <img
+                src={`${import.meta.env.BASE_URL}image.jpg`}
+                alt="Kavisha Liyanage"
+                className="block w-full h-auto rounded grayscale group-hover:grayscale-0 transition-all duration-300"
+              />
+            </div>
+
+            {/* Floating tech badges */}
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -top-3 -left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+            >
+              <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5" />
+              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">React</span>
             </motion.div>
-          ))}
+
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              className="absolute top-1/4 -right-6 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+            >
+              <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" className="w-3.5 h-3.5" />
+              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Python</span>
+            </motion.div>
+
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              className="absolute bottom-1/4 -left-7 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+            >
+              <img src="https://cdn.simpleicons.org/nodedotjs/5FA04E" alt="Node.js" className="w-3.5 h-3.5" />
+              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Node.js</span>
+            </motion.div>
+
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+              className="absolute -bottom-3 -right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white shadow-lg shadow-brand-primary/40"
+            >
+              <span className="text-[10px]">✦</span>
+              <span className="font-mono text-[11px] font-medium">AI / ML</span>
+            </motion.div>
+          </div>
+
+          {/* Available pulse dot at top */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="absolute -top-1 right-2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/40 backdrop-blur-sm"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            <span className="font-mono text-[10px] text-green-600 dark:text-green-400">Available</span>
+          </motion.div>
         </div>
       </div>
     </Section>

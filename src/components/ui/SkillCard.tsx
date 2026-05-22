@@ -12,7 +12,7 @@ interface SkillCardProps {
 export function SkillCard({ title, skills, icon: Icon, delay = 0 }: SkillCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay, duration: 0.5 }}

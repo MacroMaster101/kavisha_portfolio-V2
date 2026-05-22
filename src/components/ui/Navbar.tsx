@@ -1,137 +1,162 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const navItems = [
-  { name: 'Home', href: '#hero' },
-  { name: 'About', href: '#about' },
-  { name: 'Skills', href: '#skills' },
-  { name: 'Projects', href: '#projects' },
-  { name: 'Experience', href: '#experience' },
-  { name: 'Education', href: '#education' },
-  { name: 'Certifications', href: '#certifications' },
-  { name: 'Blogs', href: '#blogs' },
-  { name: 'Contact', href: '#contact' },
+  { num: '01.', name: 'About', href: '#about' },
+  { num: '02.', name: 'Skills', href: '#skills' },
+  { num: '03.', name: 'Projects', href: '#projects' },
+  { num: '04.', name: 'Experience', href: '#experience' },
+  { num: '05.', name: 'Education', href: '#education' },
+  { num: '06.', name: 'Certifications', href: '#certifications' },
+  { num: '07.', name: 'Writing', href: '#blogs' },
+  { num: '08.', name: 'Contact', href: '#contact' },
 ];
 
 export function Navbar() {
-  const [activeTab, setActiveTab] = useState('Home');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showThemeTooltip, setShowThemeTooltip] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowThemeTooltip(true), 1500);
-    const hideTimer = setTimeout(() => setShowThemeTooltip(false), 8000);
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(hideTimer);
-    };
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleToggleTheme = () => {
-    toggleTheme();
-    setShowThemeTooltip(false);
-  };
+  const hidden = false;
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string, name: string) => {
+  const scrollTo = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setActiveTab(name);
-      setIsMobileMenuOpen(false);
-    }
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    setMobileOpen(false);
   };
 
   return (
-    <nav className="fixed top-8 left-0 w-full z-50 px-4">
-      <div className="bg-brand-primary rounded-full px-6 py-2 flex items-center gap-4 shadow-lg backdrop-blur-sm border border-white/20 w-fit mx-auto">
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <button
-            className="p-2 text-white hover:text-white/80"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
+    <motion.header
+      animate={{ y: hidden ? -100 : 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'h-[70px] bg-white/85 dark:bg-[#030014]/85 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(2,12,27,0.7)]'
+          : 'h-[90px] bg-transparent'
+      }`}
+    >
+      <nav className="h-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 flex items-center justify-between">
+        {/* Logo */}
+        <a
+          href="#hero"
+          onClick={(e) => scrollTo(e, '#hero')}
+          className="group relative flex items-center"
+          aria-label="Home"
+        >
+          <span className="relative w-11 h-11 flex items-center justify-center font-mono font-bold text-brand-primary text-lg border-2 border-brand-primary rounded transition-all group-hover:-translate-x-0.5 group-hover:-translate-y-0.5">
+            K
+            <span className="absolute inset-0 border-2 border-brand-primary rounded translate-x-1.5 translate-y-1.5 -z-10 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform" />
+          </span>
+        </a>
 
-        {/* Nav Links – Desktop */}
-        <div className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              onClick={(e) => scrollToSection(e, item.href, item.name)}
-              className={`text-[13px] xl:text-sm font-semibold transition-all duration-300 px-4 py-2 rounded-full whitespace-nowrap ${
-                activeTab === item.name
-                  ? 'bg-white text-brand-primary'
-                  : 'text-white hover:text-white/80'
-              }`}
-            >
-              {item.name}
-            </a>
-          ))}
-        </div>
-
-        {/* Theme Toggle */}
-        <div className="relative">
-          <button
-            onClick={handleToggleTheme}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300"
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
-          <AnimatePresence>
-            {showThemeTooltip && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                className="absolute top-12 right-0 bg-white text-brand-primary text-[12px] font-bold py-2 px-3 rounded-xl shadow-[0_0_20px_var(--brand-primary-glow)] whitespace-nowrap border border-white/20 z-50 pointer-events-none"
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-2">
+          <ol className="flex items-center gap-1">
+            {navItems.map((item, idx) => (
+              <motion.li
+                key={item.name}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + idx * 0.1 }}
               >
-                <div className="flex items-center gap-1.5">
-                  Try {theme === 'dark' ? 'Light' : 'Dark'} Mode!
-                </div>
-                <div className="absolute -top-1 right-3.5 w-2 h-2 bg-white rotate-45" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Mobile Nav Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden mt-4 bg-brand-primary rounded-3xl p-6 shadow-2xl border border-white/20 overflow-y-auto max-h-[80vh] max-w-sm mx-auto"
-          >
-            <div className="flex flex-col gap-4">
-              {navItems.map((item) => (
                 <a
-                  key={item.name}
                   href={item.href}
-                  onClick={(e) => scrollToSection(e, item.href, item.name)}
-                  className={`text-center text-lg font-semibold py-2 ${
-                    activeTab === item.name
-                      ? 'bg-white text-brand-primary rounded-full'
-                      : 'text-white'
-                  }`}
+                  onClick={(e) => scrollTo(e, item.href)}
+                  className="group flex items-baseline gap-1.5 px-3 py-2 text-[13px] text-slate-700 dark:text-slate-300 hover:text-brand-primary transition-colors"
                 >
-                  {item.name}
+                  <span className="font-mono text-brand-primary text-xs">{item.num}</span>
+                  <span className="font-medium">{item.name}</span>
                 </a>
+              </motion.li>
+            ))}
+          </ol>
+
+          <motion.a
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-4 px-4 py-2 text-[13px] font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0] hover:shadow-brand-primary/30 transition-all"
+          >
+            Resume
+          </motion.a>
+
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="ml-2 w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </motion.button>
+        </div>
+
+        {/* Mobile controls */}
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary"
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            aria-label="Menu"
+            className="w-10 h-10 flex items-center justify-center text-brand-primary"
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ duration: 0.3, ease: [0.645, 0.045, 0.355, 1] }}
+            className="md:hidden fixed top-0 right-0 bottom-0 w-[75%] max-w-sm bg-slate-50 dark:bg-[#0a0418] shadow-2xl flex items-center justify-center"
+          >
+            <ol className="flex flex-col items-center gap-6">
+              {navItems.map(item => (
+                <li key={item.name}>
+                  <a
+                    href={item.href}
+                    onClick={(e) => scrollTo(e, item.href)}
+                    className="flex flex-col items-center gap-1 text-slate-900 dark:text-white hover:text-brand-primary transition-colors"
+                  >
+                    <span className="font-mono text-sm text-brand-primary">{item.num}</span>
+                    <span className="text-xl font-semibold">{item.name}</span>
+                  </a>
+                </li>
               ))}
-            </div>
+              <a
+                href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 px-6 py-3 text-base font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 transition-colors"
+              >
+                Resume
+              </a>
+            </ol>
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </motion.header>
   );
 }

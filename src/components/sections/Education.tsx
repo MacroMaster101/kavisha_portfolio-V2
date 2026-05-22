@@ -1,51 +1,76 @@
 import { Section } from '../ui/Section';
-import { TimelineItem } from '../ui/TimelineItem';
+
+interface Edu {
+  degree: string;
+  institution: string;
+  period: string;
+  location: string;
+  description: string;
+  badges?: string[];
+}
+
+const education: Edu[] = [
+  {
+    degree: 'B.Sc. (Hons) in Information Technology',
+    institution: 'Sri Lanka Institute of Information Technology (SLIIT)',
+    period: '2024 — Present',
+    location: 'Malabe, Sri Lanka',
+    description:
+      'Specializing in Artificial Intelligence. Relevant coursework: OOP, Data Structures & Algorithms, Database Management Systems, Web Development, Software Engineering, AI, and Machine Learning Fundamentals. IEEE Student Member.',
+    badges: ['AI Specialization', 'IEEE Member'],
+  },
+  {
+    degree: 'G.C.E. Advanced Level',
+    institution: "St. Mary's National College, Veyangoda",
+    period: '2021 — 2023',
+    location: 'Veyangoda, Sri Lanka',
+    description:
+      'Physical Science stream. The analytical foundation behind my approach to problem solving.',
+    badges: ['Physical Science'],
+  },
+  {
+    degree: 'G.C.E. Ordinary Level',
+    institution: "St. Mary's National College, Veyangoda",
+    period: '2020',
+    location: 'Veyangoda, Sri Lanka',
+    description: 'Completed 9 subjects with a strong focus on science and mathematics — where it all started.',
+  },
+];
 
 export function Education() {
-  const education = [
-    {
-      degree: 'Bachelor of Science (Honours) in Information Technology',
-      institution: 'Sri Lanka Institute of Information Technology (SLIIT)',
-      period: '2024 – Present',
-      location: 'Malabe, Sri Lanka',
-      description:
-        'Specializing in Artificial Intelligence. Focused on software engineering, full-stack web development, machine learning, and data science. Actively working on team-based academic projects using agile methodologies.',
-      badges: ['AI Specialization', 'Full Stack Development', 'Agile / Scrum', 'IEEE Student Member'],
-    },
-    {
-      degree: 'G.C.E. Advanced Level',
-      institution: "St. Mary's National College, Veyangoda",
-      period: '2021 – 2023',
-      location: 'Veyangoda, Sri Lanka',
-      description:
-        'Completed the G.C.E. Advanced Level in the Physical Science stream, building a strong foundation in Mathematics, Physics, and Combined Mathematics that underpins computational problem solving.',
-      badges: ['Physical Science Stream', 'Combined Mathematics', 'Physics'],
-    },
-    {
-      degree: 'G.C.E. Ordinary Level',
-      institution: "St. Mary's National College, Veyangoda",
-      period: '2016 – 2021',
-      location: 'Veyangoda, Sri Lanka',
-      description:
-        'Successfully completed G.C.E. Ordinary Level with results across nine subjects, demonstrating a broad academic foundation with an early aptitude for science and mathematics.',
-      badges: ['9 Subjects', 'Science', 'Mathematics'],
-    },
-  ];
-
   return (
-    <Section id="education" className="transition-colors duration-300">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Academic Journey</h2>
-        <div className="h-2 w-24 bg-brand-primary mx-auto rounded-full" />
-      </div>
+    <Section id="education" num="05." title="Academic Journey">
+      <ol className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 md:ml-4 space-y-12">
+        {education.map((edu, i) => (
+          <li key={i} className="relative pl-8 md:pl-12 group">
+            {/* Marker */}
+            <span className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white dark:bg-[#030014] border-2 border-brand-primary group-hover:scale-125 transition-transform" />
 
-      <div className="max-w-4xl mx-auto">
-        <div className="space-y-0">
-          {education.map((item, index) => (
-            <TimelineItem key={index} {...item} index={index} />
-          ))}
-        </div>
-      </div>
+            <p className="font-mono text-sm text-brand-primary mb-1">{edu.period}</p>
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug">
+              {edu.degree}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {edu.institution} <span className="text-slate-400 dark:text-slate-600">·</span> {edu.location}
+            </p>
+            <p className="mt-3 text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
+              {edu.description}
+            </p>
+            {edu.badges && (
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {edu.badges.map(b => (
+                  <li
+                    key={b}
+                    className="px-3 py-1 text-xs font-mono rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                  >
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
     </Section>
   );
 }
