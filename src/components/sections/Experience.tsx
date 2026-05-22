@@ -72,7 +72,7 @@ export function Experience() {
         </p>
 
         {/* Strengths grid */}
-        <div className="relative grid sm:grid-cols-3 gap-4 mb-10">
+        <div className="relative grid md:grid-cols-3 gap-4 mb-10">
           {strengths.map(({ Icon, title, body }, idx) => (
             <motion.div
               key={title}

@@ -1,6 +1,7 @@
 import { Navbar } from '../components/ui/Navbar';
 import { SideRails } from '../components/ui/SideRails';
 import { PageBackground } from '../components/ui/PageBackground';
+import { BottomNav } from '../components/ui/BottomNav';
 import { Hero } from '../components/sections/Hero';
 import { About } from '../components/sections/About';
 import { Skills } from '../components/sections/Skills';
@@ -17,7 +18,8 @@ export function Portfolio() {
       <PageBackground />
       <Navbar />
       <SideRails />
-      <main className="relative lg:px-[100px] xl:px-[120px]">
+      <BottomNav />
+      <main className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0">
         <Hero />
         <About />
         <Skills />

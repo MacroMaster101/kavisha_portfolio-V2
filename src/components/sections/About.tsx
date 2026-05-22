@@ -88,11 +88,11 @@ export function About() {
               />
             </div>
 
-            {/* Floating tech badges */}
+            {/* Floating tech badges — tighter offsets on mobile so they don't clip the viewport */}
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-3 -left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
+              className="absolute -top-2 -left-2 md:-top-3 md:-left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
               <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">React</span>
@@ -101,7 +101,7 @@ export function About() {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute top-1/4 -right-6 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
+              className="absolute top-1/4 -right-3 md:-right-6 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
               <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" className="w-3.5 h-3.5" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Python</span>
@@ -110,7 +110,7 @@ export function About() {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute bottom-1/4 -left-7 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
+              className="absolute bottom-1/4 -left-3 md:-left-7 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
               <img src="https://cdn.simpleicons.org/nodedotjs/5FA04E" alt="Node.js" className="w-3.5 h-3.5" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Node.js</span>
@@ -119,7 +119,7 @@ export function About() {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-              className="absolute -bottom-3 -right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white shadow-lg shadow-brand-primary/40"
+              className="absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white shadow-lg shadow-brand-primary/40"
             >
               <span className="text-[10px]">✦</span>
               <span className="font-mono text-[11px] font-medium">AI / ML</span>

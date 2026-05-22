@@ -240,12 +240,12 @@ export function Projects() {
                   transition={{ duration: 0.6 }}
                   className="relative grid md:grid-cols-12 items-center gap-y-6"
                 >
-                  {/* Image — fills 7 cols */}
+                  {/* Image — fills 7 cols on desktop, full width on mobile */}
                   <a
                     href={repo.homepage || repo.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} row-start-1 z-0`}
+                    className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} md:row-start-1 z-0`}
                   >
                     <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
                       <img
@@ -261,9 +261,9 @@ export function Projects() {
                     </div>
                   </a>
 
-                  {/* Content — fills 6 cols, overlapping image */}
+                  {/* Content — fills 6 cols on desktop, full width stacked below image on mobile */}
                   <div
-                    className={`relative md:col-span-6 ${isReverse ? 'md:col-start-1 md:text-left' : 'md:col-start-7 md:text-right'} row-start-1 z-10 ${isReverse ? '' : 'md:col-start-7'}`}
+                    className={`relative md:col-span-6 ${isReverse ? 'md:col-start-1 md:text-left' : 'md:col-start-7 md:text-right'} md:row-start-1 z-10`}
                   >
                     <p className="font-mono text-brand-primary text-xs md:text-sm mb-2">Featured Project</p>
                     <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4 hover:text-brand-primary transition-colors">

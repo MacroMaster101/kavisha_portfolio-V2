@@ -32,6 +32,13 @@
 
   html {
     scroll-behavior: smooth;
+    /* Sections target #anchors. Offset for fixed navbar so titles aren't cut off. */
+    scroll-padding-top: 90px;
+  }
+
+  /* Each section gets a scroll-margin so #anchor jumps land below the fixed navbar. */
+  section[id] {
+    scroll-margin-top: 80px;
   }
 
   /* Selection color */
@@ -83,4 +90,13 @@ html.light {
 html.dark {
   scrollbar-width: thin;
   scrollbar-color: rgb(71 85 105) rgb(3 0 20);
+}
+
+/* Hide scrollbar for the bottom nav's horizontal scroll rail */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

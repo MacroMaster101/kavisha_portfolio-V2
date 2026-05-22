@@ -52,10 +52,10 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center px-6 sm:px-10 pt-24 pb-16"
+      className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-28 pb-16 lg:pt-24"
     >
 
-      <div className="relative w-full max-w-[1100px] mx-auto z-10 grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-center">
+      <div className="relative w-full max-w-[1100px] mx-auto z-10 grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
         <div>
         {/* Status pill */}
         <motion.div
@@ -91,12 +91,13 @@ export function Hero() {
           Kavisha Liyanage.
         </motion.h1>
 
-        {/* Typewriter tagline */}
+        {/* Typewriter tagline — reserve 2 lines worth of height on mobile to avoid layout shift
+            as the typed string changes length. */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-[clamp(28px,6vw,56px)] font-bold text-slate-500 dark:text-slate-400 leading-[1.1] tracking-tight mt-3 min-h-[1.2em]"
+          className="text-[clamp(28px,6vw,56px)] font-bold text-slate-500 dark:text-slate-400 leading-[1.1] tracking-tight mt-3 min-h-[2.4em] sm:min-h-[1.2em]"
         >
           I build{' '}
           <span className="text-slate-700 dark:text-slate-200">
@@ -160,19 +161,21 @@ export function Hero() {
 
         </div>
 
-        {/* Spline 3D robot — interactive, follows cursor. Hidden on mobile so it doesn't crowd the text. */}
+        {/* Spline 3D robot — interactive, follows cursor.
+            On lg+ it sits in the second grid column (right side).
+            On mobile/tablet it appears below the text (smaller). */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="hidden lg:block relative"
+          className="relative w-full"
         >
           {/* Soft glow behind the robot */}
           <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-[100px] scale-90 pointer-events-none" />
 
           {/* The Spline canvas renders its own dark background. In light mode that reads as a black
               rectangle, so we soft-mask it. In dark mode the canvas blends with the page bg, no mask needed. */}
-          <div className="relative w-full aspect-square max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
+          <div className="relative w-full aspect-square max-w-[220px] sm:max-w-[300px] lg:max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
             <Suspense
               fallback={
                 <div className="w-full h-full flex items-center justify-center">

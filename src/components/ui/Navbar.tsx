@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon, Sparkles } from 'lucide-react';
+import { X, Sun, Moon, Sparkles } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const THEME_HINT_KEY = 'theme-hint-seen';
@@ -18,7 +18,6 @@ const navItems = [
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [showThemeHint, setShowThemeHint] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -112,17 +111,17 @@ export function Navbar() {
   const scrollTo = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
-    setMobileOpen(false);
   };
 
   return (
+    <>
     <motion.header
       animate={{ y: hidden ? -100 : 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'h-[70px] bg-white/85 dark:bg-[#030014]/85 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(2,12,27,0.7)]'
-          : 'h-[90px] bg-transparent'
+          ? 'h-[70px] bg-white/95 dark:bg-[#030014]/95 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(2,12,27,0.4)] border-b border-slate-200/60 dark:border-slate-800/60'
+          : 'h-[90px] bg-white/80 dark:bg-[#030014]/80 backdrop-blur-sm'
       }`}
     >
       <nav className="h-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 flex items-center justify-between">
@@ -139,8 +138,8 @@ export function Navbar() {
           </span>
         </a>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-2">
+        {/* Desktop nav — shown from lg+ only (8 nav items + Resume + toggle don't fit on tablet) */}
+        <div className="hidden lg:flex items-center gap-2">
           <ol className="flex items-center gap-1">
             {navItems.map((item, idx) => (
               <motion.li
@@ -226,8 +225,8 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile controls */}
-        <div className="md:hidden flex items-center gap-2">
+        {/* Mobile + tablet controls (hidden on lg+ where desktop nav shows) */}
+        <div className="lg:hidden flex items-center gap-2">
           <div className="relative">
             <button
               onClick={handleToggleTheme}
@@ -264,51 +263,9 @@ export function Navbar() {
               )}
             </AnimatePresence>
           </div>
-          <button
-            onClick={() => setMobileOpen(o => !o)}
-            aria-label="Menu"
-            className="w-10 h-10 flex items-center justify-center text-brand-primary"
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
       </nav>
-
-      {/* Mobile drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.3, ease: [0.645, 0.045, 0.355, 1] }}
-            className="md:hidden fixed top-0 right-0 bottom-0 w-[75%] max-w-sm bg-slate-50 dark:bg-[#0a0418] shadow-2xl flex items-center justify-center"
-          >
-            <ol className="flex flex-col items-center gap-6">
-              {navItems.map(item => (
-                <li key={item.name}>
-                  <a
-                    href={item.href}
-                    onClick={(e) => scrollTo(e, item.href)}
-                    className="flex flex-col items-center gap-1 text-slate-900 dark:text-white hover:text-brand-primary transition-colors"
-                  >
-                    <span className="font-mono text-sm text-brand-primary">{item.num}</span>
-                    <span className="text-xl font-semibold">{item.name}</span>
-                  </a>
-                </li>
-              ))}
-              <a
-                href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 px-6 py-3 text-base font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 transition-colors"
-              >
-                Resume
-              </a>
-            </ol>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.header>
+    </>
   );
 }

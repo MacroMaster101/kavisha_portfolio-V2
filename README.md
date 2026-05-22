@@ -9,9 +9,9 @@ Personal portfolio for Kavisha Liyanage — software engineering & AI intern can
 - Animated hero with typewriter tagline and interactive 3D Spline robot
 - Live GitHub repository feed with filterable categories (auto-fetches from the GitHub API)
 - Featured projects with custom social-preview images
-- Theme toggle (light / dark) with system-preference detection
+- Theme toggle (light / dark) with system-preference detection and a first-visit "try the other mode" hint
 - Animated section transitions via Framer Motion
-- Responsive across mobile, tablet, and desktop
+- Responsive: desktop nav at the top, **floating bottom dock nav for mobile/tablet** with active-section tracking and auto-centering
 - Contact form powered by Formspree
 
 ## Tech Stack
@@ -50,6 +50,13 @@ npm run preview   # preview the production build locally
 npm run lint      # eslint
 ```
 
+## Layout & Responsive Behavior
+
+| Screen | Top nav | Side rails | Bottom dock |
+|---|---|---|---|
+| **Mobile / Tablet** (<1024px) | Compact: K logo + theme toggle | Hidden | Floating pill with all sections + Resume — appears once you scroll to About, auto-centers the active section |
+| **Desktop** (≥1024px) | Full: K logo + 8 nav items + Resume + theme | Visible (socials left, email right) | Hidden |
+
 ## Customizing
 
 | What | Where |
@@ -60,6 +67,7 @@ npm run lint      # eslint
 | Skill list & logos | `groups` in `src/components/sections/Skills.tsx` |
 | Hero 3D scene | `SPLINE_ROBOT` URL in `src/components/sections/Hero.tsx` |
 | Typewriter tagline | `roles` array in `src/components/sections/Hero.tsx` |
+| Mobile dock items | `navItems` in `src/components/ui/BottomNav.tsx` |
 | Resume PDF | Replace `public/Kavisha_Liyanage_CV.pdf` |
 
 ## Deploying
