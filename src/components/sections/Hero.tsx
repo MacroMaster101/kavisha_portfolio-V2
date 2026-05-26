@@ -36,8 +36,10 @@ function useTypewriter(words: string[], typeMs = 70, holdMs = 1800, eraseMs = 35
       if (text.length > 0) {
         t = setTimeout(() => setText(text.slice(0, -1)), eraseMs);
       } else {
-        setWordIdx((wordIdx + 1) % words.length);
-        setPhase('typing');
+        t = setTimeout(() => {
+          setWordIdx((wordIdx + 1) % words.length);
+          setPhase('typing');
+        }, eraseMs);
       }
     }
     return () => clearTimeout(t);

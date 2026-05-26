@@ -147,10 +147,6 @@ function ProjectImage({
   const sources = repoImageCandidates(repoName);
   const [srcIndex, setSrcIndex] = useState(0);
 
-  useEffect(() => {
-    setSrcIndex(0);
-  }, [repoName]);
-
   return (
     <img
       src={sources[srcIndex]}
@@ -342,29 +338,31 @@ const mergeRepos = (repos: GithubRepo[]) => {
   });
 };
 
+const readCachedRepos = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp >= CACHE_TTL) return null;
+
+    return mergeRepos(data);
+  } catch {
+    return null;
+  }
+};
+
 export function Projects() {
   // Start with bundled fallback so something is always visible
-  const [repos, setRepos] = useState<GithubRepo[]>(() => mergeRepos([]));
+  const [repos, setRepos] = useState<GithubRepo[]>(() => readCachedRepos() ?? mergeRepos([]));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
 
   useEffect(() => {
-    let showedCachedRepos = false;
-
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL) {
-          setRepos(mergeRepos(data));
-          setLoading(false);
-          showedCachedRepos = true;
-        }
-      }
-    } catch { /* ignore */ }
-
     fetch('https://api.github.com/users/MacroMaster101/repos?sort=updated&per_page=100', { headers: ghHeaders })
       .then(res => {
         if (!res.ok) throw new Error('GitHub API error');
@@ -396,9 +394,8 @@ export function Projects() {
         setRepos(mergedRepos);
       })
       .catch(() => {
-        // On API failure, keep showing the bundled fallback we initialized with.
-        // Only flag error if we don't even have fallback data.
-        if (!showedCachedRepos && repos.length === 0) setError(true);
+        // On API failure, keep showing cached/bundled fallback data.
+        setError(false);
       })
       .finally(() => setLoading(false));
   }, []);
