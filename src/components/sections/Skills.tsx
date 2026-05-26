@@ -35,6 +35,7 @@ const groups: SkillGroup[] = [
     title: 'Frontend',
     items: [
       { name: 'React', slug: 'react', color: '61DAFB' },
+      { name: 'Next.js', slug: 'nextdotjs', color: 'FFFFFF', lightColor: '000000' },
       { name: 'React Native', slug: 'react', color: '61DAFB' },
       { name: 'Expo', slug: 'expo', color: 'FFFFFF', lightColor: '000020' },
       { name: 'Vite', slug: 'vite', color: '646CFF' },
@@ -48,8 +49,12 @@ const groups: SkillGroup[] = [
     items: [
       { name: 'Node.js', slug: 'nodedotjs', color: '5FA04E' },
       { name: 'Express', url: devicon('express') },
+      { name: 'Prisma', slug: 'prisma', color: 'FFFFFF', lightColor: '2D3748' },
+      { name: 'Sequelize', slug: 'sequelize', color: '52B0E7' },
       { name: 'Flask', slug: 'flask', color: 'FFFFFF', lightColor: '000000' },
       { name: 'Spring Boot', slug: 'springboot', color: '6DB33F' },
+      { name: 'Discord.js', slug: 'discord', color: '5865F2' },
+      { name: 'Discord.py', slug: 'discord', color: '5865F2' },
       { name: 'REST APIs', slug: 'fastapi', color: '009688' },
       { name: 'JWT', slug: 'jsonwebtokens', color: 'D63AFF' },
     ],
@@ -58,6 +63,8 @@ const groups: SkillGroup[] = [
     title: 'Databases',
     items: [
       { name: 'PostgreSQL', slug: 'postgresql', color: '4169E1' },
+      { name: 'Supabase', slug: 'supabase', color: '3FCF8E' },
+      { name: 'Neon', slug: 'neon', color: '00E599' },
       { name: 'MongoDB', slug: 'mongodb', color: '47A248' },
       { name: 'MySQL', slug: 'mysql', color: '4479A1' },
       { name: 'MS SQL Server', url: devicon('microsoftsqlserver') },
@@ -80,6 +87,9 @@ const groups: SkillGroup[] = [
     items: [
       { name: 'Git', slug: 'git', color: 'F05032' },
       { name: 'GitHub', slug: 'github', color: 'FFFFFF', lightColor: '181717' },
+      { name: 'Docker', slug: 'docker', color: '2496ED' },
+      { name: 'Vercel', slug: 'vercel', color: 'FFFFFF', lightColor: '000000' },
+      { name: 'Maven', url: devicon('maven') },
       { name: 'VS Code', url: devicon('vscode') },
       { name: 'IntelliJ IDEA', url: devicon('intellij') },
       { name: 'Postman', slug: 'postman', color: 'FF6C37' },

@@ -25,11 +25,32 @@ const formatName = (name: string) =>
 const CATEGORIES = ['All', 'Full Stack', 'Web', 'Mobile App', 'AI/ML', 'Discord Bot', 'Portfolio', 'Other'] as const;
 type Category = typeof CATEGORIES[number];
 
+// GitHub's language API only returns source languages, so these manifest-checked
+// stacks keep project chips aligned with the actual frameworks/tools in each repo.
+const REPO_STACKS: Record<string, string[]> = {
+  'just-for-fun-website': ['Next.js', 'TypeScript', 'Supabase', 'Neon', 'Prisma', 'PostgreSQL'],
+  'travel_genie': ['React', 'Vite', 'Node.js', 'Express', 'PostgreSQL', 'Sequelize', 'Flask', 'Pandas', 'NumPy'],
+  'travel_genie_app': ['Expo', 'React Native', 'Node.js', 'Express', 'MongoDB', 'JWT'],
+  'web-voting-system': ['Spring Boot', 'React', 'Vite', 'MS SQL Server', 'JWT'],
+  'kavisha_portfolio-v2': ['React', 'TypeScript', 'Vite', 'Tailwind CSS', 'Framer Motion'],
+  'kavisha_portfolio': ['React', 'Vite', 'CSS'],
+  'discord_music_bot': ['Node.js', 'Discord.js', 'Docker', 'yt-dlp'],
+  'discord-youtube-status-bot': ['Python', 'Discord.py', 'Flask'],
+  'discord-j4fn-server-bot': ['Python', 'Discord.py', 'Flask'],
+  'home-tutor': ['Java', 'Maven'],
+  'saloon_vero': ['Java', 'Web App'],
+  'denguerisk': ['Python', 'Pandas', 'NumPy', 'Scikit-learn'],
+};
+
+const repoStack = (repo: GithubRepo) =>
+  REPO_STACKS[repo.name.toLowerCase()] ?? repo.allLanguages;
+
 function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
   const haystack = [
     repo.name,
     repo.description ?? '',
     ...(repo.topics ?? []),
+    ...(REPO_STACKS[repo.name.toLowerCase()] ?? []),
     ...(repo.allLanguages ?? []),
     repo.language ?? '',
   ]
@@ -44,14 +65,14 @@ function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
     return 'Mobile App';
   if (has('machine-learning', 'machine learning', 'ml', 'ai', 'tensorflow', 'pytorch', 'jupyter', 'data-science', 'nlp'))
     return 'AI/ML';
-  if (has('spring-boot', 'spring boot', 'express', 'nodejs', 'node.js', 'fullstack', 'full-stack', 'postgres', 'mongodb', 'mysql', 'jwt'))
+  if (has('spring-boot', 'spring boot', 'express', 'nodejs', 'node.js', 'fullstack', 'full-stack', 'postgres', 'supabase', 'neon', 'prisma', 'mongodb', 'mysql', 'jwt'))
     return 'Full Stack';
   if (has('react', 'vite', 'next', 'vue', 'svelte', 'tailwind', 'html', 'css', 'javascript', 'typescript', 'web'))
     return 'Web';
   return 'Other';
 }
 
-const CACHE_KEY = 'gh_repos_v2';
+const CACHE_KEY = 'gh_repos_v4';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const GH_TOKEN = import.meta.env.VITE_GITHUB_TOKEN as string | undefined;
 const ghHeaders: HeadersInit = GH_TOKEN ? { Authorization: `Bearer ${GH_TOKEN}` } : {};
@@ -59,6 +80,7 @@ const ghHeaders: HeadersInit = GH_TOKEN ? { Authorization: `Bearer ${GH_TOKEN}` 
 // Names of repos we want pinned as "Featured" (in display order, lowercased).
 // Anything matching will appear in the featured section.
 const FEATURED_NAMES = [
+  'just-for-fun-website',
   'travel_genie',
   'travel_genie_app',
   'web-voting-system',
@@ -94,9 +116,33 @@ const repoImage = (repoName: string) =>
 // Mirrors data shape from the GitHub API; gets replaced as soon as a real fetch succeeds.
 const FALLBACK_REPOS: GithubRepo[] = [
   {
+    id: -5,
+    name: 'just-for-fun-website',
+    description: 'Official web hub for the Just For Fun Sri Lankan gaming crew — Next.js, Supabase, Prisma, Neon-backed Postgres, YouTube sync, admin tools, and community highlights.',
+    html_url: 'https://github.com/MacroMaster101/just-for-fun-website',
+    homepage: 'https://just-for-fun-website-lakshankavishatt-9591s-projects.vercel.app',
+    topics: ['nextjs', 'supabase', 'prisma', 'neon', 'postgresql', 'full-stack-web-development'],
+    language: 'TypeScript',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: new Date().toISOString(),
+    allLanguages: ['TypeScript', 'CSS', 'JavaScript'],
+  },
+  {
+    id: -6,
+    name: 'Travel_Genie_App',
+    description: 'TravelGenie mobile app built with Expo, React Native, and a Node/Express + MongoDB backend for trip planning, expense tracking, hotels, transport details, reviews, and notifications.',
+    html_url: 'https://github.com/MacroMaster101/Travel_Genie_App',
+    homepage: '',
+    topics: ['expo', 'react-native', 'mobile-app', 'nodejs', 'express', 'mongodb'],
+    language: 'JavaScript',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-05-22T18:07:50Z',
+    allLanguages: ['JavaScript'],
+  },
+  {
     id: -1,
     name: 'Travel_Genie',
-    description: 'TravelGenie is a full-stack AI-powered travel planner — itineraries, expense tracking, hotel stays, JWT auth, role-based admin.',
+    description: 'TravelGenie is a full-stack AI-powered travel planner — React + Vite frontend, Express API, PostgreSQL/Neon data layer, Flask ML service, JWT auth, and role-based admin.',
     html_url: 'https://github.com/MacroMaster101/Travel_Genie',
     homepage: 'https://travel-genie-da1t.vercel.app',
     topics: ['react', 'nodejs', 'express', 'postgresql', 'jwt'],
@@ -104,6 +150,66 @@ const FALLBACK_REPOS: GithubRepo[] = [
     stargazers_count: 0, forks_count: 0, fork: true,
     updated_at: new Date().toISOString(),
     allLanguages: ['JavaScript', 'TypeScript', 'CSS'],
+  },
+  {
+    id: -7,
+    name: 'discord_music_bot',
+    description: 'Self-hostable Discord music bot powered by yt-dlp with YouTube playback, queue management, loop/shuffle controls, rotating presence, Docker, and Nixpacks support.',
+    html_url: 'https://github.com/MacroMaster101/discord_music_bot',
+    homepage: '',
+    topics: ['discord', 'discord-bot', 'discord-js', 'docker'],
+    language: 'JavaScript',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-05-22T13:29:09Z',
+    allLanguages: ['JavaScript'],
+  },
+  {
+    id: -8,
+    name: 'discord-youtube-status-bot',
+    description: 'Discord bot service for YouTube status updates, built with Python, Discord.py, and Flask.',
+    html_url: 'https://github.com/MacroMaster101/discord-youtube-status-bot',
+    homepage: '',
+    topics: ['discord', 'discord-bot', 'discord-py', 'flask'],
+    language: 'Python',
+    stargazers_count: 0, forks_count: 0, fork: true,
+    updated_at: '2026-05-22T13:15:42Z',
+    allLanguages: ['Python', 'HTML'],
+  },
+  {
+    id: -9,
+    name: 'discord-j4fn-server-bot',
+    description: 'Discord bot for gaming servers with moderation, anti-spam automod, welcome embeds, fun commands, polls, and a web admin dashboard.',
+    html_url: 'https://github.com/MacroMaster101/discord-j4fn-server-bot',
+    homepage: '',
+    topics: ['discord', 'discord-bot', 'discord-py', 'flask'],
+    language: 'Python',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-05-22T09:07:08Z',
+    allLanguages: ['Python', 'HTML'],
+  },
+  {
+    id: -10,
+    name: 'home-tutor',
+    description: 'Java-based Home Tutor web application configured with Maven and Smart Tomcat deployment settings.',
+    html_url: 'https://github.com/MacroMaster101/home-tutor',
+    homepage: '',
+    topics: ['java', 'maven', 'web-app'],
+    language: 'Java',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-05-26T07:06:52Z',
+    allLanguages: ['Java'],
+  },
+  {
+    id: -11,
+    name: 'Saloon_Vero',
+    description: 'Saloon Vero project repository.',
+    html_url: 'https://github.com/MacroMaster101/Saloon_Vero',
+    homepage: '',
+    topics: ['web-app'],
+    language: null,
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-05-25T06:05:35Z',
+    allLanguages: [],
   },
   {
     id: -2,
@@ -141,11 +247,52 @@ const FALLBACK_REPOS: GithubRepo[] = [
     updated_at: new Date().toISOString(),
     allLanguages: ['TypeScript', 'CSS', 'JavaScript'],
   },
+  {
+    id: -12,
+    name: 'kavisha_portfolio',
+    description: 'Earlier personal portfolio built with React, Vite, and CSS.',
+    html_url: 'https://github.com/MacroMaster101/kavisha_portfolio',
+    homepage: '',
+    topics: ['portfolio', 'react', 'vite'],
+    language: 'CSS',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: new Date().toISOString(),
+    allLanguages: ['CSS', 'JavaScript'],
+  },
 ];
+
+const mergeRepos = (repos: GithubRepo[]) => {
+  const byName = new Map<string, GithubRepo>();
+
+  for (const repo of FALLBACK_REPOS) {
+    byName.set(repo.name.toLowerCase(), repo);
+  }
+
+  for (const repo of repos) {
+    byName.set(repo.name.toLowerCase(), {
+      ...byName.get(repo.name.toLowerCase()),
+      ...repo,
+      allLanguages: repo.allLanguages?.length
+        ? repo.allLanguages
+        : byName.get(repo.name.toLowerCase())?.allLanguages ?? [],
+    });
+  }
+
+  return Array.from(byName.values()).sort((a, b) => {
+    const featuredA = FEATURED_NAMES.indexOf(a.name.toLowerCase());
+    const featuredB = FEATURED_NAMES.indexOf(b.name.toLowerCase());
+    if (featuredA !== -1 || featuredB !== -1) {
+      if (featuredA === -1) return 1;
+      if (featuredB === -1) return -1;
+      return featuredA - featuredB;
+    }
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
+};
 
 export function Projects() {
   // Start with bundled fallback so something is always visible
-  const [repos, setRepos] = useState<GithubRepo[]>(FALLBACK_REPOS);
+  const [repos, setRepos] = useState<GithubRepo[]>(() => mergeRepos([]));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -157,7 +304,7 @@ export function Projects() {
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp < CACHE_TTL) {
-          setRepos(data);
+          setRepos(mergeRepos(data));
           setLoading(false);
           return;
         }
@@ -188,10 +335,11 @@ export function Projects() {
             return { ...repo, language, allLanguages };
           }),
         );
+        const mergedRepos = mergeRepos(withLanguages);
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: withLanguages, timestamp: Date.now() }));
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mergedRepos, timestamp: Date.now() }));
         } catch { /* ignore */ }
-        setRepos(withLanguages);
+        setRepos(mergedRepos);
       })
       .catch(() => {
         // On API failure, keep showing the bundled fallback we initialized with.
@@ -238,6 +386,7 @@ export function Projects() {
           <div className="space-y-24 md:space-y-32">
             {featured.map((repo, idx) => {
               const isReverse = idx % 2 === 1;
+              const techStack = repoStack(repo);
               return (
                 <motion.article
                   key={repo.id}
@@ -281,9 +430,9 @@ export function Projects() {
                     <div className="md:bg-slate-50 dark:md:bg-slate-900 md:p-6 md:rounded-md md:shadow-xl text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
                       {repo.description || 'A project I built — check the repo for details.'}
                     </div>
-                    {repo.allLanguages.length > 0 && (
+                    {techStack.length > 0 && (
                       <ul className={`mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[12px] text-slate-500 dark:text-slate-500 ${isReverse ? 'justify-start' : 'md:justify-end'}`}>
-                        {repo.allLanguages.slice(0, 5).map(lang => (
+                        {techStack.slice(0, 6).map(lang => (
                           <li key={lang}>{lang}</li>
                         ))}
                       </ul>
@@ -361,85 +510,88 @@ export function Projects() {
             )}
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-              {visibleRest.map((repo, idx) => (
-                <motion.article
-                  key={repo.id}
-                  initial={false}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
-                  whileHover={{ y: -7 }}
-                  className="group relative flex flex-col rounded-md bg-slate-50 dark:bg-slate-900 shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-shadow overflow-hidden"
-                >
-                  <a
-                    href={repo.homepage || repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="relative block aspect-[16/9] overflow-hidden bg-white dark:bg-slate-800"
+              {visibleRest.map((repo, idx) => {
+                const techStack = repoStack(repo);
+                return (
+                  <motion.article
+                    key={repo.id}
+                    initial={false}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.1 }}
+                    transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
+                    whileHover={{ y: -7 }}
+                    className="group relative flex flex-col rounded-md bg-slate-50 dark:bg-slate-900 shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-shadow overflow-hidden"
                   >
-                    <img
-                      src={repoImage(repo.name)}
-                      alt={repo.name}
-                      loading="lazy"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const fallback = `https://opengraph.githubassets.com/1/MacroMaster101/${repo.name}?cb=${OG_CACHE_BUST}`;
-                        if (img.src !== fallback) img.src = fallback;
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </a>
-                  <header className="flex items-center justify-between px-6 pt-5 mb-4">
-                    <Folder size={24} className="text-brand-primary" />
-                    <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                      {repo.stargazers_count > 0 && (
-                        <span className="flex items-center gap-1 text-xs"><Star size={13} /> {repo.stargazers_count}</span>
-                      )}
-                      {repo.forks_count > 0 && (
-                        <span className="flex items-center gap-1 text-xs"><GitFork size={13} /> {repo.forks_count}</span>
-                      )}
-                      <a
-                        href={repo.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="GitHub"
-                        className="hover:text-brand-primary transition-colors"
-                      >
-                        <Github size={18} />
-                      </a>
-                      {repo.homepage && (
+                    <a
+                      href={repo.homepage || repo.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative block aspect-[16/9] overflow-hidden bg-white dark:bg-slate-800"
+                    >
+                      <img
+                        src={repoImage(repo.name)}
+                        alt={repo.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          const fallback = `https://opengraph.githubassets.com/1/MacroMaster101/${repo.name}?cb=${OG_CACHE_BUST}`;
+                          if (img.src !== fallback) img.src = fallback;
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </a>
+                    <header className="flex items-center justify-between px-6 pt-5 mb-4">
+                      <Folder size={24} className="text-brand-primary" />
+                      <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+                        {repo.stargazers_count > 0 && (
+                          <span className="flex items-center gap-1 text-xs"><Star size={13} /> {repo.stargazers_count}</span>
+                        )}
+                        {repo.forks_count > 0 && (
+                          <span className="flex items-center gap-1 text-xs"><GitFork size={13} /> {repo.forks_count}</span>
+                        )}
                         <a
-                          href={repo.homepage}
+                          href={repo.html_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label="Live demo"
+                          aria-label="GitHub"
                           className="hover:text-brand-primary transition-colors"
                         >
-                          <ExternalLink size={18} />
+                          <Github size={18} />
                         </a>
+                        {repo.homepage && (
+                          <a
+                            href={repo.homepage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Live demo"
+                            className="hover:text-brand-primary transition-colors"
+                          >
+                            <ExternalLink size={18} />
+                          </a>
+                        )}
+                      </div>
+                    </header>
+
+                    <div className="flex flex-col flex-1 px-6 pb-6">
+                      <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-brand-primary transition-colors">
+                        <a href={repo.homepage || repo.html_url} target="_blank" rel="noopener noreferrer">
+                          {formatName(repo.name)}
+                        </a>
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3 flex-1">
+                        {repo.description || 'No description provided.'}
+                      </p>
+                      {techStack.length > 0 && (
+                        <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500 dark:text-slate-500">
+                          {techStack.slice(0, 5).map(lang => (
+                            <li key={lang}>{lang}</li>
+                          ))}
+                        </ul>
                       )}
                     </div>
-                  </header>
-
-                  <div className="flex flex-col flex-1 px-6 pb-6">
-                    <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-brand-primary transition-colors">
-                      <a href={repo.homepage || repo.html_url} target="_blank" rel="noopener noreferrer">
-                        {formatName(repo.name)}
-                      </a>
-                    </h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3 flex-1">
-                      {repo.description || 'No description provided.'}
-                    </p>
-                    {repo.allLanguages.length > 0 && (
-                      <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500 dark:text-slate-500">
-                        {repo.allLanguages.slice(0, 4).map(lang => (
-                          <li key={lang}>{lang}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </motion.article>
-              ))}
+                  </motion.article>
+                );
+              })}
             </div>
 
             {filteredRest.length > 6 && (

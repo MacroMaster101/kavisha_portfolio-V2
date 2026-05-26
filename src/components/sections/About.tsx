@@ -8,7 +8,18 @@ const stats = [
   { value: 'LK', label: 'Based in Sri Lanka' },
 ];
 
-const skills = ['Java', 'Python', 'JavaScript', 'React', 'Node.js', 'PostgreSQL'];
+const skills = [
+  'TypeScript',
+  'Next.js',
+  'React Native',
+  'Expo',
+  'React',
+  'Node.js',
+  'Supabase',
+  'Neon',
+  'PostgreSQL',
+  'Python',
+];
 
 export function About() {
   return (
