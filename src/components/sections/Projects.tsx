@@ -87,30 +87,82 @@ const FEATURED_NAMES = [
   'kavisha_portfolio-v2',
 ].map(n => n.toLowerCase());
 
-// Optional per-repo image overrides. Keys are lowercased repo names.
-// Drop a file in public/projects/ and reference it as `${BASE_URL}projects/filename.ext`.
-// If a repo isn't listed here, falls back to GitHub's social preview / OG image.
-//
-// Why use local overrides at all? GitHub's opengraph CDN caches social previews for
-// ~6+ hours and is slow to pick up new uploads. Local images update instantly.
-const IMAGE_OVERRIDES: Record<string, string> = {
-  'discord-youtube-status-bot': `${import.meta.env.BASE_URL}projects/discord-youtube-status-bot.jpg`,
-  'kavisha_portfolio-v2': `${import.meta.env.BASE_URL}projects/kavisha_portfolio-V2.png`,
-  'kavisha_portfolio': `${import.meta.env.BASE_URL}projects/kavisha_portfolio.png`,
-  // Add more here as you save images to public/projects/:
-  // 'travel_genie': `${import.meta.env.BASE_URL}projects/travel_genie.png`,
-  // 'travel_genie_app': `${import.meta.env.BASE_URL}projects/travel_genie_app.png`,
-  // 'web-voting-system': `${import.meta.env.BASE_URL}projects/web-voting-system.png`,
-  // 'denguerisk': `${import.meta.env.BASE_URL}projects/denguerisk.png`,
+// Optional local-image overrides for files that do not match the repo name.
+// Repo-name files in public/projects are discovered automatically.
+const LOCAL_IMAGE_OVERRIDES: Record<string, string> = {
+  // 'repo-name': `${import.meta.env.BASE_URL}projects/custom-file-name.png`,
 };
 
-// GitHub's OG image CDN caches for ~6 hours. Bump this string after uploading a
-// new social preview to force browsers to refetch.
-const OG_CACHE_BUST = 'v2';
+// GitHub repository social-preview images exposed from each repo page's og:image.
+// These are used after local uploads and before generated GitHub graph cards.
+const REPO_SOCIAL_IMAGES: Record<string, string> = {
+  'just-for-fun-website': 'https://repository-images.githubusercontent.com/1101865931/679749db-6a3b-4cbc-982c-edaf00b54d94',
+  'travel_genie_app': 'https://repository-images.githubusercontent.com/1240803395/00b10c14-befb-4204-95c5-aff2973c1eb1',
+  'discord_music_bot': 'https://repository-images.githubusercontent.com/1111201356/c97a3b09-2120-4148-b682-4cf1b5d8427b',
+  'discord-youtube-status-bot': 'https://repository-images.githubusercontent.com/1246466961/27512341-f653-40e8-be94-04e6dbb8135f',
+  'discord-j4fn-server-bot': 'https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62',
+  'kavisha_portfolio': 'https://repository-images.githubusercontent.com/1133475431/d2968bf8-d80c-4f3f-9531-876d30c53def',
+};
 
-const repoImage = (repoName: string) =>
-  IMAGE_OVERRIDES[repoName.toLowerCase()] ||
-  `https://opengraph.githubassets.com/1/MacroMaster101/${repoName}?cb=${OG_CACHE_BUST}`;
+const PROJECT_IMAGE_EXTENSIONS = ['webp', 'png', 'jpg', 'jpeg'];
+
+// GitHub's OG image CDN caches aggressively. Bump this string after uploading a
+// new repository social preview so GitHub regenerates the image URL.
+const OG_CACHE_BUST = 'v5';
+
+const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
+
+const githubOgImage = (repoName: string) =>
+  `https://opengraph.githubassets.com/${OG_CACHE_BUST}/MacroMaster101/${repoName}`;
+
+const repoImageCandidates = (repoName: string) => {
+  const key = repoName.toLowerCase();
+  const base = `${import.meta.env.BASE_URL}projects/`;
+  const names = unique([
+    repoName,
+    key,
+    key.replace(/_/g, '-'),
+    key.replace(/-/g, '_'),
+  ]);
+
+  return unique([
+    ...names.flatMap(name => PROJECT_IMAGE_EXTENSIONS.map(ext => `${base}${name}.${ext}`)),
+    LOCAL_IMAGE_OVERRIDES[key],
+    REPO_SOCIAL_IMAGES[key],
+    githubOgImage(repoName),
+  ]);
+};
+
+function ProjectImage({
+  repoName,
+  alt,
+  className,
+  loading,
+}: {
+  repoName: string;
+  alt: string;
+  className: string;
+  loading?: 'lazy' | 'eager';
+}) {
+  const sources = repoImageCandidates(repoName);
+  const [srcIndex, setSrcIndex] = useState(0);
+
+  useEffect(() => {
+    setSrcIndex(0);
+  }, [repoName]);
+
+  return (
+    <img
+      src={sources[srcIndex]}
+      alt={alt}
+      loading={loading}
+      onError={() => {
+        setSrcIndex(index => Math.min(index + 1, sources.length - 1));
+      }}
+      className={className}
+    />
+  );
+}
 
 // Bundled fallback for unlucky first visits (GitHub API rate-limited).
 // Mirrors data shape from the GitHub API; gets replaced as soon as a real fetch succeeds.
@@ -299,6 +351,8 @@ export function Projects() {
   const [activeCategory, setActiveCategory] = useState<Category>('All');
 
   useEffect(() => {
+    let showedCachedRepos = false;
+
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -306,7 +360,7 @@ export function Projects() {
         if (Date.now() - timestamp < CACHE_TTL) {
           setRepos(mergeRepos(data));
           setLoading(false);
-          return;
+          showedCachedRepos = true;
         }
       }
     } catch { /* ignore */ }
@@ -344,7 +398,7 @@ export function Projects() {
       .catch(() => {
         // On API failure, keep showing the bundled fallback we initialized with.
         // Only flag error if we don't even have fallback data.
-        if (repos.length === 0) setError(true);
+        if (!showedCachedRepos && repos.length === 0) setError(true);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -403,16 +457,11 @@ export function Projects() {
                     rel="noopener noreferrer"
                     className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} md:row-start-1 z-0`}
                   >
-                    <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
-                      <img
-                        src={repoImage(repo.name)}
+                    <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl">
+                      <ProjectImage
+                        repoName={repo.name}
                         alt={repo.name}
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          const fallback = `https://opengraph.githubassets.com/1/MacroMaster101/${repo.name}?cb=${OG_CACHE_BUST}`;
-                          if (img.src !== fallback) img.src = fallback;
-                        }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
                       />
                     </div>
                   </a>
@@ -526,18 +575,13 @@ export function Projects() {
                       href={repo.homepage || repo.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative block aspect-[16/9] overflow-hidden bg-white dark:bg-slate-800"
+                      className="relative block aspect-[16/9] overflow-hidden bg-slate-950"
                     >
-                      <img
-                        src={repoImage(repo.name)}
+                      <ProjectImage
+                        repoName={repo.name}
                         alt={repo.name}
                         loading="lazy"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          const fallback = `https://opengraph.githubassets.com/1/MacroMaster101/${repo.name}?cb=${OG_CACHE_BUST}`;
-                          if (img.src !== fallback) img.src = fallback;
-                        }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
                       />
                     </a>
                     <header className="flex items-center justify-between px-6 pt-5 mb-4">

@@ -63,7 +63,7 @@ npm run lint      # eslint
 |---|---|
 | Featured project order | `FEATURED_NAMES` in `src/components/sections/Projects.tsx` |
 | Project category rules | `classifyRepo()` in `src/components/sections/Projects.tsx` |
-| Custom project images | `IMAGE_OVERRIDES` in `src/components/sections/Projects.tsx` (drop files in `public/projects/`) |
+| Custom project images | Drop files in `public/projects/` named after the repo, for example `travel_genie.png`, `Travel_Genie.png`, or `travel-genie.webp`. Image order is local upload → GitHub repo social preview → generated GitHub graph card. |
 | Skill list & logos | `groups` in `src/components/sections/Skills.tsx` |
 | Hero 3D scene | `SPLINE_ROBOT` URL in `src/components/sections/Hero.tsx` |
 | Typewriter tagline | `roles` array in `src/components/sections/Hero.tsx` |
