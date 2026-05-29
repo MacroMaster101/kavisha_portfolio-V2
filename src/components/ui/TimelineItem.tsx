@@ -31,7 +31,7 @@ export function TimelineItem({
       {/* Marker */}
       <div className="absolute left-[-7px] top-1 w-3 h-3 rounded-full bg-white dark:bg-[#0a0418] border-2 border-brand-primary group-hover:scale-125 group-hover:bg-brand-primary transition-all" />
 
-      <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/70 p-6 md:p-7 hover:border-brand-primary/30 hover:shadow-lg hover:shadow-brand-primary/5 transition-all">
+      <div className="rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/70 p-6 md:p-7 hover:border-brand-primary/30 hover:shadow-lg hover:shadow-brand-primary/5 transition-all">
         <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
           <div>
             <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug mb-1">

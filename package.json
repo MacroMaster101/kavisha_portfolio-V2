@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/fetch-social-previews.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "social-previews": "node scripts/fetch-social-previews.mjs"
   },
   "dependencies": {
     "@splinetool/react-spline": "^4.1.0",

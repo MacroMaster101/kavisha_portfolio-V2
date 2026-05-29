@@ -58,7 +58,7 @@ export function ProjectCard({
       viewport={{ once: true }}
       transition={{ delay: Math.min(index * 0.05, 0.4), duration: 0.5 }}
       whileHover={{ y: -4 }}
-      className="group relative rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/70 hover:border-brand-primary/40 hover:shadow-xl hover:shadow-brand-primary/5 transition-all overflow-hidden flex flex-col"
+      className="group relative rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800/70 hover:border-brand-primary/40 hover:shadow-xl hover:shadow-brand-primary/5 transition-all overflow-hidden flex flex-col"
     >
       {/* Image */}
       <div className="aspect-[16/9] w-full bg-white dark:bg-slate-900 overflow-hidden relative">

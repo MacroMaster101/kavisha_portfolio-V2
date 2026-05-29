@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, User, Wrench, FolderGit2, Briefcase, GraduationCap,
-  Award, BookOpen, Mail, FileText, Play, Swords, ShoppingBag,
+  Award, BookOpen, Mail, FileText,
   LayoutGrid, X,
 } from 'lucide-react';
 
@@ -23,15 +23,15 @@ const hubItems = [
 // Sections used for active-state detection (real anchors only, skip 'hero').
 const detectableIds = hubItems.filter((i) => i.id !== 'hero').map((i) => i.id);
 
-// Decorative quick-icons in the collapsed bar (left and right of the center button).
-// These mirror the reference layout; they jump to relevant sections.
+// Quick icons in the collapsed bar (left and right of the center menu button).
+// Icons clearly map to their destination, with a short label under each.
 const quickLeft = [
-  { id: 'hero',     name: 'Home',  Icon: Home },
-  { id: 'projects', name: 'Work',  Icon: Play },
+  { id: 'hero',   name: 'Home',   Icon: Home },
+  { id: 'skills', name: 'Skills', Icon: Wrench },
 ] as const;
 const quickRight = [
-  { id: 'skills',  name: 'Skills', Icon: Swords },
-  { id: 'contact', name: 'Contact', Icon: ShoppingBag },
+  { id: 'projects', name: 'Work',    Icon: FolderGit2 },
+  { id: 'contact',  name: 'Contact', Icon: Mail },
 ] as const;
 
 export function BottomNav() {
@@ -144,7 +144,7 @@ export function BottomNav() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setHubOpen(false)}
-              className="fixed inset-0 z-40 bg-[#04040e]/80 backdrop-blur-md"
+              className="fixed inset-0 z-40 bg-slate-900/40 dark:bg-[#04040e]/80 backdrop-blur-md"
               aria-hidden
             />
 
@@ -157,13 +157,13 @@ export function BottomNav() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 24, scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-              className="fixed inset-x-3 bottom-[88px] z-50 rounded-3xl border border-brand-primary/30 bg-[#0c0c1c]/95 backdrop-blur-xl p-4 shadow-[0_0_50px_-8px] shadow-brand-primary/40"
+              className="fixed inset-x-3 bottom-[88px] z-50 rounded-3xl border border-slate-200/80 dark:border-brand-primary/30 bg-white/95 dark:bg-[#0c0c1c]/95 backdrop-blur-xl p-4 shadow-[0_0_50px_-8px] shadow-brand-primary/30 dark:shadow-brand-primary/40"
             >
               {/* Shimmer line */}
               <div className="absolute top-0 left-[20%] right-[20%] h-px rounded-full bg-gradient-to-r from-transparent via-brand-primary/60 to-transparent pointer-events-none" />
 
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-extrabold tracking-wider text-slate-100">NAVIGATION HUB</h2>
+                <h2 className="text-sm font-extrabold tracking-wider text-slate-900 dark:text-slate-100">NAVIGATION HUB</h2>
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded-full border border-brand-secondary/50 text-brand-secondary">KL</span>
               </div>
               <p className="font-mono text-[9px] text-slate-500 mt-0.5 mb-3.5">EXPLORE PORTFOLIO SECTIONS</p>
@@ -180,7 +180,7 @@ export function BottomNav() {
                       className={`group aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all ${
                         active
                           ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white border border-transparent shadow-[0_0_16px] shadow-brand-primary/45'
-                          : 'bg-brand-primary/[0.06] border border-brand-primary/15 text-slate-400 hover:bg-brand-primary/15 hover:text-brand-primary'
+                          : 'bg-brand-primary/[0.06] border border-brand-primary/15 text-slate-600 dark:text-slate-400 hover:bg-brand-primary/15 hover:text-brand-primary'
                       }`}
                     >
                       <Icon size={20} className="transition-transform group-hover:scale-110" />
@@ -215,18 +215,19 @@ export function BottomNav() {
         <div className="relative mx-auto max-w-[420px]">
           <div className="
             relative flex items-center justify-around
-            px-3 h-[60px]
+            px-2 h-[66px]
             rounded-3xl
-            bg-slate-900/70 dark:bg-white/[0.05]
+            bg-white/80 dark:bg-white/[0.05]
             backdrop-blur-2xl
-            border border-slate-800/50 dark:border-white/[0.08]
-            shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.08)]
+            border border-slate-200/80 dark:border-white/[0.08]
+            shadow-[0_8px_32px_-8px_rgba(2,12,27,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]
             overflow-visible
           ">
-            {/* Shimmer line at top */}
-            <div className="absolute top-0 left-[18%] right-[18%] h-px rounded-full bg-gradient-to-r from-transparent via-brand-primary/50 to-brand-secondary/50 pointer-events-none" />
+            {/* Subtle top hairline — kept faint so it doesn't cut a hard line across
+                the bar near the center button. */}
+            <div className="absolute top-0 left-[25%] right-[25%] h-px rounded-full bg-gradient-to-r from-transparent via-brand-primary/25 to-transparent pointer-events-none" />
 
-            {/* Left quick icons */}
+            {/* Left quick items (icon + label) */}
             {quickLeft.map(({ id, name, Icon }) => {
               const active = activeId === id;
               return (
@@ -235,13 +236,14 @@ export function BottomNav() {
                   href={id === 'hero' ? '#hero' : `#${id}`}
                   onClick={(e) => handleQuick(e, id)}
                   aria-label={name}
-                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+                  className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
                     active
-                      ? 'text-brand-primary bg-brand-primary/15 border border-brand-primary/35 shadow-[0_0_10px] shadow-brand-primary/30'
-                      : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
+                      ? 'text-brand-primary bg-brand-primary/12'
+                      : 'text-slate-500 dark:text-slate-500 hover:text-brand-primary'
                   }`}
                 >
                   <Icon size={18} />
+                  <span className="font-mono text-[9px] leading-none">{name}</span>
                 </a>
               );
             })}
@@ -251,10 +253,8 @@ export function BottomNav() {
               onClick={() => setHubOpen((o) => !o)}
               aria-label={hubOpen ? 'Close navigation hub' : 'Open navigation hub'}
               aria-expanded={hubOpen}
-              className={`relative -mt-5 w-12 h-12 rounded-full flex items-center justify-center text-white border border-white/20 transition-all hover:scale-110 ${
-                hubOpen
-                  ? 'bg-gradient-to-br from-brand-secondary to-brand-primary shadow-[0_0_24px] shadow-brand-secondary/60'
-                  : 'bg-gradient-to-br from-brand-primary to-brand-secondary shadow-[0_0_22px] shadow-brand-primary/60'
+              className={`relative -mt-5 w-12 h-12 rounded-full flex items-center justify-center text-white border border-white/20 transition-all hover:scale-110 bg-brand-primary shadow-[0_0_22px] shadow-brand-primary/55 ${
+                hubOpen ? 'shadow-[0_0_26px] shadow-brand-primary/70' : ''
               }`}
             >
               {/* Inner gloss */}
@@ -270,7 +270,7 @@ export function BottomNav() {
               </motion.span>
             </button>
 
-            {/* Right quick icons */}
+            {/* Right quick items (icon + label) */}
             {quickRight.map(({ id, name, Icon }) => {
               const active = activeId === id;
               return (
@@ -279,13 +279,14 @@ export function BottomNav() {
                   href={`#${id}`}
                   onClick={(e) => handleQuick(e, id)}
                   aria-label={name}
-                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+                  className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
                     active
-                      ? 'text-brand-primary bg-brand-primary/15 border border-brand-primary/35 shadow-[0_0_10px] shadow-brand-primary/30'
-                      : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
+                      ? 'text-brand-primary bg-brand-primary/12'
+                      : 'text-slate-500 dark:text-slate-500 hover:text-brand-primary'
                   }`}
                 >
                   <Icon size={18} />
+                  <span className="font-mono text-[9px] leading-none">{name}</span>
                 </a>
               );
             })}

@@ -39,7 +39,6 @@ npm run dev            # starts dev server on http://localhost:5173
 See `.env.example` — both are optional, the site falls back gracefully if missing:
 
 - `VITE_GITHUB_TOKEN` — GitHub read-only PAT (raises API rate limit from 60/hr to 5000/hr for the live projects feed)
-- `VITE_FORMSPREE_ID` — Formspree form ID for the contact form
 
 ## Scripts
 

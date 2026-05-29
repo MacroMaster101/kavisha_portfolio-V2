@@ -120,8 +120,8 @@ export function Navbar() {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'h-[70px] bg-white/95 dark:bg-[#030014]/95 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(2,12,27,0.4)] border-b border-slate-200/60 dark:border-slate-800/60'
-          : 'h-[90px] bg-white/80 dark:bg-[#030014]/80 backdrop-blur-sm'
+          ? 'h-[70px] bg-[#f6f7fb]/90 dark:bg-[#030014]/95 backdrop-blur-xl shadow-[0_8px_24px_-12px_rgba(2,12,27,0.25)] border-b border-slate-200/80 dark:border-slate-800/60'
+          : 'h-[90px] bg-[#f6f7fb]/70 dark:bg-[#030014]/80 backdrop-blur-md border-b border-slate-200/40 dark:border-transparent'
       }`}
     >
       <nav className="h-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 flex items-center justify-between">

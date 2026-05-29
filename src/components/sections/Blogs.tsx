@@ -4,7 +4,7 @@ import { BookOpen } from 'lucide-react';
 export function Blogs() {
   return (
     <Section id="blogs" num="07." title="Things I've Written">
-      <div className="relative p-8 md:p-10 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-2xl">
+      <div className="relative p-8 md:p-10 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm max-w-2xl">
         <BookOpen size={32} className="text-brand-primary mb-4" />
         <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
           Project breakdowns and engineering notes — soon.

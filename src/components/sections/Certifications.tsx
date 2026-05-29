@@ -4,7 +4,7 @@ import { Award } from 'lucide-react';
 export function Certifications() {
   return (
     <Section id="certifications" num="06." title="Certifications & Awards">
-      <div className="relative p-8 md:p-10 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-2xl">
+      <div className="relative p-8 md:p-10 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm max-w-2xl">
         <Award size={32} className="text-brand-primary mb-4" />
         <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
           On the roadmap — building first, certifying along the way.

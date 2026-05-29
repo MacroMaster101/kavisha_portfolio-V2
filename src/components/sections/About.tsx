@@ -61,7 +61,7 @@ export function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.4, delay: idx * 0.08 }}
-                className="p-3 rounded-md bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/50 transition-colors text-center"
+                className="p-3 rounded-md bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/50 transition-colors text-center"
               >
                 <p className="font-mono text-xl md:text-2xl font-bold text-brand-primary leading-none">{s.value}</p>
                 <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">{s.label}</p>

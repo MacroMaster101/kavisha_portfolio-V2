@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ExternalLink, Folder, Star, GitFork } from 'lucide-react';
 import { Section } from '../ui/Section';
 import { Github } from '../ui/BrandIcons';
+import { SOCIAL_PREVIEWS } from '../../data/socialPreviews';
 
 interface GithubRepo {
   id: number;
@@ -15,6 +16,7 @@ interface GithubRepo {
   stargazers_count: number;
   forks_count: number;
   fork: boolean;
+  private?: boolean;
   updated_at: string;
   allLanguages: string[];
 }
@@ -38,7 +40,6 @@ const REPO_STACKS: Record<string, string[]> = {
   'discord-youtube-status-bot': ['Python', 'Discord.py', 'Flask'],
   'discord-j4fn-server-bot': ['Python', 'Discord.py', 'Flask'],
   'home-tutor': ['Java', 'Maven'],
-  'saloon_vero': ['Java', 'Web App'],
   'denguerisk': ['Python', 'Pandas', 'NumPy', 'Scikit-learn'],
 };
 
@@ -72,7 +73,9 @@ function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
   return 'Other';
 }
 
-const CACHE_KEY = 'gh_repos_v4';
+// Bump this when the cached shape or fallback set changes, to discard stale caches
+// in returning visitors' browsers (e.g. one that cached a now-private repo).
+const CACHE_KEY = 'gh_repos_v5';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const GH_TOKEN = import.meta.env.VITE_GITHUB_TOKEN as string | undefined;
 const ghHeaders: HeadersInit = GH_TOKEN ? { Authorization: `Bearer ${GH_TOKEN}` } : {};
@@ -93,31 +96,15 @@ const LOCAL_IMAGE_OVERRIDES: Record<string, string> = {
   // 'repo-name': `${import.meta.env.BASE_URL}projects/custom-file-name.png`,
 };
 
-// GitHub repository social-preview images exposed from each repo page's og:image.
-// These are used after local uploads and before generated GitHub graph cards.
-const REPO_SOCIAL_IMAGES: Record<string, string> = {
-  'just-for-fun-website': 'https://repository-images.githubusercontent.com/1101865931/679749db-6a3b-4cbc-982c-edaf00b54d94',
-  'travel_genie_app': 'https://repository-images.githubusercontent.com/1240803395/00b10c14-befb-4204-95c5-aff2973c1eb1',
-  'web-voting-system': 'https://repository-images.githubusercontent.com/1179071882/d7aefbd2-d7ce-445e-9fac-26e4bf245d6b',
-  'kavisha_portfolio-v2': 'https://repository-images.githubusercontent.com/1187393630/def89815-9305-4c84-a5c0-070c9423c35e',
-  'denguerisk': 'https://repository-images.githubusercontent.com/1179074622/29e5b9d1-125a-41a8-97c2-28b88cb7a99f',
-  'home-tutor': 'https://repository-images.githubusercontent.com/1249950903/c3c387dc-44a7-4b82-8724-ae922b902cbc',
-  'discord_music_bot': 'https://repository-images.githubusercontent.com/1111201356/c97a3b09-2120-4148-b682-4cf1b5d8427b',
-  'discord-youtube-status-bot': 'https://repository-images.githubusercontent.com/1246466961/27512341-f653-40e8-be94-04e6dbb8135f',
-  'discord-j4fn-server-bot': 'https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62',
-  'kavisha_portfolio': 'https://repository-images.githubusercontent.com/1133475431/d2968bf8-d80c-4f3f-9531-876d30c53def',
-};
-
 const PROJECT_IMAGE_EXTENSIONS = ['webp', 'png', 'jpg', 'jpeg'];
 
-// GitHub's OG image CDN caches aggressively. Bump this string after uploading a
-// new repository social preview so GitHub regenerates the image URL.
-const OG_CACHE_BUST = 'v6';
-
+// A repo's UPLOADED social preview is served from repository-images.githubusercontent.com
+// (an unpredictable per-upload URL). It can't be derived client-side and the repo page is
+// CORS-blocked in the browser, so we resolve it at BUILD TIME: scripts/fetch-social-previews.mjs
+// reads each repo's og:image and writes the SOCIAL_PREVIEWS map. New repos with an uploaded
+// preview are picked up automatically on the next build — no manual editing.
+// Repos absent from the map fall back to GitHub's generated graph card.
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
-
-const githubOgImage = (repoName: string) =>
-  `https://opengraph.githubassets.com/${OG_CACHE_BUST}/MacroMaster101/${repoName}`;
 
 const repoImageCandidates = (repoName: string) => {
   const key = repoName.toLowerCase();
@@ -129,13 +116,45 @@ const repoImageCandidates = (repoName: string) => {
     key.replace(/-/g, '_'),
   ]);
 
+  // Resolution order, first that loads wins:
+  //   1. Local image in /public/projects matching the repo name (full manual control)
+  //   2. Explicit local override (LOCAL_IMAGE_OVERRIDES)
+  //   3. The repo's real uploaded social preview (SOCIAL_PREVIEWS, build-generated) —
+  //      the actual custom image, not the graph card.
+  // NOTE: we intentionally do NOT include GitHub's generated graph card here — it's an
+  // ugly white avatar/stats card that clashes with the design. Repos with none of the
+  // above get a clean branded placeholder (see ProjectImage) instead.
   return unique([
     ...names.flatMap(name => PROJECT_IMAGE_EXTENSIONS.map(ext => `${base}${name}.${ext}`)),
     LOCAL_IMAGE_OVERRIDES[key],
-    REPO_SOCIAL_IMAGES[key],
-    githubOgImage(repoName),
+    SOCIAL_PREVIEWS[key],
   ]);
 };
+
+// Branded placeholder shown when a repo has no real preview image — far nicer than
+// GitHub's generated graph card. A brand-gradient panel with the repo name + folder.
+function ProjectPlaceholder({ repoName, className }: { repoName: string; className: string }) {
+  return (
+    <div className={`${className} flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-900 via-slate-900 to-[#1a1438] relative overflow-hidden`}>
+      {/* faint grid + glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(99,102,241,0.22),transparent_70%)]" />
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(99,102,241,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.12) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+          maskImage: 'radial-gradient(circle at center, #000 30%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(circle at center, #000 30%, transparent 80%)',
+        }}
+      />
+      <Folder size={40} className="relative text-brand-primary" />
+      <span className="relative font-mono text-sm md:text-base font-semibold text-slate-200 px-4 text-center">
+        {formatName(repoName)}
+      </span>
+    </div>
+  );
+}
 
 function ProjectImage({
   repoName,
@@ -150,6 +169,12 @@ function ProjectImage({
 }) {
   const sources = repoImageCandidates(repoName);
   const [srcIndex, setSrcIndex] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  // No candidate image at all, or every candidate failed → branded placeholder.
+  if (sources.length === 0 || failed) {
+    return <ProjectPlaceholder repoName={repoName} className={className} />;
+  }
 
   return (
     <img
@@ -157,7 +182,14 @@ function ProjectImage({
       alt={alt}
       loading={loading}
       onError={() => {
-        setSrcIndex(index => Math.min(index + 1, sources.length - 1));
+        // Advance to the next candidate; if this was the last one, show the placeholder.
+        setSrcIndex(index => {
+          if (index >= sources.length - 1) {
+            setFailed(true);
+            return index;
+          }
+          return index + 1;
+        });
       }}
       className={className}
     />
@@ -252,18 +284,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     allLanguages: ['Java'],
   },
   {
-    id: -11,
-    name: 'Saloon_Vero',
-    description: 'Saloon Vero project repository.',
-    html_url: 'https://github.com/MacroMaster101/Saloon_Vero',
-    homepage: '',
-    topics: ['web-app'],
-    language: null,
-    stargazers_count: 0, forks_count: 0, fork: false,
-    updated_at: '2026-05-25T06:05:35Z',
-    allLanguages: [],
-  },
-  {
     id: -2,
     name: 'DengueRisk',
     description: 'Machine learning model classifying dengue risk levels in Sri Lankan districts from weekly case + weather data — for early outbreak prediction.',
@@ -330,16 +350,20 @@ const mergeRepos = (repos: GithubRepo[]) => {
     });
   }
 
-  return Array.from(byName.values()).sort((a, b) => {
-    const featuredA = FEATURED_NAMES.indexOf(a.name.toLowerCase());
-    const featuredB = FEATURED_NAMES.indexOf(b.name.toLowerCase());
-    if (featuredA !== -1 || featuredB !== -1) {
-      if (featuredA === -1) return 1;
-      if (featuredB === -1) return -1;
-      return featuredA - featuredB;
-    }
-    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-  });
+  return Array.from(byName.values())
+    // Final privacy guard — drop anything marked private no matter the source
+    // (live API, stale cache, or bundled fallback).
+    .filter(repo => repo.private !== true)
+    .sort((a, b) => {
+      const featuredA = FEATURED_NAMES.indexOf(a.name.toLowerCase());
+      const featuredB = FEATURED_NAMES.indexOf(b.name.toLowerCase());
+      if (featuredA !== -1 || featuredB !== -1) {
+        if (featuredA === -1) return 1;
+        if (featuredB === -1) return -1;
+        return featuredA - featuredB;
+      }
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
 };
 
 const readCachedRepos = () => {
@@ -367,13 +391,23 @@ export function Projects() {
   const [activeCategory, setActiveCategory] = useState<Category>('All');
 
   useEffect(() => {
-    fetch('https://api.github.com/users/MacroMaster101/repos?sort=updated&per_page=100', { headers: ghHeaders })
+    // Cache-bust the GitHub API call: api.github.com caches responses at its edge
+    // for up to ~60s, so a freshly made-private / renamed / deleted repo can linger.
+    // A per-load timestamp param + no-store forces a fresh list every visit, so
+    // visibility changes reflect on the site within seconds, not a minute.
+    const apiUrl =
+      `https://api.github.com/users/MacroMaster101/repos?sort=updated&per_page=100&_=${Date.now()}`;
+    fetch(apiUrl, { headers: ghHeaders, cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error('GitHub API error');
         return res.json();
       })
       .then(async (data: GithubRepo[]) => {
-        const sorted = data.sort(
+        // Defensive privacy guard: never display a repo the API marks private, even
+        // if the token happens to have private access. Public repos are the only
+        // thing that should ever appear in the portfolio.
+        const publicOnly = data.filter(repo => repo.private !== true);
+        const sorted = publicOnly.sort(
           (a, b) =>
             b.stargazers_count - a.stargazers_count ||
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
@@ -458,11 +492,16 @@ export function Projects() {
                     rel="noopener noreferrer"
                     className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} md:row-start-1 z-0`}
                   >
-                    <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl">
+                    {/* Soft brand glow behind the frame */}
+                    <div className="absolute -inset-2 rounded-2xl bg-brand-primary/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    {/* object-contain keeps the WHOLE social-preview visible (no cropping);
+                        the dark brand-gradient panel makes any letterbox margin look intentional. */}
+                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229] ring-1 ring-slate-200/70 dark:ring-white/10 shadow-[0_12px_40px_-12px_rgba(2,12,27,0.5)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)] group-hover:ring-brand-primary/40 transition-all duration-500">
                       <ProjectImage
                         repoName={repo.name}
                         alt={repo.name}
-                        className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
+                        loading="lazy"
+                        className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-700"
                       />
                     </div>
                   </a>
@@ -477,7 +516,7 @@ export function Projects() {
                         {formatName(repo.name)}
                       </a>
                     </h3>
-                    <div className="md:bg-slate-50 dark:md:bg-slate-900 md:p-6 md:rounded-md md:shadow-xl text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
+                    <div className="md:bg-white/80 dark:md:bg-slate-900/80 md:backdrop-blur-md md:p-6 md:rounded-xl md:ring-1 md:ring-slate-200/70 dark:md:ring-white/10 md:shadow-[0_12px_40px_-12px_rgba(2,12,27,0.45)] dark:md:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
                       {repo.description || 'A project I built — check the repo for details.'}
                     </div>
                     {techStack.length > 0 && (
@@ -570,13 +609,13 @@ export function Projects() {
                     viewport={{ once: true, amount: 0.1 }}
                     transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
                     whileHover={{ y: -7 }}
-                    className="group relative flex flex-col rounded-md bg-slate-50 dark:bg-slate-900 shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-shadow overflow-hidden"
+                    className="group relative flex flex-col rounded-md bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-transparent shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-shadow overflow-hidden"
                   >
                     <a
                       href={repo.homepage || repo.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative block aspect-[16/9] overflow-hidden bg-slate-950"
+                      className="relative block aspect-[16/9] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229]"
                     >
                       <ProjectImage
                         repoName={repo.name}

@@ -142,7 +142,7 @@ export function Skills() {
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.25) }}
                   whileHover={{ y: -3 }}
-                  className="group flex flex-col items-center justify-center gap-2 p-3 rounded-md bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/60 hover:shadow-[0_8px_20px_-12px] hover:shadow-brand-primary/40 transition-all"
+                  className="group flex flex-col items-center justify-center gap-2 p-3 rounded-md bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/60 hover:shadow-[0_8px_20px_-12px] hover:shadow-brand-primary/40 transition-all"
                 >
                   <div className="w-9 h-9 flex items-center justify-center">
                     {/* Light-mode variant (hidden in dark) */}

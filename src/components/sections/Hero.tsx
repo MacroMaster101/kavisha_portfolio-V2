@@ -129,7 +129,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-20 pb-16 lg:pt-24"
+      className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-28 pb-16 lg:pt-24"
     >
 
       <div className="relative w-full max-w-[1100px] mx-auto z-10 flex flex-col lg:grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">

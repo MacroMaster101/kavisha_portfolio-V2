@@ -25,6 +25,8 @@
   body {
     min-width: 320px;
     min-height: 100vh;
+    /* Guard against any decorative/absolute element causing horizontal scroll on mobile. */
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;

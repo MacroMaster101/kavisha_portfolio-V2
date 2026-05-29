@@ -14,7 +14,7 @@ import { Contact } from '../components/sections/Contact';
 
 export function Portfolio() {
   return (
-    <div className="relative bg-white dark:bg-[#030014] min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300 font-sans">
+    <div className="relative bg-[#f6f7fb] dark:bg-[#030014] min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300 font-sans">
       <PageBackground />
       <Navbar />
       <SideRails />
