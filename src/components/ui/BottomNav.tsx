@@ -88,9 +88,9 @@ export function BottomNav() {
           relative flex items-center justify-around
           px-3 h-[58px]
           rounded-3xl
-          bg-white/5 dark:bg-white/[0.04]
+          bg-slate-900/60 dark:bg-white/[0.04]
           backdrop-blur-2xl
-          border border-white/10 dark:border-white/[0.08]
+          border border-slate-800/50 dark:border-white/[0.08]
           shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]
           overflow-visible
         ">
@@ -105,7 +105,7 @@ export function BottomNav() {
                 key={id}
                 href={`#${id}`}
                 onClick={(e) => handleClick(e, id)}
-                aria-current={active ? 'true' : undefined}
+                aria-current={active ? 'location' : undefined}
                 className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all ${
                   active
                     ? 'text-brand-primary'
@@ -156,7 +156,7 @@ export function BottomNav() {
                 key={id}
                 href={`#${id}`}
                 onClick={(e) => handleClick(e, id)}
-                aria-current={active ? 'true' : undefined}
+                aria-current={active ? 'location' : undefined}
                 className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all ${
                   active
                     ? 'text-brand-primary'
