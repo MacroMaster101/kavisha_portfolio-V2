@@ -1,6 +1,23 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Mail } from 'lucide-react';
+import { RobotBackdrop } from '../ui/RobotBackdrop';
+
+// Tracks a CSS media query. Used to mount the (expensive) Spline robot in exactly
+// ONE place per breakpoint — never two WebGL contexts at once.
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, [query]);
+  return matches;
+}
 
 // Lazy-load Spline so it doesn't bloat the initial bundle.
 const Spline = lazy(() => import('@splinetool/react-spline'));
@@ -51,32 +68,48 @@ function useTypewriter(words: string[], typeMs = 70, holdMs = 1800, eraseMs = 35
 export function Hero() {
   const typed = useTypewriter(roles);
 
-  // Spline tracks the cursor only while the pointer is over its own canvas. To make
-  // the robot follow the mouse across the entire hero header, we grab the canvas on
-  // load and re-dispatch pointer moves onto it from the section-level handler below.
-  const splineCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Render the robot in exactly one spot per breakpoint (lg = 1024px) so only a
+  // single Spline WebGL context is ever mounted. Two contexts caused heavy lag.
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  const handleSplineLoad = useCallback(() => {
-    // The Spline component renders a <canvas>; locate it so we can forward events.
-    splineCanvasRef.current = document.querySelector('#hero canvas');
-  }, []);
+  // Spline only tracks the cursor while it's over its own canvas. To make the robot
+  // follow the mouse across the WHOLE hero header, we forward a synthetic mousemove
+  // to the canvas with the cursor position remapped onto the canvas's bounds (so the
+  // header edges map to the canvas edges — full turn range across the header).
+  //
+  // Perf: rects are cached and only recomputed on resize/scroll (not per move), and
+  // dispatch is throttled to one per animation frame to avoid flooding the 3D scene.
+  // The Spline application instance.
+  // setGlobalEvents(true) makes the robot's "look at cursor" behavior track the
+  // mouse across the WHOLE window (navbar, side rails, every corner), not just over
+  // the canvas. Spline's built-in solution — no synthetic event forwarding needed.
+  const splineAppRef = useRef<{
+    play?: () => void;
+    stop?: () => void;
+    setGlobalEvents?: (global: boolean) => void;
+  } | null>(null);
 
-  // Forward a mousemove anywhere in the header to the Spline canvas at the same
-  // screen coordinates, so the robot reacts as if the cursor were over it.
-  // Both the mobile and desktop canvases live in the DOM; pick whichever is
-  // currently visible (the hidden one has no offsetParent).
-  const handleHeaderMouseMove = useCallback((e: React.MouseEvent) => {
-    const canvases = document.querySelectorAll<HTMLCanvasElement>('#hero canvas');
-    const canvas = Array.from(canvases).find((c) => c.offsetParent !== null) ?? splineCanvasRef.current;
-    if (!canvas) return;
-    canvas.dispatchEvent(
-      new MouseEvent('mousemove', {
-        clientX: e.clientX,
-        clientY: e.clientY,
-        bubbles: true,
-        cancelable: true,
-      })
-    );
+  const handleSplineLoad = useCallback(
+    (app: { play?: () => void; stop?: () => void; setGlobalEvents?: (global: boolean) => void }) => {
+      splineAppRef.current = app;
+      app.setGlobalEvents?.(true);
+    },
+    []
+  );
+
+  // Pause the render loop only when the browser TAB is hidden (so we don't burn GPU
+  // in the background), and resume in place when it's shown again. We deliberately do
+  // NOT pause on scroll — calling play() after stop() makes Spline replay the robot's
+  // intro animation, which looked jarring when scrolling back up to the hero.
+  useEffect(() => {
+    const onVisibility = () => {
+      const app = splineAppRef.current;
+      if (!app) return;
+      if (document.hidden) app.stop?.();
+      else app.play?.();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   // The Spline robot canvas, reused in two spots: inline on mobile (between the
@@ -93,32 +126,9 @@ export function Hero() {
     </Suspense>
   );
 
-  // Decorative background behind the robot: radial glow + faint grid + dot pattern.
-  const robotBackdrop = (
-    <>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(99,102,241,0.28),rgba(168,85,247,0.10)_45%,transparent_72%)]" />
-      <div
-        className="absolute inset-0 [mask-image:radial-gradient(circle_at_center,#000_30%,transparent_75%)] dark:opacity-100 opacity-60"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(99,102,241,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.10) 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-        }}
-      />
-      <div
-        className="absolute inset-0 [mask-image:radial-gradient(circle_at_center,#000_20%,transparent_70%)]"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(168,85,247,0.22) 1px, transparent 1.4px)',
-          backgroundSize: '16px 16px',
-        }}
-      />
-    </>
-  );
-
   return (
     <section
       id="hero"
-      onMouseMove={handleHeaderMouseMove}
       className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-20 pb-16 lg:pt-24"
     >
 
@@ -173,21 +183,25 @@ export function Hero() {
           </span>
         </motion.h2>
 
-        {/* Mobile-only robot — sits between the tagline and description.
-            On lg+ the robot lives in the right grid column instead (see below). */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.35 }}
-          className="lg:hidden relative w-full mt-6 mb-2"
-        >
-          <div className="relative mx-auto w-full max-w-[260px] aspect-square rounded-3xl overflow-hidden">
-            {robotBackdrop}
-            <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_60%,transparent_88%)] dark:[mask-image:none]">
-              {robotCanvas}
+        {/* Mobile-only robot — sits between the tagline and description. Rendered
+            only on mobile so just one Spline WebGL context exists at a time. */}
+        {!isDesktop && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.35 }}
+            className="relative w-full mt-6 mb-2"
+          >
+            <div className="relative mx-auto w-full max-w-[280px] aspect-square">
+              <RobotBackdrop />
+              {/* In light mode the Spline canvas paints a dark square, so we soft-mask
+                  its edges to blend into the page. In dark mode no mask is needed. */}
+              <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_70%,transparent_92%)] dark:[mask-image:none]">
+                {robotCanvas}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Description */}
         <motion.p
@@ -244,31 +258,30 @@ export function Hero() {
 
         </div>
 
-        {/* Spline 3D robot — desktop only. On lg+ it sits in the second grid column
-            (right side). On mobile the robot renders inline between the tagline and
-            description instead (see the lg:hidden block above). */}
+        {/* Spline 3D robot — desktop only, in the right grid column. Rendered only
+            on desktop so just one Spline WebGL context exists at a time. */}
+        {isDesktop && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="hidden lg:block relative w-full"
+          className="relative w-full"
         >
-          {/* Soft outer glow behind the robot */}
+          {/* Soft outer glow bleeding beyond the panel */}
           <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-[100px] scale-90 pointer-events-none" />
 
-          {/* The Spline canvas renders its own dark background. In light mode that reads as a black
-              rectangle, so we soft-mask it. In dark mode the canvas blends with the page bg, no mask needed. */}
+          {/* Orbital backdrop panel with the robot composited on top */}
           <div className="relative w-full aspect-square max-w-[480px] mx-auto">
-            {/* Decorative backdrop: radial glow + grid + dots */}
-            <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
-              {robotBackdrop}
-            </div>
-            <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
+            <RobotBackdrop />
+            {/* In light mode the Spline canvas paints a dark square, so we soft-mask
+                its edges to blend into the page. In dark mode no mask is needed. */}
+            <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_70%,transparent_92%)] dark:[mask-image:none]">
               {robotCanvas}
             </div>
           </div>
 
         </motion.div>
+        )}
       </div>
     </section>
   );

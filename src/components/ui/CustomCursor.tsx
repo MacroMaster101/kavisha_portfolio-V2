@@ -13,30 +13,35 @@ export const CustomCursor = () => {
   const trailY = useSpring(mouseY, springConfig);
 
   useEffect(() => {
+    // mouseX/mouseY are motion values (set imperatively, no re-render). We only
+    // flip the React `isVisible`/`isHovering` state on actual changes, and we read
+    // the latest visibility via a ref so this effect runs once (stable listeners).
+    let visible = false;
+    const setVisibleOnce = (v: boolean) => {
+      if (visible === v) return;
+      visible = v;
+      setIsVisible(v);
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
+      setVisibleOnce(true);
     };
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const isInteractive =
-        target.tagName === 'A' ||
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.closest('a') ||
-        target.closest('button') ||
-        target.getAttribute('role') === 'button';
-      setIsHovering(!!isInteractive);
+      const isInteractive = !!(
+        target.closest('a, button, input, textarea, [role="button"]')
+      );
+      setIsHovering(isInteractive);
     };
 
-    const handleMouseLeaveWindow = () => setIsVisible(false);
-    const handleMouseEnterWindow = () => setIsVisible(true);
+    const handleMouseLeaveWindow = () => setVisibleOnce(false);
+    const handleMouseEnterWindow = () => setVisibleOnce(true);
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseover', handleMouseOver, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeaveWindow);
     document.addEventListener('mouseenter', handleMouseEnterWindow);
 
@@ -46,7 +51,7 @@ export const CustomCursor = () => {
       document.removeEventListener('mouseleave', handleMouseLeaveWindow);
       document.removeEventListener('mouseenter', handleMouseEnterWindow);
     };
-  }, [mouseX, mouseY, isVisible]);
+  }, [mouseX, mouseY]);
 
   if (!isVisible) return null;
 
