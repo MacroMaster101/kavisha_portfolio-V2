@@ -98,6 +98,10 @@ const LOCAL_IMAGE_OVERRIDES: Record<string, string> = {
 const REPO_SOCIAL_IMAGES: Record<string, string> = {
   'just-for-fun-website': 'https://repository-images.githubusercontent.com/1101865931/679749db-6a3b-4cbc-982c-edaf00b54d94',
   'travel_genie_app': 'https://repository-images.githubusercontent.com/1240803395/00b10c14-befb-4204-95c5-aff2973c1eb1',
+  'web-voting-system': 'https://repository-images.githubusercontent.com/1179071882/d7aefbd2-d7ce-445e-9fac-26e4bf245d6b',
+  'kavisha_portfolio-v2': 'https://repository-images.githubusercontent.com/1187393630/def89815-9305-4c84-a5c0-070c9423c35e',
+  'denguerisk': 'https://repository-images.githubusercontent.com/1179074622/29e5b9d1-125a-41a8-97c2-28b88cb7a99f',
+  'home-tutor': 'https://repository-images.githubusercontent.com/1249950903/c3c387dc-44a7-4b82-8724-ae922b902cbc',
   'discord_music_bot': 'https://repository-images.githubusercontent.com/1111201356/c97a3b09-2120-4148-b682-4cf1b5d8427b',
   'discord-youtube-status-bot': 'https://repository-images.githubusercontent.com/1246466961/27512341-f653-40e8-be94-04e6dbb8135f',
   'discord-j4fn-server-bot': 'https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62',
@@ -108,7 +112,7 @@ const PROJECT_IMAGE_EXTENSIONS = ['webp', 'png', 'jpg', 'jpeg'];
 
 // GitHub's OG image CDN caches aggressively. Bump this string after uploading a
 // new repository social preview so GitHub regenerates the image URL.
-const OG_CACHE_BUST = 'v5';
+const OG_CACHE_BUST = 'v6';
 
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
 
