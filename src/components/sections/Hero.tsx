@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Mail } from 'lucide-react';
 
@@ -51,6 +51,34 @@ function useTypewriter(words: string[], typeMs = 70, holdMs = 1800, eraseMs = 35
 export function Hero() {
   const typed = useTypewriter(roles);
 
+  // Spline tracks the cursor only while the pointer is over its own canvas. To make
+  // the robot follow the mouse across the entire hero header, we grab the canvas on
+  // load and re-dispatch pointer moves onto it from the section-level handler below.
+  const splineCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const handleSplineLoad = useCallback(() => {
+    // The Spline component renders a <canvas>; locate it so we can forward events.
+    splineCanvasRef.current = document.querySelector('#hero canvas');
+  }, []);
+
+  // Forward a mousemove anywhere in the header to the Spline canvas at the same
+  // screen coordinates, so the robot reacts as if the cursor were over it.
+  // Both the mobile and desktop canvases live in the DOM; pick whichever is
+  // currently visible (the hidden one has no offsetParent).
+  const handleHeaderMouseMove = useCallback((e: React.MouseEvent) => {
+    const canvases = document.querySelectorAll<HTMLCanvasElement>('#hero canvas');
+    const canvas = Array.from(canvases).find((c) => c.offsetParent !== null) ?? splineCanvasRef.current;
+    if (!canvas) return;
+    canvas.dispatchEvent(
+      new MouseEvent('mousemove', {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+  }, []);
+
   // The Spline robot canvas, reused in two spots: inline on mobile (between the
   // tagline and description) and in the right column on desktop.
   const robotCanvas = (
@@ -61,7 +89,7 @@ export function Hero() {
         </div>
       }
     >
-      <Spline scene={SPLINE_ROBOT} />
+      <Spline scene={SPLINE_ROBOT} onLoad={handleSplineLoad} />
     </Suspense>
   );
 
@@ -90,6 +118,7 @@ export function Hero() {
   return (
     <section
       id="hero"
+      onMouseMove={handleHeaderMouseMove}
       className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-20 pb-16 lg:pt-24"
     >
 
@@ -224,13 +253,19 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="hidden lg:block relative w-full"
         >
-          {/* Soft glow behind the robot */}
+          {/* Soft outer glow behind the robot */}
           <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-[100px] scale-90 pointer-events-none" />
 
           {/* The Spline canvas renders its own dark background. In light mode that reads as a black
               rectangle, so we soft-mask it. In dark mode the canvas blends with the page bg, no mask needed. */}
-          <div className="relative w-full aspect-square max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
-            {robotCanvas}
+          <div className="relative w-full aspect-square max-w-[480px] mx-auto">
+            {/* Decorative backdrop: radial glow + grid + dots */}
+            <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
+              {robotBackdrop}
+            </div>
+            <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
+              {robotCanvas}
+            </div>
           </div>
 
         </motion.div>
