@@ -1,22 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import { User, Wrench, FolderGit2, Briefcase, GraduationCap, Award, BookOpen, Mail, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { User, FolderGit2, Mail, FileText } from 'lucide-react';
 
 const navItems = [
-  { id: 'about', name: 'About', Icon: User },
-  { id: 'skills', name: 'Skills', Icon: Wrench },
-  { id: 'projects', name: 'Projects', Icon: FolderGit2 },
-  { id: 'experience', name: 'Experience', Icon: Briefcase },
-  { id: 'education', name: 'Education', Icon: GraduationCap },
-  { id: 'certifications', name: 'Certs', Icon: Award },
-  { id: 'blogs', name: 'Writing', Icon: BookOpen },
+  { id: 'about',   name: 'About',   Icon: User },
+  { id: 'projects', name: 'Work',   Icon: FolderGit2 },
+  // center K button goes here in JSX
   { id: 'contact', name: 'Contact', Icon: Mail },
-];
+] as const;
 
 export function BottomNav() {
   const [activeId, setActiveId] = useState<string>('about');
   const [visible, setVisible] = useState(false);
-  const listRef = useRef<HTMLUListElement>(null);
-  const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   // Track which section is in view by measuring scroll position against section bounds.
   // IntersectionObserver was unreliable for short sections (Skills, Projects, Experience),
@@ -76,21 +70,6 @@ export function BottomNav() {
     };
   }, []);
 
-  // Auto-scroll the bottom nav horizontally so the active chip is centered.
-  useEffect(() => {
-    if (!activeId) return;
-    const list = listRef.current;
-    const item = itemRefs.current.get(activeId);
-    if (!list || !item) return;
-
-    const listRect = list.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-    const targetScrollLeft =
-      list.scrollLeft + (itemRect.left - listRect.left) - (listRect.width / 2) + (itemRect.width / 2);
-
-    list.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
-  }, [activeId]);
-
   const handleClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -103,53 +82,119 @@ export function BottomNav() {
         visible ? 'translate-y-0 opacity-100' : 'translate-y-[140%] opacity-0 pointer-events-none'
       }`}
     >
-      <div className="relative mx-auto max-w-[640px] rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_-8px_rgba(2,12,27,0.4)] dark:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.6)]">
-        {/* Horizontal scroll-snap rail for nav items + Resume */}
-        <ul ref={listRef} className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto scrollbar-none">
-          {navItems.map(({ id, name, Icon }) => {
+      <div className="relative mx-auto max-w-[420px]">
+        {/* Glass container */}
+        <div className="
+          relative flex items-center justify-around
+          px-3 h-[58px]
+          rounded-3xl
+          bg-white/5 dark:bg-white/[0.04]
+          backdrop-blur-2xl
+          border border-white/10 dark:border-white/[0.08]
+          shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]
+          overflow-visible
+        ">
+          {/* Shimmer line at top of glass */}
+          <div className="absolute top-0 left-[15%] right-[15%] h-px rounded-full bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+
+          {/* About + Work (first 2 items) */}
+          {navItems.slice(0, 2).map(({ id, name, Icon }) => {
             const active = activeId === id;
             return (
-              <li
+              <a
                 key={id}
-                ref={(el) => {
-                  if (el) itemRefs.current.set(id, el);
-                  else itemRefs.current.delete(id);
-                }}
-                className="shrink-0"
+                href={`#${id}`}
+                onClick={(e) => handleClick(e, id)}
+                aria-current={active ? 'true' : undefined}
+                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all ${
+                  active
+                    ? 'text-brand-primary'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
+                }`}
               >
-                <a
-                  href={`#${id}`}
-                  onClick={(e) => handleClick(e, id)}
-                  aria-current={active ? 'true' : undefined}
-                  className={`group flex flex-col items-center gap-0.5 px-3 py-2 rounded-full transition-all ${
-                    active
-                      ? 'bg-brand-primary text-white shadow-[0_4px_12px_-2px] shadow-brand-primary/50'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10'
-                  }`}
-                >
-                  <Icon size={16} />
-                  <span className="font-mono text-[9px] leading-none">{name}</span>
-                </a>
-              </li>
+                <div className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${
+                  active
+                    ? 'bg-brand-primary/20 border border-brand-primary/40 shadow-[0_0_12px] shadow-brand-primary/30'
+                    : 'bg-transparent'
+                }`}>
+                  <Icon size={15} />
+                </div>
+                <span className="font-mono text-[9px] leading-none">{name}</span>
+              </a>
             );
           })}
 
-          {/* Visual divider before Resume */}
-          <li className="shrink-0 w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1" aria-hidden />
-
-          {/* Resume button */}
-          <li className="snap-center shrink-0">
+          {/* Center K floater */}
+          <div className="flex flex-col items-center gap-1 relative" style={{ marginTop: '-20px' }}>
             <a
-              href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-full text-brand-primary border border-brand-primary/50 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all"
+              href="#hero"
+              onClick={(e) => handleClick(e, 'hero')}
+              aria-label="Home"
+              className="
+                w-10 h-10 rounded-full
+                bg-gradient-to-br from-brand-primary to-brand-secondary
+                flex items-center justify-center
+                font-mono font-bold text-white text-sm
+                shadow-[0_0_20px] shadow-brand-primary/60
+                border border-white/15
+                hover:scale-110 transition-transform
+                relative
+              "
             >
-              <FileText size={16} />
-              <span className="font-mono text-[9px] leading-none">Resume</span>
+              {/* Inner gloss */}
+              <span className="absolute inset-0.5 rounded-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
+              K
             </a>
-          </li>
-        </ul>
+            <span className="font-mono text-[9px] leading-none text-slate-400 dark:text-slate-500">Home</span>
+          </div>
+
+          {/* Contact (3rd item) */}
+          {navItems.slice(2).map(({ id, name, Icon }) => {
+            const active = activeId === id;
+            return (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={(e) => handleClick(e, id)}
+                aria-current={active ? 'true' : undefined}
+                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all ${
+                  active
+                    ? 'text-brand-primary'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
+                }`}
+              >
+                <div className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${
+                  active
+                    ? 'bg-brand-primary/20 border border-brand-primary/40 shadow-[0_0_12px] shadow-brand-primary/30'
+                    : 'bg-transparent'
+                }`}>
+                  <Icon size={15} />
+                </div>
+                <span className="font-mono text-[9px] leading-none">{name}</span>
+              </a>
+            );
+          })}
+
+          {/* CV pill */}
+          <a
+            href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+              flex flex-col items-center gap-1 px-2.5 py-1.5
+              rounded-xl
+              border border-brand-primary/45
+              bg-brand-primary/8
+              text-brand-primary
+              hover:bg-brand-primary/15 transition-all
+            "
+          >
+            <div className="w-8 h-8 flex items-center justify-center">
+              <FileText size={15} />
+            </div>
+            <span className="font-mono text-[9px] leading-none">CV</span>
+          </a>
+        </div>
       </div>
     </nav>
   );
