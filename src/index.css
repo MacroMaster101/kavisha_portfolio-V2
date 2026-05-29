@@ -50,6 +50,11 @@
   }
 }
 
+/* Sliding sweep used by image loading skeletons (see ProjectImage in Projects.tsx). */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 /* Custom scrollbar — outside @layer so it isn't overridden by Tailwind preflight */
 
 ::-webkit-scrollbar {

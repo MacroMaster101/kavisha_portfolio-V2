@@ -170,6 +170,7 @@ function ProjectImage({
   const sources = repoImageCandidates(repoName);
   const [srcIndex, setSrcIndex] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   // No candidate image at all, or every candidate failed → branded placeholder.
   if (sources.length === 0 || failed) {
@@ -177,22 +178,32 @@ function ProjectImage({
   }
 
   return (
-    <img
-      src={sources[srcIndex]}
-      alt={alt}
-      loading={loading}
-      onError={() => {
-        // Advance to the next candidate; if this was the last one, show the placeholder.
-        setSrcIndex(index => {
-          if (index >= sources.length - 1) {
-            setFailed(true);
-            return index;
-          }
-          return index + 1;
-        });
-      }}
-      className={className}
-    />
+    <>
+      {/* Shimmer skeleton shown until the image finishes downloading. Sits behind
+          the (initially transparent) image; the image fades in over it on load. */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-slate-800 overflow-hidden" aria-hidden="true">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        </div>
+      )}
+      <img
+        src={sources[srcIndex]}
+        alt={alt}
+        loading={loading}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          // Advance to the next candidate; if this was the last one, show the placeholder.
+          setSrcIndex(index => {
+            if (index >= sources.length - 1) {
+              setFailed(true);
+              return index;
+            }
+            return index + 1;
+          });
+        }}
+        className={`${className} transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      />
+    </>
   );
 }
 
