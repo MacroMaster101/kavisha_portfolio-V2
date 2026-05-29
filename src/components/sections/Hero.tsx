@@ -54,10 +54,10 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-28 pb-16 lg:pt-24"
+      className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-20 pb-16 lg:pt-24"
     >
 
-      <div className="relative w-full max-w-[1100px] mx-auto z-10 grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
+      <div className="relative w-full max-w-[1100px] mx-auto z-10 flex flex-col-reverse lg:grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
         <div>
         {/* Status pill */}
         <motion.div
@@ -177,7 +177,7 @@ export function Hero() {
 
           {/* The Spline canvas renders its own dark background. In light mode that reads as a black
               rectangle, so we soft-mask it. In dark mode the canvas blends with the page bg, no mask needed. */}
-          <div className="relative w-full aspect-square max-w-[220px] sm:max-w-[300px] lg:max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
+          <div className="relative w-full aspect-square max-w-[180px] sm:max-w-[300px] lg:max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
             <Suspense
               fallback={
                 <div className="w-full h-full flex items-center justify-center">
