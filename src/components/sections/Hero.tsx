@@ -51,13 +51,49 @@ function useTypewriter(words: string[], typeMs = 70, holdMs = 1800, eraseMs = 35
 export function Hero() {
   const typed = useTypewriter(roles);
 
+  // The Spline robot canvas, reused in two spots: inline on mobile (between the
+  // tagline and description) and in the right column on desktop.
+  const robotCanvas = (
+    <Suspense
+      fallback={
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full border-2 border-brand-primary/30 border-t-brand-primary animate-spin" />
+        </div>
+      }
+    >
+      <Spline scene={SPLINE_ROBOT} />
+    </Suspense>
+  );
+
+  // Decorative background behind the robot: radial glow + faint grid + dot pattern.
+  const robotBackdrop = (
+    <>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(99,102,241,0.28),rgba(168,85,247,0.10)_45%,transparent_72%)]" />
+      <div
+        className="absolute inset-0 [mask-image:radial-gradient(circle_at_center,#000_30%,transparent_75%)] dark:opacity-100 opacity-60"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(99,102,241,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.10) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+        }}
+      />
+      <div
+        className="absolute inset-0 [mask-image:radial-gradient(circle_at_center,#000_20%,transparent_70%)]"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(168,85,247,0.22) 1px, transparent 1.4px)',
+          backgroundSize: '16px 16px',
+        }}
+      />
+    </>
+  );
+
   return (
     <section
       id="hero"
       className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-20 pb-16 lg:pt-24"
     >
 
-      <div className="relative w-full max-w-[1100px] mx-auto z-10 flex flex-col-reverse lg:grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
+      <div className="relative w-full max-w-[1100px] mx-auto z-10 flex flex-col lg:grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
         <div>
         {/* Status pill */}
         <motion.div
@@ -107,6 +143,22 @@ export function Hero() {
             <span className="inline-block w-[3px] h-[0.85em] align-middle ml-1 bg-brand-primary animate-pulse" />
           </span>
         </motion.h2>
+
+        {/* Mobile-only robot — sits between the tagline and description.
+            On lg+ the robot lives in the right grid column instead (see below). */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="lg:hidden relative w-full mt-6 mb-2"
+        >
+          <div className="relative mx-auto w-full max-w-[260px] aspect-square rounded-3xl overflow-hidden">
+            {robotBackdrop}
+            <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_60%,transparent_88%)] dark:[mask-image:none]">
+              {robotCanvas}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Description */}
         <motion.p
@@ -163,30 +215,22 @@ export function Hero() {
 
         </div>
 
-        {/* Spline 3D robot — interactive, follows cursor.
-            On lg+ it sits in the second grid column (right side).
-            On mobile/tablet it appears below the text (smaller). */}
+        {/* Spline 3D robot — desktop only. On lg+ it sits in the second grid column
+            (right side). On mobile the robot renders inline between the tagline and
+            description instead (see the lg:hidden block above). */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="relative w-full"
+          className="hidden lg:block relative w-full"
         >
           {/* Soft glow behind the robot */}
           <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-[100px] scale-90 pointer-events-none" />
 
           {/* The Spline canvas renders its own dark background. In light mode that reads as a black
               rectangle, so we soft-mask it. In dark mode the canvas blends with the page bg, no mask needed. */}
-          <div className="relative w-full aspect-square max-w-[180px] sm:max-w-[300px] lg:max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
-            <Suspense
-              fallback={
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full border-2 border-brand-primary/30 border-t-brand-primary animate-spin" />
-                </div>
-              }
-            >
-              <Spline scene={SPLINE_ROBOT} />
-            </Suspense>
+          <div className="relative w-full aspect-square max-w-[480px] mx-auto [mask-image:radial-gradient(circle_at_center,#000_55%,transparent_85%)] dark:[mask-image:none]">
+            {robotCanvas}
           </div>
 
         </motion.div>

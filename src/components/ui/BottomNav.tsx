@@ -1,16 +1,43 @@
 import { useEffect, useState } from 'react';
-import { User, FolderGit2, Mail, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Home, User, Wrench, FolderGit2, Briefcase, GraduationCap,
+  Award, BookOpen, Mail, FileText, Play, Swords, ShoppingBag,
+  LayoutGrid, X,
+} from 'lucide-react';
 
-const navItems = [
-  { id: 'about',   name: 'About',   Icon: User },
-  { id: 'projects', name: 'Work',   Icon: FolderGit2 },
-  // center K button goes here in JSX
-  { id: 'contact', name: 'Contact', Icon: Mail },
+// Sections that appear in the expandable Navigation Hub grid.
+// `id` matches the section anchor; 'hero' is the top of the page.
+const hubItems = [
+  { id: 'hero',           name: 'Home',    Icon: Home },
+  { id: 'about',          name: 'About',   Icon: User },
+  { id: 'skills',         name: 'Skills',  Icon: Wrench },
+  { id: 'projects',       name: 'Work',    Icon: FolderGit2 },
+  { id: 'experience',     name: 'Exp',     Icon: Briefcase },
+  { id: 'education',      name: 'Edu',     Icon: GraduationCap },
+  { id: 'certifications', name: 'Certs',   Icon: Award },
+  { id: 'blogs',          name: 'Writing', Icon: BookOpen },
+  { id: 'contact',        name: 'Contact', Icon: Mail },
+] as const;
+
+// Sections used for active-state detection (real anchors only, skip 'hero').
+const detectableIds = hubItems.filter((i) => i.id !== 'hero').map((i) => i.id);
+
+// Decorative quick-icons in the collapsed bar (left and right of the center button).
+// These mirror the reference layout; they jump to relevant sections.
+const quickLeft = [
+  { id: 'hero',     name: 'Home',  Icon: Home },
+  { id: 'projects', name: 'Work',  Icon: Play },
+] as const;
+const quickRight = [
+  { id: 'skills',  name: 'Skills', Icon: Swords },
+  { id: 'contact', name: 'Contact', Icon: ShoppingBag },
 ] as const;
 
 export function BottomNav() {
   const [activeId, setActiveId] = useState<string>('about');
   const [visible, setVisible] = useState(false);
+  const [hubOpen, setHubOpen] = useState(false);
 
   // Track which section is in view by measuring scroll position against section bounds.
   // IntersectionObserver was unreliable for short sections (Skills, Projects, Experience),
@@ -18,8 +45,8 @@ export function BottomNav() {
   // the top of the viewport (minus the navbar offset).
   useEffect(() => {
     const detect = () => {
-      const sections = navItems
-        .map(({ id }) => document.getElementById(id))
+      const sections = detectableIds
+        .map((id) => document.getElementById(id))
         .filter((el): el is HTMLElement => Boolean(el));
 
       if (sections.length === 0) return;
@@ -70,132 +97,201 @@ export function BottomNav() {
     };
   }, []);
 
-  const handleClick = (e: React.MouseEvent, id: string) => {
+  // Lock body scroll while the hub overlay is open.
+  useEffect(() => {
+    if (!hubOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [hubOpen]);
+
+  // Close the hub on Escape.
+  useEffect(() => {
+    if (!hubOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setHubOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [hubOpen]);
+
+  const scrollToId = (id: string) => {
+    if (id === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleQuick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    scrollToId(id);
+  };
+
+  const handleHubNav = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    setHubOpen(false);
+    scrollToId(id);
   };
 
   return (
-    <nav
-      aria-label="Section navigation"
-      className={`lg:hidden fixed bottom-3 inset-x-3 z-40 transition-all duration-300 ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-[140%] opacity-0 pointer-events-none'
-      }`}
-    >
-      <div className="relative mx-auto max-w-[420px]">
-        {/* Glass container */}
-        <div className="
-          relative flex items-center justify-around
-          px-3 h-[58px]
-          rounded-3xl
-          bg-slate-900/60 dark:bg-white/[0.04]
-          backdrop-blur-2xl
-          border border-slate-800/50 dark:border-white/[0.08]
-          shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]
-          overflow-visible
-        ">
-          {/* Shimmer line at top of glass */}
-          <div className="absolute top-0 left-[15%] right-[15%] h-px rounded-full bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+    <div className="lg:hidden">
+      {/* ===== Expandable Navigation Hub ===== */}
+      <AnimatePresence>
+        {hubOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setHubOpen(false)}
+              className="fixed inset-0 z-40 bg-[#04040e]/80 backdrop-blur-md"
+              aria-hidden
+            />
 
-          {/* About + Work (first 2 items) */}
-          {navItems.slice(0, 2).map(({ id, name, Icon }) => {
-            const active = activeId === id;
-            return (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={(e) => handleClick(e, id)}
-                aria-current={active ? 'location' : undefined}
-                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all ${
-                  active
-                    ? 'text-brand-primary'
-                    : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
-                }`}
-              >
-                <div className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${
-                  active
-                    ? 'bg-brand-primary/20 border border-brand-primary/40 shadow-[0_0_12px] shadow-brand-primary/30'
-                    : 'bg-transparent'
-                }`}>
-                  <Icon size={15} />
-                </div>
-                <span className="font-mono text-[9px] leading-none">{name}</span>
-              </a>
-            );
-          })}
+            {/* Hub panel */}
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation hub"
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+              className="fixed inset-x-3 bottom-[88px] z-50 rounded-3xl border border-brand-primary/30 bg-[#0c0c1c]/95 backdrop-blur-xl p-4 shadow-[0_0_50px_-8px] shadow-brand-primary/40"
+            >
+              {/* Shimmer line */}
+              <div className="absolute top-0 left-[20%] right-[20%] h-px rounded-full bg-gradient-to-r from-transparent via-brand-primary/60 to-transparent pointer-events-none" />
 
-          {/* Center K floater */}
-          <div className="flex flex-col items-center gap-1 relative" style={{ marginTop: '-20px' }}>
-            <a
-              href="#hero"
-              onClick={(e) => handleClick(e, 'hero')}
-              aria-label="Home"
-              className="
-                w-10 h-10 rounded-full
-                bg-gradient-to-br from-brand-primary to-brand-secondary
-                flex items-center justify-center
-                font-mono font-bold text-white text-sm
-                shadow-[0_0_20px] shadow-brand-primary/60
-                border border-white/15
-                hover:scale-110 transition-transform
-                relative
-              "
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold tracking-wider text-slate-100">NAVIGATION HUB</h2>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full border border-brand-secondary/50 text-brand-secondary">KL</span>
+              </div>
+              <p className="font-mono text-[9px] text-slate-500 mt-0.5 mb-3.5">EXPLORE PORTFOLIO SECTIONS</p>
+
+              <div className="grid grid-cols-3 gap-2.5">
+                {hubItems.map(({ id, name, Icon }) => {
+                  const active = activeId === id;
+                  return (
+                    <a
+                      key={id}
+                      href={id === 'hero' ? '#hero' : `#${id}`}
+                      onClick={(e) => handleHubNav(e, id)}
+                      aria-current={active ? 'location' : undefined}
+                      className={`group aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all ${
+                        active
+                          ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white border border-transparent shadow-[0_0_16px] shadow-brand-primary/45'
+                          : 'bg-brand-primary/[0.06] border border-brand-primary/15 text-slate-400 hover:bg-brand-primary/15 hover:text-brand-primary'
+                      }`}
+                    >
+                      <Icon size={20} className="transition-transform group-hover:scale-110" />
+                      <span className="font-mono text-[8.5px] tracking-wide uppercase leading-none">{name}</span>
+                    </a>
+                  );
+                })}
+
+                {/* CV — spans full width */}
+                <a
+                  href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="col-span-3 flex items-center justify-center gap-2 py-3 rounded-2xl border border-brand-primary/40 bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 transition-all"
+                >
+                  <FileText size={16} />
+                  <span className="font-mono text-[11px] tracking-wide uppercase">Download CV</span>
+                </a>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ===== Collapsed bottom bar ===== */}
+      <nav
+        aria-label="Section navigation"
+        className={`fixed bottom-3 inset-x-3 z-50 transition-all duration-300 ${
+          visible ? 'translate-y-0 opacity-100' : 'translate-y-[140%] opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="relative mx-auto max-w-[420px]">
+          <div className="
+            relative flex items-center justify-around
+            px-3 h-[60px]
+            rounded-3xl
+            bg-slate-900/70 dark:bg-white/[0.05]
+            backdrop-blur-2xl
+            border border-slate-800/50 dark:border-white/[0.08]
+            shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.08)]
+            overflow-visible
+          ">
+            {/* Shimmer line at top */}
+            <div className="absolute top-0 left-[18%] right-[18%] h-px rounded-full bg-gradient-to-r from-transparent via-brand-primary/50 to-brand-secondary/50 pointer-events-none" />
+
+            {/* Left quick icons */}
+            {quickLeft.map(({ id, name, Icon }) => {
+              const active = activeId === id;
+              return (
+                <a
+                  key={id}
+                  href={id === 'hero' ? '#hero' : `#${id}`}
+                  onClick={(e) => handleQuick(e, id)}
+                  aria-label={name}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+                    active
+                      ? 'text-brand-primary bg-brand-primary/15 border border-brand-primary/35 shadow-[0_0_10px] shadow-brand-primary/30'
+                      : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
+                  }`}
+                >
+                  <Icon size={18} />
+                </a>
+              );
+            })}
+
+            {/* Center toggle button */}
+            <button
+              onClick={() => setHubOpen((o) => !o)}
+              aria-label={hubOpen ? 'Close navigation hub' : 'Open navigation hub'}
+              aria-expanded={hubOpen}
+              className={`relative -mt-5 w-12 h-12 rounded-full flex items-center justify-center text-white border border-white/20 transition-all hover:scale-110 ${
+                hubOpen
+                  ? 'bg-gradient-to-br from-brand-secondary to-brand-primary shadow-[0_0_24px] shadow-brand-secondary/60'
+                  : 'bg-gradient-to-br from-brand-primary to-brand-secondary shadow-[0_0_22px] shadow-brand-primary/60'
+              }`}
             >
               {/* Inner gloss */}
-              <span className="absolute inset-0.5 rounded-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
-              K
-            </a>
-            <span className="font-mono text-[9px] leading-none text-slate-400 dark:text-slate-500">Home</span>
-          </div>
-
-          {/* Contact (3rd item) */}
-          {navItems.slice(2).map(({ id, name, Icon }) => {
-            const active = activeId === id;
-            return (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={(e) => handleClick(e, id)}
-                aria-current={active ? 'location' : undefined}
-                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all ${
-                  active
-                    ? 'text-brand-primary'
-                    : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
-                }`}
+              <span className="absolute inset-0.5 rounded-full bg-gradient-to-br from-white/25 to-transparent pointer-events-none" />
+              <motion.span
+                key={hubOpen ? 'x' : 'grid'}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="relative flex items-center justify-center"
               >
-                <div className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${
-                  active
-                    ? 'bg-brand-primary/20 border border-brand-primary/40 shadow-[0_0_12px] shadow-brand-primary/30'
-                    : 'bg-transparent'
-                }`}>
-                  <Icon size={15} />
-                </div>
-                <span className="font-mono text-[9px] leading-none">{name}</span>
-              </a>
-            );
-          })}
+                {hubOpen ? <X size={22} /> : <LayoutGrid size={20} />}
+              </motion.span>
+            </button>
 
-          {/* CV pill */}
-          <a
-            href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="
-              flex flex-col items-center gap-1 px-2.5 py-1.5
-              rounded-xl
-              border border-brand-primary/45
-              bg-brand-primary/8
-              text-brand-primary
-              hover:bg-brand-primary/15 transition-all
-            "
-          >
-            <div className="w-8 h-8 flex items-center justify-center">
-              <FileText size={15} />
-            </div>
-            <span className="font-mono text-[9px] leading-none">CV</span>
-          </a>
+            {/* Right quick icons */}
+            {quickRight.map(({ id, name, Icon }) => {
+              const active = activeId === id;
+              return (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(e) => handleQuick(e, id)}
+                  aria-label={name}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+                    active
+                      ? 'text-brand-primary bg-brand-primary/15 border border-brand-primary/35 shadow-[0_0_10px] shadow-brand-primary/30'
+                      : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary'
+                  }`}
+                >
+                  <Icon size={18} />
+                </a>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
