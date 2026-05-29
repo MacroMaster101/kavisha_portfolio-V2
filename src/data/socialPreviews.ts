@@ -10,7 +10,7 @@ export const SOCIAL_PREVIEWS: Record<string, string> = {
   "discord-youtube-status-bot": "https://repository-images.githubusercontent.com/1246466961/27512341-f653-40e8-be94-04e6dbb8135f",
   "home-tutor": "https://repository-images.githubusercontent.com/1249950903/c3c387dc-44a7-4b82-8724-ae922b902cbc",
   "just-for-fun-website": "https://repository-images.githubusercontent.com/1101865931/1d62c29a-d8c7-4869-84dd-756c372b2c07",
-  "kavisha_portfolio": "https://repository-images.githubusercontent.com/1133475431/d2968bf8-d80c-4f3f-9531-876d30c53def",
+  "kavisha_portfolio": "https://repository-images.githubusercontent.com/1133475431/2b60a04b-c065-4002-804b-4e9149ebb684",
   "kavisha_portfolio-v2": "https://repository-images.githubusercontent.com/1187393630/def89815-9305-4c84-a5c0-070c9423c35e",
   "travel_genie_app": "https://repository-images.githubusercontent.com/1240803395/00b10c14-befb-4204-95c5-aff2973c1eb1",
   "web-voting-system": "https://repository-images.githubusercontent.com/1179071882/d7aefbd2-d7ce-445e-9fac-26e4bf245d6b"

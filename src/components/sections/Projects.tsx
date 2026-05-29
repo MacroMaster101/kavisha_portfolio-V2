@@ -507,7 +507,7 @@ export function Projects() {
                     <div className="absolute -inset-2 rounded-2xl bg-brand-primary/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     {/* object-contain keeps the WHOLE social-preview visible (no cropping);
                         the dark brand-gradient panel makes any letterbox margin look intentional. */}
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229] ring-1 ring-slate-200/70 dark:ring-white/10 shadow-[0_12px_40px_-12px_rgba(2,12,27,0.5)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)] group-hover:ring-brand-primary/40 transition-all duration-500">
+                    <div className="relative aspect-[2/1] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229] ring-1 ring-slate-200/70 dark:ring-white/10 shadow-[0_12px_40px_-12px_rgba(2,12,27,0.5)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)] group-hover:ring-brand-primary/40 transition-all duration-500">
                       <ProjectImage
                         repoName={repo.name}
                         alt={repo.name}
@@ -626,7 +626,7 @@ export function Projects() {
                       href={repo.homepage || repo.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative block aspect-[16/9] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229]"
+                      className="relative block aspect-[2/1] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229]"
                     >
                       <ProjectImage
                         repoName={repo.name}
