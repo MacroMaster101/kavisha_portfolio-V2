@@ -11,7 +11,7 @@ export const SOCIAL_PREVIEWS: Record<string, string> = {
   "home-tutor": "https://repository-images.githubusercontent.com/1249950903/c3c387dc-44a7-4b82-8724-ae922b902cbc",
   "just-for-fun-website": "https://repository-images.githubusercontent.com/1101865931/1d62c29a-d8c7-4869-84dd-756c372b2c07",
   "kavisha_portfolio": "https://repository-images.githubusercontent.com/1133475431/2b60a04b-c065-4002-804b-4e9149ebb684",
-  "kavisha_portfolio-v2": "https://repository-images.githubusercontent.com/1187393630/def89815-9305-4c84-a5c0-070c9423c35e",
+  "kavisha_portfolio-v2": "https://repository-images.githubusercontent.com/1276894842/bb7b4bf3-c065-4692-84f2-520186cd3fa8",
   "saloon_vero_website": "https://repository-images.githubusercontent.com/1248869385/f7143b64-785e-4cf4-9d3e-28cc1a0448b3",
   "stremio_discord_rich_presence": "https://repository-images.githubusercontent.com/1258308482/5e5f4667-39b8-42a9-b39a-498e56bd0fa5",
   "travel_genie": "https://repository-images.githubusercontent.com/1219954621/614682d9-723c-4ef7-8402-4e198faef8b4",
