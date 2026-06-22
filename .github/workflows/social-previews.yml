@@ -1,0 +1,49 @@
+name: Refresh social previews
+
+# Keeps src/data/socialPreviews.ts in sync with the social-preview images
+# uploaded to your GitHub repos. Runs the generator on a schedule (and on demand),
+# and commits the result only when it actually changes. The commit triggers
+# Vercel's normal auto-deploy, so new previews go live with no manual steps.
+
+on:
+  schedule:
+    # Daily at 06:00 UTC. Adjust the cron if you want a different cadence.
+    - cron: '0 6 * * *'
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write # needed to push the updated file back
+
+concurrency:
+  group: social-previews
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Regenerate social previews
+        env:
+          # Built-in token — raises the GitHub API rate limit. No setup required.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/fetch-social-previews.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/data/socialPreviews.ts; then
+            echo "No social-preview changes."
+            exit 0
+          fi
+          git config user.name "MacroMaster101"
+          git config user.email "lakshan.kavishatt@gmail.com"
+          git add src/data/socialPreviews.ts
+          git commit -m "chore: refresh social previews"
+          git push
