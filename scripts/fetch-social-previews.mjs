@@ -31,8 +31,16 @@ const headers = {
 function extractCustomPreview(html) {
   const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
   if (!match) return null;
-  const url = match[1];
-  return url.includes('repository-images.githubusercontent.com') ? url : null;
+  let url = match[1];
+  if (!url.includes('repository-images.githubusercontent.com')) return null;
+
+  // Strip query parameters to remove temporary access tokens, AWS credentials, and JWT secrets
+  url = url.split('?')[0];
+
+  // Strip internal bucket path prefixes (e.g. /github-production-repository-image-32fea6/)
+  url = url.replace(/\/github-production-repository-image-[^/]+\//, '/');
+
+  return url;
 }
 
 async function main() {
