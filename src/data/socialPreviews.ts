@@ -9,6 +9,7 @@ export const SOCIAL_PREVIEWS: Record<string, string> = {
   "discord-j4fn-server-bot": "https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62",
   "discord-youtube-status-bot": "https://repository-images.githubusercontent.com/1246466961/27512341-f653-40e8-be94-04e6dbb8135f",
   "home-tutor": "https://repository-images.githubusercontent.com/1249950903/c3c387dc-44a7-4b82-8724-ae922b902cbc",
+  "job-hunting-tracker": "https://repository-images.githubusercontent.com/1327400924/f2716e23-a010-4a0b-b543-212df1362542",
   "just-for-fun-website": "https://repository-images.githubusercontent.com/1101865931/1d62c29a-d8c7-4869-84dd-756c372b2c07",
   "kavisha_portfolio": "https://repository-images.githubusercontent.com/1133475431/2b60a04b-c065-4002-804b-4e9149ebb684",
   "kavisha_portfolio-v2": "https://repository-images.githubusercontent.com/1276894842/bb7b4bf3-c065-4692-84f2-520186cd3fa8",
