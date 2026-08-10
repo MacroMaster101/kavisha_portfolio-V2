@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, MotionConfig } from 'framer-motion';
+import { MotionConfig } from 'framer-motion';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CustomCursor } from './components/ui/CustomCursor';
 import { Loader } from './components/ui/Loader';
@@ -34,16 +34,9 @@ function App() {
       <MotionConfig reducedMotion="user">
         {loading && <Loader onFinish={finishLoading} />}
         <CustomCursor />
-        <motion.div
-          inert={loading ? true : undefined}
-          aria-hidden={loading || undefined}
-          initial={false}
-          animate={{ opacity: loading ? 0.72 : 1, scale: loading ? 0.985 : 1, filter: loading ? 'blur(4px)' : 'blur(0px)' }}
-          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-          className="origin-top will-change-[opacity,transform,filter]"
-        >
+        <div inert={loading ? true : undefined} aria-hidden={loading || undefined}>
           <Portfolio />
-        </motion.div>
+        </div>
         <Analytics />
       </MotionConfig>
     </ThemeProvider>
