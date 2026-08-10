@@ -140,7 +140,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-start lg:items-center px-6 sm:px-10 pt-28 pb-16 lg:pt-24"
+      className="relative min-h-screen overflow-hidden flex items-start lg:items-center px-6 sm:px-10 pt-28 pb-16 lg:pt-24"
     >
 
       <div className="relative w-full max-w-[1100px] mx-auto z-10 flex flex-col lg:grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
@@ -179,13 +179,13 @@ export function Hero() {
           Kavisha Liyanage.
         </motion.h1>
 
-        {/* Typewriter tagline — reserve 2 lines worth of height on mobile to avoid layout shift
-            as the typed string changes length. */}
+        {/* A fixed two-line slot prevents longer phrases from moving the robot and
+            everything below it while the typewriter cycles. */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-[clamp(28px,6vw,56px)] font-bold text-slate-500 dark:text-slate-400 leading-[1.1] tracking-tight mt-3 min-h-[2.4em] sm:min-h-[1.2em]"
+          className="h-[2.35em] overflow-hidden break-words text-[clamp(28px,6vw,56px)] font-bold text-slate-500 dark:text-slate-400 leading-[1.1] tracking-tight mt-3"
         >
           I build{' '}
           <span className="text-slate-700 dark:text-slate-200">
@@ -201,9 +201,9 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.35 }}
-            className="relative w-full mt-6 mb-2"
+            className="relative w-full mt-4 mb-2 overflow-hidden"
           >
-            <div className="relative mx-auto w-full max-w-[280px] aspect-square">
+            <div className="relative mx-auto aspect-square w-full max-w-[clamp(220px,58vw,280px)] overflow-hidden">
               <RobotBackdrop />
               {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                   its edges to blend into the page. In dark mode no mask is needed. */}

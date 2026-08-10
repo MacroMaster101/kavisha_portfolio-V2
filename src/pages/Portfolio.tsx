@@ -22,7 +22,7 @@ export function Portfolio() {
       <Navbar />
       <SideRails />
       <BottomNav />
-      <main id="main-content" className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0">
+      <main id="main-content" tabIndex={-1} className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0 focus:outline-none">
         <Hero />
         <About />
         <Skills />
