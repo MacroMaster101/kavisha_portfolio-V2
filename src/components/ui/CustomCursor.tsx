@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, useSpring, useMotionValue } from 'framer-motion';
 
 export const CustomCursor = () => {
+  const [enabled, setEnabled] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -13,6 +14,20 @@ export const CustomCursor = () => {
   const trailY = useSpring(mouseY, springConfig);
 
   useEffect(() => {
+    const finePointer = window.matchMedia('(pointer: fine)');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setEnabled(finePointer.matches && !reducedMotion.matches);
+    update();
+    finePointer.addEventListener('change', update);
+    reducedMotion.addEventListener('change', update);
+    return () => {
+      finePointer.removeEventListener('change', update);
+      reducedMotion.removeEventListener('change', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
     // mouseX/mouseY are motion values (set imperatively, no re-render). We only
     // flip the React `isVisible`/`isHovering` state on actual changes, and we read
     // the latest visibility via a ref so this effect runs once (stable listeners).
@@ -51,9 +66,9 @@ export const CustomCursor = () => {
       document.removeEventListener('mouseleave', handleMouseLeaveWindow);
       document.removeEventListener('mouseenter', handleMouseEnterWindow);
     };
-  }, [mouseX, mouseY]);
+  }, [enabled, mouseX, mouseY]);
 
-  if (!isVisible) return null;
+  if (!enabled || !isVisible) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999] hidden md:block">

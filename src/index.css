@@ -21,6 +21,16 @@
   --font-outfit: 'Inter', sans-serif;
 }
 
+:root {
+  --brand-primary: #6366f1;
+  --brand-primary-hover: #4f46e5;
+  --brand-primary-light: rgba(99, 102, 241, 0.1);
+  --brand-primary-glow: rgba(99, 102, 241, 0.5);
+  --brand-primary-glow-hover: rgba(99, 102, 241, 0.7);
+  --brand-secondary: #a855f7;
+  --brand-secondary-hover: #9333ea;
+}
+
 @layer base {
   body {
     min-width: 320px;
@@ -97,6 +107,21 @@ html.light {
 html.dark {
   scrollbar-width: thin;
   scrollbar-color: rgb(71 85 105) rgb(3 0 20);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 3px;
+  }
 }
 
 /* Hide scrollbar for the bottom nav's horizontal scroll rail */

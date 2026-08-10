@@ -122,10 +122,6 @@ export function Experience() {
         <div className="relative flex flex-col sm:flex-row gap-3">
           <a
             href="#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
-            }}
             className="group inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-mono font-medium text-white bg-brand-primary rounded hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px] hover:shadow-brand-primary/60 transition-all"
           >
             <Mail size={15} />

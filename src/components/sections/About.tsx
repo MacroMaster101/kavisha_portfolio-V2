@@ -93,8 +93,12 @@ export function About() {
             <div className="relative rounded overflow-hidden">
               <div className="absolute inset-0 bg-brand-primary/25 dark:bg-brand-primary/35 mix-blend-multiply group-hover:bg-transparent transition-colors duration-300 z-10" />
               <img
-                src={`${import.meta.env.BASE_URL}image.jpg`}
+                src={`${import.meta.env.BASE_URL}portrait.webp`}
                 alt="Kavisha Liyanage"
+                width="800"
+                height="1067"
+                loading="lazy"
+                decoding="async"
                 className="block w-full h-auto rounded group-hover:scale-[1.02] transition-transform duration-300"
               />
             </div>

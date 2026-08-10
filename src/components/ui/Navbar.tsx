@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sun, Moon, Sparkles } from 'lucide-react';
 import { useTheme } from '../../contexts/useTheme';
@@ -139,18 +139,9 @@ export function Navbar() {
     toggleTheme();
   };
 
-  const hidden = false;
-
-  const scrollTo = (e: React.MouseEvent, href: string) => {
-    e.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <>
-    <motion.header
-      animate={{ y: hidden ? -100 : 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+    <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
           ? 'h-[70px] bg-[#f6f7fb]/90 dark:bg-[#030014]/95 backdrop-blur-xl shadow-[0_8px_24px_-12px_rgba(2,12,27,0.25)] border-b border-slate-200/80 dark:border-slate-800/60'
@@ -161,7 +152,6 @@ export function Navbar() {
         {/* Logo */}
         <a
           href="#hero"
-          onClick={(e) => scrollTo(e, '#hero')}
           className="group relative flex items-center"
           aria-label="Home"
         >
@@ -185,7 +175,6 @@ export function Navbar() {
                 >
                   <a
                     href={item.href}
-                    onClick={(e) => scrollTo(e, item.href)}
                     aria-current={active ? 'location' : undefined}
                     className={`group relative flex items-baseline gap-1.5 px-3 py-2 text-[13px] transition-colors ${
                       active
@@ -314,7 +303,7 @@ export function Navbar() {
           </div>
         </div>
       </nav>
-    </motion.header>
+    </header>
     </>
   );
 }

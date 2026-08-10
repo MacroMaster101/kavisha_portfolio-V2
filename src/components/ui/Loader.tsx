@@ -186,12 +186,22 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
     };
   }, []);
 
-  // Drive progress bar / loading trigger with guaranteed display duration (minimum 3.2 seconds)
+  // Keep the branded intro brief; it is session-only and skipped for reduced motion.
   useEffect(() => {
-    const totalDuration = 3200; // 3.2 seconds minimum display time
-    const intervalTime = 30; // Update progress every 30ms
+    const totalDuration = 800;
+    const intervalTime = 25;
     const totalSteps = totalDuration / intervalTime;
     let step = 0;
+    let exitTimer: ReturnType<typeof setTimeout> | undefined;
+    let loadFallbackTimer: ReturnType<typeof setTimeout> | undefined;
+    let finished = false;
+
+    const finalize = () => {
+      if (finished) return;
+      finished = true;
+      setProgress(100);
+      exitTimer = setTimeout(() => setExiting(true), 150);
+    };
 
     const tick = setInterval(() => {
       step++;
@@ -201,23 +211,20 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
       if (step >= totalSteps) {
         clearInterval(tick);
 
-        const finalize = () => {
-          setProgress(100);
-          setTimeout(() => setExiting(true), 800);
-        };
-
-        // If the window is fully loaded, transition to 100% immediately
         if (document.readyState === 'complete') {
           finalize();
         } else {
-          // Otherwise, wait for the window load event to complete the transition
           window.addEventListener('load', finalize, { once: true });
+          loadFallbackTimer = setTimeout(finalize, 1200);
         }
       }
     }, intervalTime);
 
     return () => {
       clearInterval(tick);
+      if (exitTimer) clearTimeout(exitTimer);
+      if (loadFallbackTimer) clearTimeout(loadFallbackTimer);
+      window.removeEventListener('load', finalize);
     };
   }, []);
 
@@ -268,7 +275,8 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
 
     // Listen to resize and font load triggers to re-scan text coordinate shape
     window.addEventListener('resize', handleResize);
-    document.fonts.ready.then(handleResize);
+    let disposed = false;
+    document.fonts.ready.then(() => { if (!disposed) handleResize(); });
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = {
@@ -327,12 +335,13 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
       // Draw constellation connections
       drawConstellation(ctx, particles, maxLineDist, isDark);
 
-      animationFrameId = requestAnimationFrame(loop);
+      if (!reduce) animationFrameId = requestAnimationFrame(loop);
     };
 
     loop();
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
@@ -344,7 +353,8 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
     <AnimatePresence onExitComplete={onFinish}>
       {!exiting && (
         <motion.div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-[100] pointer-events-none flex flex-col items-center justify-center overflow-hidden"
+          aria-hidden="true"
           style={{ background: bg }}
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -381,4 +391,3 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
     </AnimatePresence>
   );
 }
-

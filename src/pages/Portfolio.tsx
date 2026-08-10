@@ -15,11 +15,14 @@ import { Contact } from '../components/sections/Contact';
 export function Portfolio() {
   return (
     <div className="relative bg-[#f6f7fb] dark:bg-[#030014] min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300 font-sans">
+      <a href="#main-content" className="fixed left-4 top-4 z-[200] -translate-y-24 rounded bg-brand-primary px-4 py-2 text-white focus:translate-y-0">
+        Skip to content
+      </a>
       <PageBackground />
       <Navbar />
       <SideRails />
       <BottomNav />
-      <main className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0">
+      <main id="main-content" className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0">
         <Hero />
         <About />
         <Skills />

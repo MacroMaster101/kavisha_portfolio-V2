@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, User, Wrench, FolderGit2, Briefcase, GraduationCap,
@@ -38,6 +38,8 @@ export function BottomNav() {
   const [activeId, setActiveId] = useState<string>('about');
   const [visible, setVisible] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
+  const hubRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   // Track which section is in view by measuring scroll position against section bounds.
   // IntersectionObserver was unreliable for short sections (Skills, Projects, Experience),
@@ -105,31 +107,41 @@ export function BottomNav() {
     return () => { document.body.style.overflow = prev; };
   }, [hubOpen]);
 
-  // Close the hub on Escape.
+  // Keep keyboard focus inside the modal hub, close on Escape, and restore focus.
   useEffect(() => {
     if (!hubOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setHubOpen(false); };
+    const toggleButton = toggleRef.current;
+    const frame = requestAnimationFrame(() => hubRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setHubOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab' || !hubRef.current) return;
+      const focusable = Array.from(
+        hubRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', onKey);
+      toggleButton?.focus();
+    };
   }, [hubOpen]);
 
-  const scrollToId = (id: string) => {
-    if (id === 'hero') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleQuick = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    scrollToId(id);
-  };
-
-  const handleHubNav = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
+  const handleHubNav = () => {
     setHubOpen(false);
-    scrollToId(id);
   };
 
   return (
@@ -150,9 +162,11 @@ export function BottomNav() {
 
             {/* Hub panel */}
             <motion.div
+              ref={hubRef}
               role="dialog"
               aria-modal="true"
               aria-label="Navigation hub"
+              tabIndex={-1}
               initial={{ opacity: 0, y: 24, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 24, scale: 0.96 }}
@@ -164,7 +178,14 @@ export function BottomNav() {
 
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-extrabold tracking-wider text-slate-900 dark:text-slate-100">NAVIGATION HUB</h2>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full border border-brand-secondary/50 text-brand-secondary">KL</span>
+                <button
+                  type="button"
+                  onClick={() => setHubOpen(false)}
+                  aria-label="Close navigation hub"
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary dark:text-slate-300"
+                >
+                  <X size={18} />
+                </button>
               </div>
               <p className="font-mono text-[9px] text-slate-500 mt-0.5 mb-3.5">EXPLORE PORTFOLIO SECTIONS</p>
 
@@ -175,7 +196,7 @@ export function BottomNav() {
                     <a
                       key={id}
                       href={id === 'hero' ? '#hero' : `#${id}`}
-                      onClick={(e) => handleHubNav(e, id)}
+                      onClick={handleHubNav}
                       aria-current={active ? 'location' : undefined}
                       className={`group aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all ${
                         active
@@ -208,6 +229,8 @@ export function BottomNav() {
       {/* ===== Collapsed bottom bar ===== */}
       <nav
         aria-label="Section navigation"
+        aria-hidden={!visible}
+        inert={!visible}
         className={`fixed bottom-3 inset-x-3 z-50 transition-all duration-300 ${
           visible ? 'translate-y-0 opacity-100' : 'translate-y-[140%] opacity-0 pointer-events-none'
         }`}
@@ -234,7 +257,6 @@ export function BottomNav() {
                 <a
                   key={id}
                   href={id === 'hero' ? '#hero' : `#${id}`}
-                  onClick={(e) => handleQuick(e, id)}
                   aria-label={name}
                   className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
                     active
@@ -250,6 +272,8 @@ export function BottomNav() {
 
             {/* Center toggle button */}
             <button
+              ref={toggleRef}
+              type="button"
               onClick={() => setHubOpen((o) => !o)}
               aria-label={hubOpen ? 'Close navigation hub' : 'Open navigation hub'}
               aria-expanded={hubOpen}
@@ -277,7 +301,6 @@ export function BottomNav() {
                 <a
                   key={id}
                   href={`#${id}`}
-                  onClick={(e) => handleQuick(e, id)}
                   aria-label={name}
                   className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
                     active

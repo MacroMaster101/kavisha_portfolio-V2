@@ -19,6 +19,7 @@ const stars = [
 ];
 
 export function RobotBackdrop() {
+  const reduceMotion = useReducedMotion() === true;
   return (
     <div
       className="absolute inset-0 pointer-events-none [--robot-glow-a:rgba(99,102,241,0.12)] [--robot-glow-b:rgba(168,85,247,0.05)] dark:[--robot-glow-a:rgba(99,102,241,0.20)] dark:[--robot-glow-b:rgba(168,85,247,0.08)]"
@@ -67,7 +68,9 @@ export function RobotBackdrop() {
             <g key={i} transform={`rotate(${o.rotate} 100 100)`}>
               <path d={ellipsePath} stroke={o.nodeColor} strokeWidth="0.7" opacity="0.55" fill="none" />
               <circle r="3" fill={o.nodeColor} style={{ filter: `drop-shadow(0 0 6px ${o.nodeColor})` }}>
-                <animateMotion dur={`${o.duration}s`} begin={`${o.delay}s`} repeatCount="indefinite" path={ellipsePath} />
+                {!reduceMotion && (
+                  <animateMotion dur={`${o.duration}s`} begin={`${o.delay}s`} repeatCount="indefinite" path={ellipsePath} />
+                )}
               </circle>
             </g>
           );
@@ -76,3 +79,4 @@ export function RobotBackdrop() {
     </div>
   );
 }
+import { useReducedMotion } from 'framer-motion';

@@ -3,65 +3,23 @@ import { motion } from 'framer-motion';
 import { ExternalLink, Folder, Star, GitFork, Download } from 'lucide-react';
 import { Section } from '../ui/Section';
 import { Github } from '../ui/BrandIcons';
-import { SOCIAL_PREVIEWS } from '../../data/socialPreviews';
+import { PROJECT_METADATA, SOCIAL_PREVIEWS } from '../../data/socialPreviews';
+import {
+  fetchPublicGithubRepos,
+  parseGithubRepoCache,
+  safeHttpUrl,
+  type GithubRepo,
+} from '../../lib/github';
 
 // Latest GitHub Release for a repo, distilled to what the card needs: a version label,
 // total downloads across all assets, and a direct download URL (primary asset, or the
 // release page if a release has no uploaded binaries — e.g. source-only tags).
-interface LatestRelease {
-  version: string;
-  url: string;
-  downloads: number;
-}
-
-interface GithubRepo {
-  id: number;
-  name: string;
-  description: string | null;
-  html_url: string;
-  homepage: string | null;
-  topics: string[];
-  language: string | null;
-  stargazers_count: number;
-  forks_count: number;
-  fork: boolean;
-  private?: boolean;
-  updated_at: string;
-  allLanguages: string[];
-  latestRelease?: LatestRelease | null;
-}
-
-// Raw shape from GET /repos/{owner}/{repo}/releases/latest (only the bits we use).
-interface GithubReleaseResponse {
-  tag_name: string;
-  name: string | null;
-  html_url: string;
-  draft: boolean;
-  prerelease: boolean;
-  assets: { browser_download_url: string; download_count: number; size: number }[];
-}
-
 const formatName = (name: string) =>
   name.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
 // Compact download-count label: 1204 → "1.2k", 980 → "980".
 const formatDownloads = (n: number) =>
   n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n);
-
-// Map the releases/latest payload onto our distilled LatestRelease, or null when there's
-// no usable published release. Picks the largest asset as the primary download (installers
-// dwarf checksums/sig files), and falls back to the release page when a tag has no binaries.
-const toLatestRelease = (r: GithubReleaseResponse | null): LatestRelease | null => {
-  if (!r || r.draft) return null;
-  const assets = r.assets ?? [];
-  const downloads = assets.reduce((sum, a) => sum + (a.download_count ?? 0), 0);
-  const primary = [...assets].sort((a, b) => b.size - a.size)[0];
-  return {
-    version: r.tag_name || r.name || 'latest',
-    url: primary?.browser_download_url ?? r.html_url,
-    downloads,
-  };
-};
 
 const CATEGORIES = ['All', 'Full Stack', 'Web', 'Mobile App', 'AI/ML', 'Discord Bot', 'Portfolio', 'Other'] as const;
 type Category = typeof CATEGORIES[number];
@@ -82,6 +40,14 @@ const REPO_STACKS: Record<string, string[]> = {
   'denguerisk': ['Python', 'Pandas', 'NumPy', 'Scikit-learn'],
 };
 
+const REPO_DESCRIPTION_OVERRIDES: Record<string, string> = {
+  'kavisha_portfolio-v2': 'Personal portfolio built with React 19, TypeScript, Vite, Tailwind CSS, Framer Motion, and a privacy-conscious public GitHub project feed.',
+};
+
+const REPO_HOMEPAGE_OVERRIDES: Record<string, string> = {
+  'kavisha_portfolio-v2': 'https://kavisha.online/',
+};
+
 const repoStack = (repo: GithubRepo) =>
   REPO_STACKS[repo.name.toLowerCase()] ?? repo.allLanguages;
 
@@ -98,12 +64,14 @@ function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
     .toLowerCase();
 
   const has = (...keys: string[]) => keys.some(k => haystack.includes(k));
+  const words = new Set(haystack.split(/[^a-z0-9+#.]+/).filter(Boolean));
+  const hasTerm = (...keys: string[]) => keys.some(k => k.length <= 3 ? words.has(k) : haystack.includes(k));
 
   if (has('portfolio')) return 'Portfolio';
-  if (has('discord', 'bot')) return 'Discord Bot';
+  if (hasTerm('discord') && hasTerm('bot')) return 'Discord Bot';
   if (has('mobile-app', 'mobile app', 'react-native', 'react native', 'flutter', 'android', 'ios', 'kotlin', 'swift', 'expo'))
     return 'Mobile App';
-  if (has('machine-learning', 'machine learning', 'ml', 'ai', 'tensorflow', 'pytorch', 'jupyter', 'data-science', 'nlp'))
+  if (hasTerm('machine-learning', 'machine learning', 'ml', 'ai', 'tensorflow', 'pytorch', 'jupyter', 'data-science', 'nlp'))
     return 'AI/ML';
   if (has('spring-boot', 'spring boot', 'express', 'nodejs', 'node.js', 'fullstack', 'full-stack', 'postgres', 'supabase', 'neon', 'prisma', 'mongodb', 'mysql', 'jwt'))
     return 'Full Stack';
@@ -114,10 +82,8 @@ function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
 
 // Bump this when the cached shape or fallback set changes, to discard stale caches
 // in returning visitors' browsers (e.g. one that cached a now-private repo).
-const CACHE_KEY = 'gh_repos_v6';
+const CACHE_KEY = 'gh_repos_v7';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
-const GH_TOKEN = import.meta.env.VITE_GITHUB_TOKEN as string | undefined;
-const ghHeaders: HeadersInit = GH_TOKEN ? { Authorization: `Bearer ${GH_TOKEN}` } : {};
 
 // Names of repos we want pinned as "Featured" (in display order, lowercased).
 // Anything matching will appear in the featured section.
@@ -135,8 +101,6 @@ const LOCAL_IMAGE_OVERRIDES: Record<string, string> = {
   // 'repo-name': `${import.meta.env.BASE_URL}projects/custom-file-name.png`,
 };
 
-const PROJECT_IMAGE_EXTENSIONS = ['webp', 'png', 'jpg', 'jpeg'];
-
 // A repo's UPLOADED social preview is served from repository-images.githubusercontent.com
 // (an unpredictable per-upload URL). It can't be derived client-side and the repo page is
 // CORS-blocked in the browser, so we resolve it at BUILD TIME: scripts/fetch-social-previews.mjs
@@ -147,24 +111,14 @@ const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)))
 
 const repoImageCandidates = (repoName: string) => {
   const key = repoName.toLowerCase();
-  const base = `${import.meta.env.BASE_URL}projects/`;
-  const names = unique([
-    repoName,
-    key,
-    key.replace(/_/g, '-'),
-    key.replace(/-/g, '_'),
-  ]);
-
   // Resolution order, first that loads wins:
-  //   1. Local image in /public/projects matching the repo name (full manual control)
-  //   2. Explicit local override (LOCAL_IMAGE_OVERRIDES)
-  //   3. The repo's real uploaded social preview (SOCIAL_PREVIEWS, build-generated) —
+  //   1. Explicit local override (LOCAL_IMAGE_OVERRIDES)
+  //   2. The repo's real uploaded social preview (SOCIAL_PREVIEWS, build-generated) —
   //      the actual custom image, not the graph card.
   // NOTE: we intentionally do NOT include GitHub's generated graph card here — it's an
   // ugly white avatar/stats card that clashes with the design. Repos with none of the
   // above get a clean branded placeholder (see ProjectImage) instead.
   return unique([
-    ...names.flatMap(name => PROJECT_IMAGE_EXTENSIONS.map(ext => `${base}${name}.${ext}`)),
     LOCAL_IMAGE_OVERRIDES[key],
     SOCIAL_PREVIEWS[key],
   ]);
@@ -258,7 +212,7 @@ const FALLBACK_REPOS: GithubRepo[] = [
     topics: ['nextjs', 'supabase', 'prisma', 'neon', 'postgresql', 'full-stack-web-development'],
     language: 'TypeScript',
     stargazers_count: 0, forks_count: 0, fork: false,
-    updated_at: new Date().toISOString(),
+    updated_at: '2026-06-01T00:00:00Z',
     allLanguages: ['TypeScript', 'CSS', 'JavaScript'],
   },
   {
@@ -282,7 +236,7 @@ const FALLBACK_REPOS: GithubRepo[] = [
     topics: ['react', 'nodejs', 'express', 'postgresql', 'jwt'],
     language: 'JavaScript',
     stargazers_count: 0, forks_count: 0, fork: true,
-    updated_at: new Date().toISOString(),
+    updated_at: '2026-05-22T18:00:00Z',
     allLanguages: ['JavaScript', 'TypeScript', 'CSS'],
   },
   {
@@ -342,7 +296,7 @@ const FALLBACK_REPOS: GithubRepo[] = [
     topics: ['machine-learning', 'python', 'data-science'],
     language: 'Python',
     stargazers_count: 0, forks_count: 0, fork: true,
-    updated_at: new Date().toISOString(),
+    updated_at: '2026-05-20T00:00:00Z',
     allLanguages: ['Python', 'Jupyter Notebook'],
   },
   {
@@ -354,7 +308,7 @@ const FALLBACK_REPOS: GithubRepo[] = [
     topics: ['java', 'spring-boot', 'react', 'security'],
     language: 'Java',
     stargazers_count: 0, forks_count: 0, fork: true,
-    updated_at: new Date().toISOString(),
+    updated_at: '2026-05-19T00:00:00Z',
     allLanguages: ['Java', 'TypeScript', 'CSS'],
   },
   {
@@ -362,11 +316,11 @@ const FALLBACK_REPOS: GithubRepo[] = [
     name: 'kavisha_portfolio-V2',
     description: 'Personal portfolio built with React 19, Vite, Tailwind v4, and framer-motion. The site you’re looking at right now.',
     html_url: 'https://github.com/MacroMaster101/kavisha_portfolio-V2',
-    homepage: 'https://kavisha-portfolio-v2.vercel.app',
+    homepage: 'https://kavisha.online',
     topics: ['react', 'vite', 'tailwindcss', 'typescript'],
     language: 'TypeScript',
     stargazers_count: 0, forks_count: 0, fork: false,
-    updated_at: new Date().toISOString(),
+    updated_at: '2026-05-18T00:00:00Z',
     allLanguages: ['TypeScript', 'CSS', 'JavaScript'],
   },
   {
@@ -378,7 +332,7 @@ const FALLBACK_REPOS: GithubRepo[] = [
     topics: ['portfolio', 'react', 'vite'],
     language: 'CSS',
     stargazers_count: 0, forks_count: 0, fork: false,
-    updated_at: new Date().toISOString(),
+    updated_at: '2026-05-17T00:00:00Z',
     allLanguages: ['CSS', 'JavaScript'],
   },
 ];
@@ -390,7 +344,15 @@ const mergeRepos = (repos: GithubRepo[]) => {
     byName.set(repo.name.toLowerCase(), repo);
   }
 
-  for (const repo of repos) {
+  for (const incoming of repos) {
+    const generated = PROJECT_METADATA[incoming.name.toLowerCase()];
+    const repo: GithubRepo = {
+      ...incoming,
+      description: REPO_DESCRIPTION_OVERRIDES[incoming.name.toLowerCase()] ?? incoming.description,
+      allLanguages: generated?.allLanguages?.length ? generated.allLanguages : incoming.allLanguages,
+      latestRelease: generated?.latestRelease ?? incoming.latestRelease,
+      homepage: REPO_HOMEPAGE_OVERRIDES[incoming.name.toLowerCase()] ?? safeHttpUrl(incoming.homepage),
+    };
     byName.set(repo.name.toLowerCase(), {
       ...byName.get(repo.name.toLowerCase()),
       ...repo,
@@ -416,86 +378,62 @@ const mergeRepos = (repos: GithubRepo[]) => {
     });
 };
 
-const readCachedRepos = () => {
+const readCachedRepos = (): GithubRepo[] | null => {
   if (typeof window === 'undefined') return null;
 
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
 
-    const { data, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp >= CACHE_TTL) return null;
-
-    return mergeRepos(data);
+    const repos = parseGithubRepoCache(cached, CACHE_TTL);
+    return repos ? mergeRepos(repos) : null;
   } catch {
+    try { localStorage.removeItem(CACHE_KEY); } catch { /* storage unavailable */ }
     return null;
   }
 };
 
 export function Projects() {
-  // Start with bundled fallback so something is always visible
-  const [repos, setRepos] = useState<GithubRepo[]>(() => readCachedRepos() ?? mergeRepos([]));
-  const [loading, setLoading] = useState(false);
+  const [initialState] = useState(() => {
+    const cached = readCachedRepos();
+    return { repos: cached ?? mergeRepos([]), hasFreshCache: cached !== null };
+  });
+  const [repos, setRepos] = useState<GithubRepo[]>(initialState.repos);
+  const [loading, setLoading] = useState(!initialState.hasFreshCache);
   const [error, setError] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
 
   useEffect(() => {
-    // Cache-bust the GitHub API call: api.github.com caches responses at its edge
-    // for up to ~60s, so a freshly made-private / renamed / deleted repo can linger.
-    // A per-load timestamp param + no-store forces a fresh list every visit, so
-    // visibility changes reflect on the site within seconds, not a minute.
-    const apiUrl =
-      `https://api.github.com/users/MacroMaster101/repos?sort=updated&per_page=100&_=${Date.now()}`;
-    fetch(apiUrl, { headers: ghHeaders, cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error('GitHub API error');
-        return res.json();
-      })
-      .then(async (data: GithubRepo[]) => {
-        // Defensive privacy guard: never display a repo the API marks private, even
-        // if the token happens to have private access. Public repos are the only
-        // thing that should ever appear in the portfolio.
-        const publicOnly = data.filter(repo => repo.private !== true);
-        const sorted = publicOnly.sort(
+    if (initialState.hasFreshCache) return;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    fetchPublicGithubRepos(controller.signal)
+      .then(data => {
+        const sorted = data.sort(
           (a, b) =>
             b.stargazers_count - a.stargazers_count ||
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
         );
-        const withLanguages = await Promise.all(
-          sorted.map(async repo => {
-            let language = repo.language;
-            let allLanguages: string[] = [];
-            try {
-              const langsRes = await fetch(`https://api.github.com/repos/MacroMaster101/${repo.name}/languages`, { headers: ghHeaders });
-              const langsData = await langsRes.json();
-              allLanguages = Object.keys(langsData).slice(0, 5);
-              if (!language && allLanguages.length > 0) language = allLanguages[0];
-            } catch { /* ignore */ }
-
-            // Latest published release, if any. 404 (no releases) is the common case and
-            // is treated as "no download button" rather than an error.
-            let latestRelease: LatestRelease | null = null;
-            try {
-              const relRes = await fetch(`https://api.github.com/repos/MacroMaster101/${repo.name}/releases/latest`, { headers: ghHeaders });
-              if (relRes.ok) latestRelease = toLatestRelease(await relRes.json());
-            } catch { /* ignore */ }
-
-            return { ...repo, language, allLanguages, latestRelease };
-          }),
-        );
-        const mergedRepos = mergeRepos(withLanguages);
+        const mergedRepos = mergeRepos(sorted);
         try {
           localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mergedRepos, timestamp: Date.now() }));
         } catch { /* ignore */ }
         setRepos(mergedRepos);
       })
-      .catch(() => {
+      .catch((reason: unknown) => {
         // On API failure, keep showing cached/bundled fallback data.
-        setError(false);
+        if (!(reason instanceof DOMException && reason.name === 'AbortError')) setError(true);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        window.clearTimeout(timeout);
+        setLoading(false);
+      });
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [initialState.hasFreshCache]);
 
   // Split into featured + rest
   const featured = FEATURED_NAMES
@@ -519,18 +457,18 @@ export function Projects() {
       {/* Featured Projects */}
       <Section id="projects" num="03." title="Some Things I've Built">
         {loading && (
-          <p className="text-slate-500 text-center py-10 font-mono text-sm">Loading projects from GitHub…</p>
+          <p className="text-slate-500 text-center pb-8 font-mono text-sm" role="status">Refreshing public projects from GitHub…</p>
         )}
         {error && (
-          <p className="text-slate-500 text-center py-10 text-sm">
-            Could not load repositories.{' '}
+          <p className="text-slate-500 text-center pb-8 text-sm" role="status">
+            Live GitHub refresh is unavailable; showing bundled project details.{' '}
             <a href="https://github.com/MacroMaster101" className="text-brand-primary hover:underline" target="_blank" rel="noopener noreferrer">
               Visit GitHub
             </a>
           </p>
         )}
 
-        {!loading && !error && featured.length > 0 && (
+        {featured.length > 0 && (
           <div className="space-y-24 md:space-y-32">
             {featured.map((repo, idx) => {
               const isReverse = idx % 2 === 1;
@@ -633,7 +571,7 @@ export function Projects() {
       </Section>
 
       {/* Other Noteworthy Projects */}
-      {!loading && !error && rest.length > 0 && (
+      {rest.length > 0 && (
         <section className="py-12 md:py-16">
           <div className="w-full max-w-[1000px] mx-auto px-6 sm:px-10">
             <div className="text-center mb-4">
@@ -656,6 +594,7 @@ export function Projects() {
                   <button
                     key={cat}
                     onClick={() => handleCategory(cat)}
+                    aria-pressed={active}
                     className={`px-4 py-1.5 text-[13px] font-mono rounded-full border transition-all ${
                       active
                         ? 'bg-brand-primary text-white border-brand-primary shadow-[0_6px_20px_-6px] shadow-brand-primary/60'

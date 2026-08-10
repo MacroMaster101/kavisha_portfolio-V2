@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Mail } from 'lucide-react';
 import { RobotBackdrop } from '../ui/RobotBackdrop';
 
@@ -34,12 +34,13 @@ const roles = [
   'machine learning models.',
 ];
 
-function useTypewriter(words: string[], typeMs = 70, holdMs = 1800, eraseMs = 35) {
+function useTypewriter(words: string[], reducedMotion: boolean, typeMs = 70, holdMs = 1800, eraseMs = 35) {
   const [text, setText] = useState('');
   const [wordIdx, setWordIdx] = useState(0);
   const [phase, setPhase] = useState<'typing' | 'holding' | 'erasing'>('typing');
 
   useEffect(() => {
+    if (reducedMotion) return;
     const current = words[wordIdx];
     let t: ReturnType<typeof setTimeout>;
 
@@ -60,17 +61,27 @@ function useTypewriter(words: string[], typeMs = 70, holdMs = 1800, eraseMs = 35
       }
     }
     return () => clearTimeout(t);
-  }, [text, phase, wordIdx, words, typeMs, holdMs, eraseMs]);
+  }, [text, phase, wordIdx, words, reducedMotion, typeMs, holdMs, eraseMs]);
 
-  return text;
+  return reducedMotion ? words[0] : text;
 }
 
 export function Hero() {
-  const typed = useTypewriter(roles);
+  const reduceMotion = useReducedMotion() === true;
+  const typed = useTypewriter(roles, reduceMotion);
+  const [robotReady, setRobotReady] = useState(false);
 
   // Render the robot in exactly one spot per breakpoint (lg = 1024px) so only a
   // single Spline WebGL context is ever mounted. Two contexts caused heavy lag.
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  // Keep the large WebGL runtime out of the critical rendering window. The visual
+  // backdrop renders immediately; the interactive scene follows once content is usable.
+  useEffect(() => {
+    if (reduceMotion) return;
+    const timer = window.setTimeout(() => setRobotReady(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, [reduceMotion]);
 
   // Spline only tracks the cursor while it's over its own canvas. To make the robot
   // follow the mouse across the WHOLE hero header, we forward a synthetic mousemove
@@ -197,7 +208,7 @@ export function Hero() {
               {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                   its edges to blend into the page. In dark mode no mask is needed. */}
               <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_70%,transparent_92%)] dark:[mask-image:none]">
-                {robotCanvas}
+                {robotReady && robotCanvas}
               </div>
             </div>
           </motion.div>
@@ -234,10 +245,6 @@ export function Hero() {
         >
           <a
             href="#projects"
-            onClick={(e) => {
-              e.preventDefault();
-              document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' });
-            }}
             className="group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm md:text-base font-mono font-medium text-white bg-brand-primary rounded hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px] hover:shadow-brand-primary/60 transition-all"
           >
             Check out my work
@@ -245,10 +252,6 @@ export function Hero() {
           </a>
           <a
             href="#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
-            }}
             className="group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm md:text-base font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-1 transition-all"
           >
             <Mail size={16} />
@@ -276,7 +279,7 @@ export function Hero() {
             {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                 its edges to blend into the page. In dark mode no mask is needed. */}
             <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_70%,transparent_92%)] dark:[mask-image:none]">
-              {robotCanvas}
+              {robotReady && robotCanvas}
             </div>
           </div>
 

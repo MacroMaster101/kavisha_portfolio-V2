@@ -16,7 +16,7 @@ export function Section({ id, num, title, children, className = '', bare = false
       id={id}
       className={`relative ${full ? 'min-h-screen flex items-center' : 'py-24 md:py-28'} ${className}`}
     >
-      <div className={`w-full ${full ? 'max-w-[1000px]' : 'max-w-[1000px]'} mx-auto px-6 sm:px-10`}>
+      <div className="w-full max-w-[1000px] mx-auto px-6 sm:px-10">
         {!bare && title && (
           <header className="flex items-center gap-3 md:gap-4 mb-12 md:mb-16">
             {num && (
