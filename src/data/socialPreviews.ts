@@ -44,8 +44,10 @@ export const PROJECT_METADATA: Record<string, {
   },
   "discord-j4fn-server-bot": {
     "allLanguages": [
-      "HTML",
       "Python",
+      "HTML",
+      "CSS",
+      "JavaScript",
       "Dockerfile"
     ],
     "latestRelease": null
