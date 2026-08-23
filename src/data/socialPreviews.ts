@@ -24,6 +24,14 @@ export const PROJECT_METADATA: Record<string, {
   allLanguages: string[];
   latestRelease?: { version: string; url: string; downloads: number } | null;
 }> = {
+  "brakmasra": {
+    "allLanguages": [
+      "TypeScript",
+      "CSS",
+      "JavaScript"
+    ],
+    "latestRelease": null
+  },
   "denguerisk": {
     "allLanguages": [
       "Jupyter Notebook",
