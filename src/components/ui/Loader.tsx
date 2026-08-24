@@ -18,14 +18,160 @@ const LOADER_MESSAGES = [
   'Building what comes next.',
 ];
 
+interface BrainNode {
+  nx: number;
+  ny: number;
+  nz: number;
+  tx: number;
+  ty: number;
+  phase: number;
+  hemisphere: -1 | 1;
+}
+
+interface BrainEdge {
+  from: number;
+  to: number;
+}
+
 interface ProjectedPoint {
   x: number;
   y: number;
   z: number;
 }
 
-function NeuralField({ dark, reduced }: { dark: boolean; reduced: boolean }) {
+function seededRandom(seed: number) {
+  let value = seed >>> 0;
+  return () => {
+    value += 0x6d2b79f5;
+    let result = value;
+    result = Math.imul(result ^ (result >>> 15), result | 1);
+    result ^= result + Math.imul(result ^ (result >>> 7), result | 61);
+    return ((result ^ (result >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function createMonogramTargets(count: number, random: () => number) {
+  const segments = [
+    { ax: -0.76, ay: -0.82, bx: -0.76, by: 0.82, weight: 0.24 },
+    { ax: -0.7, ay: 0.02, bx: -0.08, by: -0.82, weight: 0.18 },
+    { ax: -0.7, ay: 0.02, bx: -0.02, by: 0.82, weight: 0.2 },
+    { ax: 0.2, ay: -0.82, bx: 0.2, by: 0.82, weight: 0.23 },
+    { ax: 0.2, ay: 0.82, bx: 0.9, by: 0.82, weight: 0.15 },
+  ];
+  const targets: Array<{ x: number; y: number }> = [];
+
+  for (let index = 0; index < count; index++) {
+    const position = (index + 0.5) / count;
+    let start = 0;
+    const segment = segments.find((candidate) => {
+      const inside = position <= start + candidate.weight;
+      if (!inside) start += candidate.weight;
+      return inside;
+    }) ?? segments[segments.length - 1];
+    const local = Math.max(0, Math.min(1, (position - start) / segment.weight));
+    const dx = segment.bx - segment.ax;
+    const dy = segment.by - segment.ay;
+    const length = Math.hypot(dx, dy);
+    const thickness = (random() - 0.5) * 0.13;
+
+    targets.push({
+      x: segment.ax + dx * local + (-dy / length) * thickness + (random() - 0.5) * 0.025,
+      y: segment.ay + dy * local + (dx / length) * thickness + (random() - 0.5) * 0.025,
+    });
+  }
+
+  return targets;
+}
+
+function createBrainNetwork(compact: boolean) {
+  const random = seededRandom(20260824);
+  const nodes: BrainNode[] = [];
+  const targetCount = compact ? 210 : 360;
+
+  // Two overlapping lobes form the calm neural silhouette before it morphs
+  // into the KL monogram later in the loading sequence.
+  while (nodes.length < targetCount) {
+    const nx = random() * 2.2 - 1.1;
+    const ny = random() * 2 - 1;
+    const hemisphere: -1 | 1 = nx < 0 ? -1 : 1;
+    const lobeCenter = hemisphere * 0.29;
+    const inLobe = Math.pow((nx - lobeCenter) / 0.82, 2) + Math.pow((ny + 0.08) / 0.96, 2) <= 1;
+    const lowerTaper = ny < 0.52 || Math.abs(nx) < 0.62 - (ny - 0.52) * 0.82;
+    const centralFissure = Math.abs(nx) > 0.025 + Math.max(0, -ny) * 0.018;
+
+    if (!inLobe || !lowerTaper || !centralFissure) continue;
+
+    const edgeDistance = Math.max(0, 1 - Math.pow((nx - lobeCenter) / 0.82, 2) - Math.pow((ny + 0.08) / 0.96, 2));
+    nodes.push({
+      nx,
+      ny,
+      nz: (random() * 2 - 1) * Math.sqrt(edgeDistance) * 0.34,
+      tx: 0,
+      ty: 0,
+      phase: random() * Math.PI * 2,
+      hemisphere,
+    });
+  }
+
+  const targets = createMonogramTargets(targetCount, random).sort((a, b) => a.y - b.y || a.x - b.x);
+  const nodeOrder = nodes
+    .map((_, index) => index)
+    .sort((a, b) => nodes[a].ny - nodes[b].ny || nodes[a].nx - nodes[b].nx);
+  nodeOrder.forEach((nodeIndex, targetIndex) => {
+    nodes[nodeIndex].tx = targets[targetIndex].x;
+    nodes[nodeIndex].ty = targets[targetIndex].y;
+  });
+
+  const edges: BrainEdge[] = [];
+  const edgeKeys = new Set<string>();
+  nodes.forEach((node, from) => {
+    const nearest = nodes
+      .map((candidate, to) => ({
+        to,
+        distance: Math.hypot(node.nx - candidate.nx, node.ny - candidate.ny, (node.nz - candidate.nz) * 0.7),
+      }))
+      .filter(({ to, distance }) => to !== from && distance < 0.245)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, compact ? 3 : 4);
+
+    nearest.forEach(({ to }) => {
+      const key = from < to ? `${from}:${to}` : `${to}:${from}`;
+      if (edgeKeys.has(key)) return;
+      edgeKeys.add(key);
+      edges.push({ from, to });
+    });
+  });
+
+  const monogramEdges: BrainEdge[] = [];
+  const monogramEdgeKeys = new Set<string>();
+  nodes.forEach((node, from) => {
+    const nearest = nodes
+      .map((candidate, to) => ({
+        to,
+        distance: Math.hypot(node.tx - candidate.tx, node.ty - candidate.ty),
+      }))
+      .filter(({ to, distance }) => to !== from && distance < 0.19)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, compact ? 2 : 3);
+
+    nearest.forEach(({ to }) => {
+      const key = from < to ? `${from}:${to}` : `${to}:${from}`;
+      if (monogramEdgeKeys.has(key)) return;
+      monogramEdgeKeys.add(key);
+      monogramEdges.push({ from, to });
+    });
+  });
+
+  return { nodes, edges, monogramEdges };
+}
+
+function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: boolean; progress: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const progressRef = useRef(progress);
+
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,14 +186,21 @@ function NeuralField({ dark, reduced }: { dark: boolean; reduced: boolean }) {
     let pointerX: number | null = null;
     let pointerY: number | null = null;
     let touchReleaseTimer: number | undefined;
-    const rows = window.innerWidth < 640 ? 13 : 17;
-    const columns = window.innerWidth < 640 ? 22 : 30;
-    const points: ProjectedPoint[] = new Array((rows + 1) * columns);
+    let currentMorph = 0;
+    let compact = window.innerWidth < 640;
+    let network = createBrainNetwork(compact);
+    let points: ProjectedPoint[] = new Array(network.nodes.length);
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = window.innerWidth;
       height = window.innerHeight;
+      const nextCompact = width < 640;
+      if (nextCompact !== compact) {
+        compact = nextCompact;
+        network = createBrainNetwork(compact);
+        points = new Array(network.nodes.length);
+      }
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       canvas.style.width = `${width}px`;
@@ -82,97 +235,116 @@ function NeuralField({ dark, reduced }: { dark: boolean; reduced: boolean }) {
       const dx = x - pointerX;
       const dy = y - pointerY;
       const distance = Math.hypot(dx, dy);
-      const radius = Math.min(150, Math.max(90, width * 0.1));
+      const radius = Math.min(170, Math.max(92, width * 0.11));
       if (distance >= radius || distance === 0) return { x, y };
-      const force = Math.pow(1 - distance / radius, 2) * 58;
+      const force = Math.pow(1 - distance / radius, 2) * (compact ? 42 : 64);
       return {
         x: x + (dx / distance) * force,
         y: y + (dy / distance) * force,
       };
     };
 
-    const projectField = (time: number) => {
+    const projectBrain = (time: number) => {
       const centerX = width / 2;
-      const centerY = height * (width < 640 ? 0.43 : 0.46);
-      const fieldRadius = Math.min(width * (width < 640 ? 0.39 : 0.26), height * 0.32);
-      const rotationY = reduced ? -0.28 : time * 0.00018;
-      const rotationX = -0.22 + (reduced ? 0 : Math.sin(time * 0.00027) * 0.07);
-      const cosY = Math.cos(rotationY);
-      const sinY = Math.sin(rotationY);
-      const cosX = Math.cos(rotationX);
-      const sinX = Math.sin(rotationX);
+      const centerY = height * 0.47;
+      const radius = Math.min(width * (compact ? 0.43 : 0.34), height * (compact ? 0.285 : 0.36));
+      const morphRatio = Math.max(0, Math.min(1, (progressRef.current - 54) / 34));
+      currentMorph = morphRatio * morphRatio * (3 - 2 * morphRatio);
+      const calm = 1 - currentMorph;
+      const breathe = reduced ? 1 : 1 + Math.sin(time * 0.0015) * 0.016 * calm;
+      const turn = reduced ? 0.04 : Math.sin(time * 0.00042) * 0.11 * calm;
+      const cosTurn = Math.cos(turn);
+      const sinTurn = Math.sin(turn);
 
-      for (let row = 0; row <= rows; row++) {
-        const theta = (row / rows) * Math.PI;
-        for (let column = 0; column < columns; column++) {
-          const phi = (column / columns) * Math.PI * 2;
-          const waveTime = reduced ? 0.8 : time * 0.001;
-          const deformation =
-            1 +
-            Math.sin(phi * 3 + waveTime * 0.9) * Math.sin(theta * 2.2) * 0.16 +
-            Math.cos(theta * 5 - waveTime * 0.7) * 0.09 +
-            Math.sin(phi * 5 - theta * 2 + waveTime) * 0.055;
+      network.nodes.forEach((node, index) => {
+        const pulse = reduced ? 0 : Math.sin(time * 0.0011 + node.phase) * 0.016 * calm;
+        const brainX = node.nx * (breathe + pulse);
+        const brainY = node.ny * (breathe + pulse * 0.45);
+        const sourceX = brainX + (node.tx - brainX) * currentMorph;
+        const sourceY = brainY + (node.ty - brainY) * currentMorph;
+        const sourceZ = node.nz * calm;
+        const rotatedX = sourceX * cosTurn - sourceZ * sinTurn;
+        const rotatedZ = sourceX * sinTurn + sourceZ * cosTurn;
+        const perspective = 1 / (1.08 + rotatedZ * 0.12);
+        const projectedX = centerX + rotatedX * radius * perspective;
+        const projectedY = centerY + sourceY * radius * perspective;
+        const disturbed = disturb(projectedX, projectedY);
 
-          const sphereX = Math.sin(theta) * Math.cos(phi) * deformation;
-          const sphereY = Math.cos(theta) * deformation;
-          const sphereZ = Math.sin(theta) * Math.sin(phi) * deformation;
-
-          const rotatedX = sphereX * cosY - sphereZ * sinY;
-          const depthY = sphereX * sinY + sphereZ * cosY;
-          const rotatedY = sphereY * cosX - depthY * sinX;
-          const rotatedZ = sphereY * sinX + depthY * cosX;
-          const perspective = 1.12 / (1.42 + rotatedZ * 0.24);
-          const projectedX = centerX + rotatedX * fieldRadius * perspective;
-          const projectedY = centerY + rotatedY * fieldRadius * perspective;
-          const disturbed = disturb(projectedX, projectedY);
-
-          points[row * columns + column] = {
-            x: disturbed.x,
-            y: disturbed.y,
-            z: rotatedZ,
-          };
-        }
-      }
+        points[index] = { x: disturbed.x, y: disturbed.y, z: rotatedZ };
+      });
     };
 
     const draw = (time: number) => {
       context.clearRect(0, 0, width, height);
-      projectField(time);
-      context.lineWidth = dark ? 0.7 : 0.8;
+      projectBrain(time);
+      context.lineWidth = dark ? 0.72 : 0.86;
 
-      for (let row = 0; row <= rows; row++) {
-        for (let column = 0; column < columns; column++) {
-          const index = row * columns + column;
-          const point = points[index];
-          const right = points[row * columns + ((column + 1) % columns)];
-          const below = row < rows ? points[(row + 1) * columns + column] : null;
-          const depth = Math.max(0.12, Math.min(1, (point.z + 1.3) / 2.6));
-          const hue = 222 + depth * 54;
-          const lineAlpha = (dark ? 0.09 : 0.075) + depth * (dark ? 0.16 : 0.12);
-
-          context.strokeStyle = `hsla(${hue}, 90%, ${dark ? 64 : 48}%, ${lineAlpha})`;
+      const drawEdges = (edges: BrainEdge[], opacity: number) => {
+        if (opacity <= 0.01) return;
+        context.save();
+        context.globalAlpha = opacity;
+        for (const edge of edges) {
+          const from = points[edge.from];
+          const to = points[edge.to];
+          const depth = Math.max(0, Math.min(1, ((from.z + to.z) / 2 + 0.42) / 0.84));
+          const hue = 224 + depth * 54;
+          const lineAlpha = (dark ? 0.1 : 0.12) + depth * (dark ? 0.24 : 0.18);
+          context.strokeStyle = `hsla(${hue}, ${dark ? 94 : 82}%, ${dark ? 66 : 43}%, ${lineAlpha})`;
           context.beginPath();
-          context.moveTo(point.x, point.y);
-          context.lineTo(right.x, right.y);
-          if (below) {
-            context.moveTo(point.x, point.y);
-            context.lineTo(below.x, below.y);
-          }
+          context.moveTo(from.x, from.y);
+          context.lineTo(to.x, to.y);
           context.stroke();
         }
-      }
+        context.restore();
+      };
+
+      drawEdges(network.edges, 1 - currentMorph);
+      drawEdges(network.monogramEdges, currentMorph);
 
       context.globalCompositeOperation = dark ? 'lighter' : 'source-over';
-      for (const point of points) {
-        const depth = Math.max(0.08, Math.min(1, (point.z + 1.25) / 2.5));
-        const hue = 205 + depth * 76;
-        const radius = 0.75 + depth * (dark ? 1.6 : 1.35);
-        context.fillStyle = `hsla(${hue}, 94%, ${dark ? 65 : 47}%, ${0.34 + depth * 0.62})`;
+      points.forEach((point, index) => {
+        const depth = Math.max(0, Math.min(1, (point.z + 0.42) / 0.84));
+        const signal = reduced ? 0 : (Math.sin(time * 0.003 + network.nodes[index].phase) + 1) / 2;
+        const hue = 216 + depth * 70;
+        const nodeRadius = 0.8 + depth * (dark ? 1.55 : 1.35) + signal * 0.35;
+        context.shadowBlur = dark ? 5 + signal * 7 : 2 + signal * 3;
+        context.shadowColor = `hsla(${hue}, 100%, ${dark ? 68 : 45}%, .7)`;
+        context.fillStyle = `hsla(${hue}, ${dark ? 96 : 86}%, ${dark ? 68 : 42}%, ${0.48 + depth * 0.48})`;
         context.beginPath();
-        context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        context.arc(point.x, point.y, nodeRadius, 0, Math.PI * 2);
         context.fill();
-      }
+      });
+      context.shadowBlur = 0;
       context.globalCompositeOperation = 'source-over';
+
+      // The pulsing center line keeps the two calm hemispheres clearly separated.
+      const centerX = width / 2;
+      const centerY = height * 0.47;
+      const radius = Math.min(width * (compact ? 0.43 : 0.34), height * (compact ? 0.285 : 0.36));
+      const fissureGlow = reduced ? 0.46 : 0.38 + (Math.sin(time * 0.002) + 1) * 0.1;
+      const gradient = context.createLinearGradient(centerX, centerY - radius, centerX, centerY + radius);
+      gradient.addColorStop(0, 'transparent');
+      gradient.addColorStop(0.18, dark ? `rgba(129,140,248,${fissureGlow})` : `rgba(79,70,229,${fissureGlow})`);
+      gradient.addColorStop(0.78, dark ? `rgba(168,85,247,${fissureGlow})` : `rgba(126,34,206,${fissureGlow})`);
+      gradient.addColorStop(1, 'transparent');
+      if (currentMorph < 0.94) {
+        context.save();
+        context.globalAlpha = 1 - currentMorph;
+        context.strokeStyle = gradient;
+        context.lineWidth = dark ? 1.3 : 1.15;
+        context.beginPath();
+        context.moveTo(centerX, centerY - radius * 0.88);
+        context.bezierCurveTo(
+          centerX - radius * 0.065,
+          centerY - radius * 0.46,
+          centerX + radius * 0.06,
+          centerY + radius * 0.18,
+          centerX,
+          centerY + radius * 0.76,
+        );
+        context.stroke();
+        context.restore();
+      }
 
       if (!reduced && !disposed) frame = requestAnimationFrame(draw);
     };
@@ -267,13 +439,13 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
         className="absolute inset-0 opacity-60 dark:opacity-80"
         style={{
           background: dark
-            ? 'radial-gradient(circle at 50% 43%, rgba(99,102,241,.13), transparent 31%), radial-gradient(circle at 62% 50%, rgba(168,85,247,.08), transparent 28%)'
-            : 'radial-gradient(circle at 50% 43%, rgba(99,102,241,.12), transparent 31%), radial-gradient(circle at 62% 50%, rgba(168,85,247,.07), transparent 28%)',
+            ? 'radial-gradient(circle at 50% 47%, rgba(99,102,241,.16), transparent 43%), radial-gradient(circle at 62% 53%, rgba(168,85,247,.1), transparent 36%)'
+            : 'radial-gradient(circle at 50% 47%, rgba(99,102,241,.14), transparent 43%), radial-gradient(circle at 62% 53%, rgba(168,85,247,.08), transparent 36%)',
         }}
         aria-hidden="true"
       />
 
-      <NeuralField dark={dark} reduced={reduced} />
+      <NeuralBrain dark={dark} reduced={reduced} progress={progress} />
 
       <div
         className="absolute inset-0 opacity-[0.035] dark:opacity-[0.055]"
@@ -319,7 +491,7 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.6, ease: 'easeOut' }}
-          className="mt-4 text-[clamp(2.45rem,8vw,6.8rem)] font-bold leading-[0.88] tracking-[-0.065em] text-slate-950 dark:text-white"
+          className="mt-3 text-[clamp(2.55rem,8vw,7rem)] font-bold leading-[0.86] tracking-[-0.065em] text-slate-950 [text-shadow:0_2px_24px_rgba(246,247,251,.95)] dark:text-white dark:[text-shadow:0_2px_28px_rgba(3,0,20,.96)]"
         >
           Kavisha
           <br />
