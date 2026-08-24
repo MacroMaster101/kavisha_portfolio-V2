@@ -14,14 +14,46 @@ dist-ssr
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+.npmrc
+
+# Local deployment and tool state
+.vercel/
+.netlify/
+.wrangler/
+coverage/
+.eslintcache
+.vite/
+*.tsbuildinfo
+vite.config.*.timestamp-*
+
+# Local AI/editor assistants (shared project instructions may still be committed)
+.codex/
+.agents/
+.cursor/
+.continue/
+.windsurf/
+.roo/
+.aider*
+.claude/
+.superpowers/
+
+# Credentials and local service accounts
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.claude
-.superpowers
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.suo
 *.ntvs*
 *.njsproj

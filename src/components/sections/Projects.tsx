@@ -23,6 +23,7 @@ const formatDownloads = (n: number) =>
 
 const CATEGORIES = ['All', 'Full Stack', 'Web', 'Mobile App', 'AI/ML', 'Discord Bot', 'Portfolio', 'Other'] as const;
 type Category = typeof CATEGORIES[number];
+type ProjectCategory = Exclude<Category, 'All'>;
 
 // GitHub's language API only returns source languages, so these manifest-checked
 // stacks keep project chips aligned with the actual frameworks/tools in each repo.
@@ -31,6 +32,8 @@ const REPO_STACKS: Record<string, string[]> = {
   'travel_genie': ['React', 'Vite', 'Node.js', 'Express', 'PostgreSQL', 'Sequelize', 'Flask', 'Pandas', 'NumPy'],
   'travel_genie_app': ['Expo', 'React Native', 'Node.js', 'Express', 'MongoDB', 'JWT'],
   'web-voting-system': ['Spring Boot', 'React', 'Vite', 'MS SQL Server', 'JWT'],
+  'mazora-network': ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Drizzle ORM', 'Supabase Auth'],
+  'vero_salon_website': ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL'],
   'kavisha_portfolio-v2': ['React', 'TypeScript', 'Vite', 'Tailwind CSS', 'Framer Motion'],
   'kavisha_portfolio': ['React', 'Vite', 'CSS'],
   'discord_music_bot': ['Node.js', 'Discord.js', 'Docker', 'yt-dlp'],
@@ -51,7 +54,7 @@ const REPO_HOMEPAGE_OVERRIDES: Record<string, string> = {
 const repoStack = (repo: GithubRepo) =>
   REPO_STACKS[repo.name.toLowerCase()] ?? repo.allLanguages;
 
-function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
+function getRepoCategories(repo: GithubRepo): ProjectCategory[] {
   const haystack = [
     repo.name,
     repo.description ?? '',
@@ -67,39 +70,39 @@ function classifyRepo(repo: GithubRepo): Exclude<Category, 'All'> {
   const words = new Set(haystack.split(/[^a-z0-9+#.]+/).filter(Boolean));
   const hasTerm = (...keys: string[]) => keys.some(k => k.length <= 3 ? words.has(k) : haystack.includes(k));
 
-  if (has('portfolio')) return 'Portfolio';
-  if (hasTerm('discord') && hasTerm('bot')) return 'Discord Bot';
+  const categories: ProjectCategory[] = [];
+  const add = (category: ProjectCategory) => {
+    if (!categories.includes(category)) categories.push(category);
+  };
+
+  if (has('portfolio')) add('Portfolio');
+  if (hasTerm('discord') && hasTerm('bot')) add('Discord Bot');
   if (has('mobile-app', 'mobile app', 'react-native', 'react native', 'flutter', 'android', 'ios', 'kotlin', 'swift', 'expo'))
-    return 'Mobile App';
+    add('Mobile App');
   if (hasTerm('machine-learning', 'machine learning', 'ml', 'ai', 'tensorflow', 'pytorch', 'jupyter', 'data-science', 'nlp'))
-    return 'AI/ML';
+    add('AI/ML');
   if (has('spring-boot', 'spring boot', 'express', 'nodejs', 'node.js', 'fullstack', 'full-stack', 'postgres', 'supabase', 'neon', 'prisma', 'mongodb', 'mysql', 'jwt'))
-    return 'Full Stack';
+    add('Full Stack');
   if (has('react', 'vite', 'next', 'vue', 'svelte', 'tailwind', 'html', 'css', 'javascript', 'typescript', 'web'))
-    return 'Web';
-  return 'Other';
+    add('Web');
+
+  return categories.length > 0 ? categories : ['Other'];
 }
 
 // Bump this when the cached shape or fallback set changes, to discard stale caches
 // in returning visitors' browsers (e.g. one that cached a now-private repo).
-const CACHE_KEY = 'gh_repos_v7';
+const CACHE_KEY = 'gh_repos_v9';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 // Names of repos we want pinned as "Featured" (in display order, lowercased).
 // Anything matching will appear in the featured section.
 const FEATURED_NAMES = [
   'just-for-fun-website',
+  'mazora-network',
   'travel_genie',
   'travel_genie_app',
-  'web-voting-system',
-  'kavisha_portfolio-v2',
+  'vero_salon_website',
 ].map(n => n.toLowerCase());
-
-// Optional local-image overrides for files that do not match the repo name.
-// Repo-name files in public/projects are discovered automatically.
-const LOCAL_IMAGE_OVERRIDES: Record<string, string> = {
-  // 'repo-name': `${import.meta.env.BASE_URL}projects/custom-file-name.png`,
-};
 
 // A repo's UPLOADED social preview is served from repository-images.githubusercontent.com
 // (an unpredictable per-upload URL). It can't be derived client-side and the repo page is
@@ -112,16 +115,12 @@ const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)))
 const repoImageCandidates = (repoName: string) => {
   const key = repoName.toLowerCase();
   // Resolution order, first that loads wins:
-  //   1. Explicit local override (LOCAL_IMAGE_OVERRIDES)
-  //   2. The repo's real uploaded social preview (SOCIAL_PREVIEWS, build-generated) —
+  //   1. The repo's real uploaded social preview (SOCIAL_PREVIEWS, build-generated) —
   //      the actual custom image, not the graph card.
   // NOTE: we intentionally do NOT include GitHub's generated graph card here — it's an
   // ugly white avatar/stats card that clashes with the design. Repos with none of the
   // above get a clean branded placeholder (see ProjectImage) instead.
-  return unique([
-    LOCAL_IMAGE_OVERRIDES[key],
-    SOCIAL_PREVIEWS[key],
-  ]);
+  return unique([SOCIAL_PREVIEWS[key]]);
 };
 
 // Branded placeholder shown when a repo has no real preview image — far nicer than
@@ -203,6 +202,30 @@ function ProjectImage({
 // Bundled fallback for unlucky first visits (GitHub API rate-limited).
 // Mirrors data shape from the GitHub API; gets replaced as soon as a real fetch succeeds.
 const FALLBACK_REPOS: GithubRepo[] = [
+  {
+    id: -13,
+    name: 'Mazora-Network',
+    description: 'The official Mazora Network community platform — a production-ready Minecraft server website with live status, Discord integration, storefront, member dashboards, and role-based staff administration.',
+    html_url: 'https://github.com/MacroMaster101/Mazora-Network',
+    homepage: 'https://mazora.us/',
+    topics: ['nextjs', 'react', 'typescript', 'tailwindcss', 'drizzle-orm', 'supabase', 'full-stack'],
+    language: 'TypeScript',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-08-01T00:00:00Z',
+    allLanguages: ['TypeScript', 'CSS', 'PLpgSQL', 'JavaScript'],
+  },
+  {
+    id: -14,
+    name: 'Vero_Salon_Website',
+    description: 'Full-stack salon booking platform for Vero Salon — Next.js, TypeScript, Supabase, and Tailwind CSS. Includes race-safe booking slots, customer accounts, ratings, reviews, and role-based staff administration.',
+    html_url: 'https://github.com/MacroMaster101/Vero_Salon_Website',
+    homepage: 'https://vero-salon-website.vercel.app/',
+    topics: ['nextjs', 'react', 'typescript', 'tailwindcss', 'supabase', 'postgresql', 'full-stack'],
+    language: 'TypeScript',
+    stargazers_count: 0, forks_count: 0, fork: false,
+    updated_at: '2026-08-01T00:00:00Z',
+    allLanguages: ['TypeScript', 'CSS', 'PLpgSQL', 'JavaScript'],
+  },
   {
     id: -5,
     name: 'just-for-fun-website',
@@ -401,7 +424,6 @@ export function Projects() {
   const [repos, setRepos] = useState<GithubRepo[]>(initialState.repos);
   const [loading, setLoading] = useState(!initialState.hasFreshCache);
   const [error, setError] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
 
   useEffect(() => {
@@ -439,17 +461,15 @@ export function Projects() {
   const featured = FEATURED_NAMES
     .map(n => repos.find(r => r.name.toLowerCase() === n))
     .filter((r): r is GithubRepo => Boolean(r))
-    .slice(0, 4);
+    .slice(0, 5);
   const featuredIds = new Set(featured.map(r => r.id));
   // Exclude the "MacroMaster101" GitHub profile repo (it's just a README)
   const rest = repos.filter(r => !featuredIds.has(r.id) && r.name !== 'MacroMaster101');
   const filteredRest =
-    activeCategory === 'All' ? rest : rest.filter(r => classifyRepo(r) === activeCategory);
-  const visibleRest = showAll ? filteredRest : filteredRest.slice(0, 6);
+    activeCategory === 'All' ? rest : rest.filter(r => getRepoCategories(r).includes(activeCategory));
 
   const handleCategory = (c: Category) => {
     setActiveCategory(c);
-    setShowAll(false);
   };
 
   return (
@@ -614,11 +634,12 @@ export function Projects() {
             )}
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-              {visibleRest.map((repo, idx) => {
+              {filteredRest.map((repo, idx) => {
                 const techStack = repoStack(repo);
                 return (
                   <motion.article
                     key={repo.id}
+                    layout
                     initial={false}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.1 }}
@@ -710,16 +731,6 @@ export function Projects() {
               })}
             </div>
 
-            {filteredRest.length > 6 && (
-              <div className="text-center mt-12">
-                <button
-                  onClick={() => setShowAll(s => !s)}
-                  className="px-6 py-3 font-mono text-sm font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-0.5 transition-all"
-                >
-                  {showAll ? 'Show Less' : `Show More (${filteredRest.length - 6})`}
-                </button>
-              </div>
-            )}
           </div>
         </section>
       )}

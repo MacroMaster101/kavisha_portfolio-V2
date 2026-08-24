@@ -69,11 +69,32 @@ function useTypewriter(words: string[], reducedMotion: boolean, typeMs = 70, hol
 export function Hero() {
   const reduceMotion = useReducedMotion() === true;
   const typed = useTypewriter(roles, reduceMotion);
-  const [robotReady, setRobotReady] = useState(false);
+  const [robotReady, setRobotReady] = useState(reduceMotion);
 
   // Render the robot in exactly one spot per breakpoint (lg = 1024px) so only a
   // single Spline WebGL context is ever mounted. Two contexts caused heavy lag.
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  // Older published Spline scenes are migrated in memory by the current runtime.
+  // The runtime reports that expected migration as a console warning even though
+  // loading succeeds. Filter only that exact vendor notice during scene startup.
+  useEffect(() => {
+    const originalWarn = console.warn;
+    const filteredWarn = (...args: unknown[]) => {
+      if (args[0] === 'updating from ' && args[2] === 'to ') return;
+      originalWarn(...args);
+    };
+    console.warn = filteredWarn;
+
+    const restoreTimer = window.setTimeout(() => {
+      if (console.warn === filteredWarn) console.warn = originalWarn;
+    }, 6000);
+
+    return () => {
+      window.clearTimeout(restoreTimer);
+      if (console.warn === filteredWarn) console.warn = originalWarn;
+    };
+  }, []);
 
   // Keep the large WebGL runtime out of the critical rendering window. The visual
   // backdrop renders immediately; the interactive scene follows once content is usable.
@@ -83,29 +104,25 @@ export function Hero() {
     return () => window.clearTimeout(timer);
   }, [reduceMotion]);
 
-  // Spline only tracks the cursor while it's over its own canvas. To make the robot
-  // follow the mouse across the WHOLE hero header, we forward a synthetic mousemove
-  // to the canvas with the cursor position remapped onto the canvas's bounds (so the
-  // header edges map to the canvas edges — full turn range across the header).
-  //
-  // Perf: rects are cached and only recomputed on resize/scroll (not per move), and
-  // dispatch is throttled to one per animation frame to avoid flooding the 3D scene.
-  // The Spline application instance.
   // setGlobalEvents(true) makes the robot's "look at cursor" behavior track the
   // mouse across the WHOLE window (navbar, side rails, every corner), not just over
-  // the canvas. Spline's built-in solution — no synthetic event forwarding needed.
+  // the canvas.
   const splineAppRef = useRef<{
     play?: () => void;
     stop?: () => void;
+    setZoom?: (zoom: number) => void;
     setGlobalEvents?: (global: boolean) => void;
   } | null>(null);
 
   const handleSplineLoad = useCallback(
-    (app: { play?: () => void; stop?: () => void; setGlobalEvents?: (global: boolean) => void }) => {
+    (app: { play?: () => void; stop?: () => void; setZoom?: (zoom: number) => void; setGlobalEvents?: (global: boolean) => void }) => {
       splineAppRef.current = app;
+      // The scene's responsive camera crops the character on narrow canvases.
+      // Pulling it back keeps the head, face, hands, and torso in the safe area.
+      app.setZoom?.(isDesktop ? 0.92 : 0.48);
       app.setGlobalEvents?.(true);
     },
-    []
+    [isDesktop]
   );
 
   // Pause the render loop only when the browser TAB is hidden (so we don't burn GPU
@@ -133,7 +150,11 @@ export function Hero() {
         </div>
       }
     >
-      <Spline scene={SPLINE_ROBOT} onLoad={handleSplineLoad} />
+      <Spline
+        className="h-full w-full"
+        scene={SPLINE_ROBOT}
+        onLoad={handleSplineLoad}
+      />
     </Suspense>
   );
 
@@ -207,7 +228,7 @@ export function Hero() {
               <RobotBackdrop />
               {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                   its edges to blend into the page. In dark mode no mask is needed. */}
-              <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_70%,transparent_92%)] dark:[mask-image:none]">
+              <div className="relative h-full w-full [mask-image:radial-gradient(circle_at_center,#000_78%,transparent_98%)] dark:[mask-image:none]">
                 {robotReady && robotCanvas}
               </div>
             </div>
@@ -278,7 +299,7 @@ export function Hero() {
             <RobotBackdrop />
             {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                 its edges to blend into the page. In dark mode no mask is needed. */}
-            <div className="relative w-full h-full [mask-image:radial-gradient(circle_at_center,#000_70%,transparent_92%)] dark:[mask-image:none]">
+            <div className="relative h-full w-full [mask-image:radial-gradient(circle_at_center,#000_78%,transparent_98%)] dark:[mask-image:none]">
               {robotReady && robotCanvas}
             </div>
           </div>

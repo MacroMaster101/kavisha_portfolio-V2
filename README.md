@@ -1,90 +1,93 @@
 <div align="center">
 
-<img src="./public/og-image.jpg" alt="Kavisha Liyanage portfolio" width="100%" />
+<a href="https://kavisha.online">
+  <img src="./public/Logo.png" width="138" alt="Kavisha Liyanage monogram" />
+</a>
 
 # ✨ Kavisha Portfolio V2
 
 ### Software Engineering · Artificial Intelligence · Creative Development
 
-A fast, accessible, and interactive portfolio showcasing my projects, technical skills, education, and journey as a Software Engineering and AI undergraduate.
+A fast, accessible, and interactive portfolio built to showcase my projects, technical skills, education, and journey as a Software Engineering and AI undergraduate.
 
-[![Live Website](https://img.shields.io/badge/Live-kavisha.online-6366F1?style=for-the-badge&logo=vercel&logoColor=white)](https://kavisha.online)
-[![Refresh Social Previews](https://img.shields.io/github/actions/workflow/status/MacroMaster101/kavisha_portfolio-V2/social-previews.yml?style=for-the-badge&label=Project%20Previews&logo=githubactions&logoColor=white)](https://github.com/MacroMaster101/kavisha_portfolio-V2/actions/workflows/social-previews.yml)
-[![Portfolio](https://img.shields.io/badge/Project-Personal_Portfolio-A855F7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MacroMaster101/kavisha_portfolio-V2)
+[![Live Portfolio](https://img.shields.io/badge/VIEW_LIVE-kavisha.online-6366F1?style=for-the-badge&logo=vercel&logoColor=white)](https://kavisha.online)
+[![Quality Checks](https://img.shields.io/github/actions/workflow/status/MacroMaster101/kavisha_portfolio-V2/ci.yml?branch=main&style=for-the-badge&label=QUALITY&logo=githubactions&logoColor=white)](https://github.com/MacroMaster101/kavisha_portfolio-V2/actions/workflows/ci.yml)
+[![Project Metadata](https://img.shields.io/github/actions/workflow/status/MacroMaster101/kavisha_portfolio-V2/social-previews.yml?branch=main&style=for-the-badge&label=PROJECT_DATA&logo=github&logoColor=white)](https://github.com/MacroMaster101/kavisha_portfolio-V2/actions/workflows/social-previews.yml)
 
 <br />
 
-<img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,vercel,github&theme=dark" alt="React, TypeScript, Vite, Tailwind CSS, Vercel, and GitHub" />
+<img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,nodejs,python,java,postgres,supabase,vercel,github&theme=dark" alt="Technology stack" />
+
+<br /><br />
+
+**[Explore the portfolio →](https://kavisha.online)**
 
 </div>
 
 ---
 
-## 🌐 Live Portfolio
+## 👋 About the Project
 
-Visit **[kavisha.online](https://kavisha.online)** to explore the full interactive experience.
+This repository contains the second version of my personal portfolio. It presents my featured work, broader GitHub project archive, technical skills, education, and internship profile through a responsive experience built for both personality and performance.
 
-The site includes a particle-based `KL` welcome screen, touch and mouse interaction, a cloud-and-scatter portfolio reveal, a responsive 3D Spline robot, and a validated public GitHub project showcase.
+The site is designed and developed by **Kavisha Liyanage**, a third-year SLIIT undergraduate specializing in Artificial Intelligence.
 
-## 🚀 Highlights
+## 🚀 Experience Highlights
 
-- ✨ Interactive particle intro with an accessible **Get Started** experience
-- ☁️ Theme-matched aurora clouds, network graphics, and blended page reveal
-- 🤖 Lazy-loaded interactive Spline robot with background-tab safeguards
-- 🌓 System-aware light and dark themes with persisted preference
-- 📱 Responsive layouts and navigation for mobile, tablet, and desktop
-- 🧑‍💻 Public GitHub project feed with strict runtime validation and caching
-- 🖼️ Build-generated repository previews, languages, and release information
-- ♿ Skip navigation, keyboard focus management, semantic landmarks, and reduced-motion support
-- 🔍 Open Graph, Twitter Card, Person JSON-LD, sitemap, and robots metadata
-- 🔐 Content Security Policy, HSTS, privacy-conscious storage, and secure external links
-- 📊 Privacy-conscious Vercel Analytics integration
+- 🧠 Interactive neural-particle loader with mouse, touch, light-theme, and dark-theme support
+- 🤖 Lazy-loaded interactive Spline robot with responsive framing and background-tab safeguards
+- 🌓 System-aware first visit with a persistent light or dark theme preference
+- 📱 Responsive navigation and layouts for phone, tablet, laptop, and desktop screens
+- 🗂️ Live public GitHub project archive with useful multi-category filters
+- ⭐ Five curated featured project stories with real preview artwork and technology stacks
+- 🔄 Build-generated repository preview URLs, language data, and release metadata
+- ♿ Semantic landmarks, keyboard navigation, reduced-motion support, and visible focus states
+- 🔎 Canonical metadata, `WebSite` and `Person` structured data, sitemap, robots, and social cards
+- 🔐 Restrictive production security headers, validated public data, and privacy-conscious analytics
+
+## 🌟 Featured Work
+
+| Project | What it demonstrates |
+| --- | --- |
+| 🎮 **Just For Fun** | Community platform, moderation tooling, and production deployment |
+| 🌐 **Mazora Network** | Next.js community platform, live integrations, storefront, and staff administration |
+| ✈️ **Travel Genie** | Full-stack AI-assisted travel planning for Sri Lanka |
+| 📲 **Travel Genie App** | React Native travel companion with secure REST APIs |
+| ✂️ **Vero Salon** | Full-stack salon booking, customer accounts, reviews, and staff workflows |
 
 ## 🧰 Technology Stack
 
 | Area | Technologies |
 | --- | --- |
 | ⚛️ Interface | React 19, TypeScript 6, Tailwind CSS 4 |
-| ⚡ Tooling | Vite 8, ESLint 10, TSX |
-| 🎞️ Motion | Framer Motion, Canvas particles, CSS animation |
-| 🧊 3D Experience | Spline Runtime, React Spline |
-| 🐙 Project Data | GitHub REST API, generated social previews, validated browser cache |
-| ☁️ Hosting | Vercel, Vercel Analytics |
-| 🧪 Quality | Node test runner, TypeScript build checks, ESLint, npm audit |
-
-<div align="center">
-
-![React](https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript_6-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=flat-square&logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)
-![Spline](https://img.shields.io/badge/Spline-111111?style=flat-square&logo=spline&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
-
-</div>
+| ⚡ Tooling | Vite 8, PostCSS, ESLint, TSX |
+| 🎞️ Motion | Framer Motion, Canvas API, CSS animation |
+| 🧊 3D experience | React Spline, Spline Runtime |
+| 🐙 Project data | GitHub REST API, generated repository metadata, validated browser cache |
+| ☁️ Deployment | Vercel, Vercel Analytics, GitHub Actions |
+| 🧪 Quality | TypeScript strict mode, ESLint, Node test runner, npm audit |
 
 ## 🏗️ How It Works
 
 ```mermaid
 flowchart LR
-    A[GitHub public repositories] --> B[Build-side metadata generator]
-    B --> C[Committed preview metadata]
-    C --> D[React portfolio]
-    E[Validated 24-hour browser cache] --> D
-    D --> F[Vercel production deployment]
+    A[🐙 Public GitHub repositories] --> B[⚙️ Metadata generator]
+    B --> C[🖼️ Preview and release data]
+    C --> D[⚛️ React portfolio]
+    E[🛡️ Validated 24-hour cache] --> D
+    D --> F[▲ Vercel deployment]
 ```
 
-The production build is deterministic and does not need network access. Repository preview metadata is generated ahead of time and committed, while the browser performs at most one unauthenticated GitHub repository-list request when its validated 24-hour cache is empty.
+The production bundle does not require GitHub access to render its core project content. Bundled fallback data keeps featured work available, while the browser can refresh public repository information and store a validated 24-hour cache.
 
-## 🧑‍💻 Local Development
+## 💻 Local Development
 
 ### Requirements
 
-- Node.js 20 or newer
-- npm
+- Node.js 20.19+, 22.13+, or 24+
+- npm 11
 
-### Setup
+### Installation
 
 ```bash
 git clone https://github.com/MacroMaster101/kavisha_portfolio-V2.git
@@ -100,88 +103,89 @@ Open **[http://localhost:5173](http://localhost:5173)**.
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start the Vite development server |
-| `npm run build` | Run TypeScript checks and create the production build |
+| `npm run build` | Run TypeScript checks and create the production bundle |
 | `npm run preview` | Preview the production bundle locally |
-| `npm run lint` | Run ESLint across the project |
-| `npm test` | Run the GitHub validation and cache tests |
-| `npm run social-previews` | Refresh generated repository metadata |
+| `npm run lint` | Run ESLint across the repository |
+| `npm test` | Run the GitHub data validation and cache tests |
+| `npm run social-previews` | Refresh repository previews, languages, and release metadata |
 
-## 🐙 GitHub Project Feed
+## 🐙 Project Data
 
-The portfolio deliberately avoids shipping a GitHub token to the browser.
+The portfolio never exposes a GitHub access token in client-side code.
 
-- Browser requests are unauthenticated and limited to public repository data.
-- Repository objects and cached values are validated before use.
-- Corrupt, expired, future-dated, private, and wrong-owner data is rejected.
-- Language, release, and social-preview requests run only in the build-side generator.
-- Bundled metadata keeps the portfolio usable if GitHub is unavailable.
+- Only public repositories owned by `MacroMaster101` are accepted.
+- API responses and cached values are validated before rendering.
+- Private repositories, malformed URLs, expired caches, and unexpected owners are rejected.
+- Bundled fallback data keeps the project section available during API outages or rate limits.
+- The scheduled metadata workflow uses GitHub's repository-scoped built-in token.
+- Partial metadata request failures preserve the last valid generated values.
 
-For optional higher generator rate limits, create a local `.env` file:
+An optional token can be used locally when regenerating metadata:
 
 ```env
 GITHUB_TOKEN=your_optional_token
 ```
 
-> [!IMPORTANT]
-> Never use `VITE_GITHUB_TOKEN` or another `VITE_*` variable for secrets. Referenced Vite variables are exposed to browser JavaScript. Never commit `.env`.
+> [!CAUTION]
+> Never place a secret in a `VITE_*` variable. Vite exposes referenced `VITE_*` values to browser JavaScript. Never commit a local `.env` file.
 
-The scheduled **Refresh social previews** GitHub Action uses GitHub's repository-scoped built-in token. No custom repository secret is required.
-
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```text
-public/                         Static images, resume, SEO files, and social image
-scripts/fetch-social-previews.mjs
-src/
-├── components/
-│   ├── sections/              Portfolio content sections
-│   └── ui/                    Navigation, loader, cursor, and visual components
-├── contexts/                  Theme state and preference handling
-├── data/socialPreviews.ts     Generated public repository metadata
-├── lib/github.ts              GitHub validation, cache, and fetch logic
-├── pages/Portfolio.tsx        Main page composition
-└── App.tsx                    Intro lifecycle and application providers
-tests/github.test.ts           GitHub data and cache security tests
-vercel.json                    Security headers and asset caching
+.
+├── .github/workflows/           CI and project-metadata automation
+├── .env.example                 Optional build-only token template
+├── public/                      Logo, portrait, résumé, SEO, and social assets
+├── scripts/
+│   └── fetch-social-previews.mjs
+├── src/
+│   ├── components/
+│   │   ├── sections/           Portfolio content sections
+│   │   └── ui/                 Navigation, loader, cursor, and visual components
+│   ├── contexts/               Theme state and preference handling
+│   ├── data/                   Generated repository metadata
+│   ├── lib/                    GitHub validation, caching, and fetching
+│   ├── pages/                  Main page composition
+│   ├── App.tsx
+│   └── main.tsx
+├── tests/                      Automated public-data security tests
+├── index.html                  SEO metadata and application entry
+├── package.json                Commands and dependency manifest
+└── vercel.json                 Redirects, security, and cache headers
 ```
 
-## 🎨 Customization
+## 🎨 Customization Guide
 
-- Update portfolio content inside `src/components/sections/`.
-- Adjust featured repositories and stack overrides in `Projects.tsx`.
-- Add intentional project artwork to `public/projects/` and map it through `LOCAL_IMAGE_OVERRIDES`.
-- Change theme colors through the brand variables in `src/index.css`.
-- Replace the Spline scene URL in `Hero.tsx` after publishing a new scene.
-
-## ☁️ Deployment
-
-The project is configured for Vercel:
-
-| Setting | Value |
-| --- | --- |
-| Build command | `npm run build` |
-| Output directory | `dist` |
-| Framework | Vite |
-| Required production secrets | None |
-
-`vercel.json` provides security headers and immutable caching for hashed assets. Unknown URLs retain genuine 404 behavior instead of being rewritten into soft-404 pages.
+- 📝 Portfolio content: `src/components/sections/`
+- ⭐ Featured projects and filters: `src/components/sections/Projects.tsx`
+- 🧠 Neural loading experience: `src/components/ui/Loader.tsx`
+- 🎨 Brand colors and global styles: `src/index.css`
+- 🖼️ Logo and social artwork: `public/Logo.png` and `public/og-image.jpg`
+- 🤖 Spline scene and responsive robot framing: `src/components/sections/Hero.tsx`
 
 ## 🔐 Privacy & Security
 
-The site has no authentication, database, admin panel, tracking cookies, or contact-form backend. Contact uses a direct `mailto:` link.
+- No authentication, database, admin panel, tracking cookies, or contact-form backend
+- Theme preference and validated public GitHub data are the only persistent browser data
+- CSP, HSTS, referrer, permissions, framing, and MIME-sniffing protections
+- Permanent `www` → canonical-domain redirect
+- No browser-side secrets or private repository access
+- External links use safe new-tab behavior
 
-Local browser storage is limited to:
+## ☁️ Deployment
 
-- Theme preference
-- One-session intro state
-- One-time theme hint state
-- Validated public GitHub repository cache
+The project is ready for Vercel:
 
-Browser requests may reach GitHub, Spline, Google Fonts, jsDelivr/Simple Icons, and Vercel Analytics.
+| Setting | Value |
+| --- | --- |
+| Framework | Vite |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Required production secrets | None |
 
-## ✅ Quality Checks
+The included `vercel.json` configures canonical host redirects, security headers, and long-lived caching for hashed production assets.
 
-Before publishing:
+## ✅ Release Checklist
 
 ```bash
 npm run lint
@@ -190,7 +194,7 @@ npm run build
 npm audit
 ```
 
-The current release passes all automated tests and reports zero dependency vulnerabilities.
+The repository also runs these checks automatically for pushes and pull requests through GitHub Actions.
 
 ## 🤝 Connect
 
@@ -201,14 +205,16 @@ The current release passes all automated tests and reports zero dependency vulne
 
 ## 📄 Usage
 
-This public repository is provided for portfolio and demonstration purposes. No standalone license is currently included, so reuse permission is not granted by default. Personal biography, photographs, resume content, and project descriptions remain personal material.
+This repository is publicly visible for portfolio and demonstration purposes. No standalone license is currently included, so reuse rights are not granted by default. Personal biography, photographs, résumé content, and project descriptions remain personal material.
 
 ---
 
 <div align="center">
 
-Designed and built with 💜 by **Kavisha Liyanage**
+### Built with curiosity, code, and a little purple energy 💜
 
-⭐ If you like the project, consider giving the repository a star!
+Designed and developed by **Kavisha Liyanage**
+
+⭐ If you enjoy the project, consider giving the repository a star.
 
 </div>

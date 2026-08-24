@@ -2,16 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { ThemeContext, type Theme } from './themeContextValue';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-    } catch { /* storage unavailable */ }
-    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
-    return 'dark';
-  });
+  // The inline head script resolves saved/system preference before first paint.
+  // Reading that class here guarantees React and the loader start on the same theme.
+  const [theme, setTheme] = useState<Theme>(() =>
+    document.documentElement.classList.contains('light') ? 'light' : 'dark'
+  );
 
   useEffect(() => {
     const root = document.documentElement;

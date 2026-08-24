@@ -1,7 +1,7 @@
 // Refreshes repository preview URLs plus language/release metadata for the client.
 // Authentication is build-side only: GITHUB_TOKEN is never exposed through Vite.
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,10 +25,10 @@ async function fetchWithTimeout(url, options = {}) {
   });
 }
 
-async function fetchJson(url) {
+async function fetchJsonResult(url) {
   const response = await fetchWithTimeout(url, { headers: apiHeaders });
-  if (!response.ok) return null;
-  return response.json();
+  if (!response.ok) return { ok: false, status: response.status, data: null };
+  return { ok: true, status: response.status, data: await response.json() };
 }
 
 function extractMetaContent(html, property) {
@@ -95,25 +95,49 @@ function safeJson(value) {
   return JSON.stringify(value, null, 2).replaceAll('<', '\\u003c');
 }
 
+async function readExistingData() {
+  try {
+    const source = await readFile(OUT_PATH, 'utf8');
+    const previewsMatch = source.match(
+      /export const SOCIAL_PREVIEWS[^=]*=\s*(\{[\s\S]*?\});\s*export const PROJECT_METADATA/,
+    );
+    const metadataMatch = source.match(
+      /export const PROJECT_METADATA[\s\S]*?>\s*=\s*(\{[\s\S]*\});\s*$/,
+    );
+    const previews = previewsMatch ? JSON.parse(previewsMatch[1]) : {};
+    const metadata = metadataMatch ? JSON.parse(metadataMatch[1]) : {};
+    return {
+      previews: previews && typeof previews === 'object' && !Array.isArray(previews) ? previews : {},
+      metadata: metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {},
+    };
+  } catch {
+    return { previews: {}, metadata: {} };
+  }
+}
+
 async function main() {
   console.log(`[project-data] fetching public repositories for ${GH_USER}…`);
-  const repos = await fetchJson(`https://api.github.com/users/${GH_USER}/repos?per_page=100&type=public`);
+  const repoResult = await fetchJsonResult(`https://api.github.com/users/${GH_USER}/repos?per_page=100&type=public`);
+  const repos = repoResult.data;
   if (!Array.isArray(repos)) {
-    console.warn('[project-data] repository list unavailable; existing generated file left untouched.');
-    return;
+    throw new Error(`repository list unavailable (HTTP ${repoResult.status})`);
   }
 
   const publicRepos = repos.filter((repo) =>
     repo && repo.private !== true && typeof repo.name === 'string' && /^[A-Za-z0-9._-]{1,100}$/.test(repo.name)
   );
+  const existing = await readExistingData();
   const previews = {};
   const metadata = {};
 
   await mapWithConcurrency(publicRepos, async (repo) => {
     const key = repo.name.toLowerCase();
-    let preview = null;
-    let languages = repo.language ? [repo.language] : [];
-    let latestRelease = null;
+    let preview = typeof existing.previews[key] === 'string' ? existing.previews[key] : null;
+    const previousMetadata = existing.metadata[key];
+    let languages = Array.isArray(previousMetadata?.allLanguages)
+      ? previousMetadata.allLanguages
+      : repo.language ? [repo.language] : [];
+    let latestRelease = previousMetadata?.latestRelease ?? null;
 
     try {
       const page = await fetchWithTimeout(`https://github.com/${GH_USER}/${encodeURIComponent(repo.name)}`, {
@@ -125,18 +149,20 @@ async function main() {
     }
 
     try {
-      const response = await fetchJson(`https://api.github.com/repos/${GH_USER}/${encodeURIComponent(repo.name)}/languages`);
-      if (response && typeof response === 'object' && !Array.isArray(response)) {
-        languages = Object.keys(response).slice(0, 5);
+      const result = await fetchJsonResult(`https://api.github.com/repos/${GH_USER}/${encodeURIComponent(repo.name)}/languages`);
+      if (result.ok && result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
+        languages = Object.keys(result.data).slice(0, 5);
       }
     } catch {
       // The list response's primary language remains a useful fallback.
     }
 
     try {
-      latestRelease = toLatestRelease(
-        await fetchJson(`https://api.github.com/repos/${GH_USER}/${encodeURIComponent(repo.name)}/releases/latest`),
+      const result = await fetchJsonResult(
+        `https://api.github.com/repos/${GH_USER}/${encodeURIComponent(repo.name)}/releases/latest`,
       );
+      if (result.ok) latestRelease = toLatestRelease(result.data);
+      else if (result.status === 404) latestRelease = null;
     } catch {
       // Most repositories have no releases; null is the intended representation.
     }
@@ -165,5 +191,6 @@ export const PROJECT_METADATA: Record<string, {
 }
 
 main().catch((error) => {
-  console.warn('[project-data] generation skipped:', error instanceof Error ? error.message : 'unknown error');
+  console.error('[project-data] generation failed:', error instanceof Error ? error.message : 'unknown error');
+  process.exitCode = 1;
 });

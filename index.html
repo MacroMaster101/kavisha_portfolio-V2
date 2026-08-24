@@ -2,16 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/Logo.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/Logo.png" />
     <link rel="apple-touch-icon" href="/Logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Kavisha Liyanage is a software engineering and AI undergraduate building full-stack web, mobile, and machine-learning projects." />
     <meta name="author" content="Kavisha Liyanage" />
+    <meta name="application-name" content="Kavisha Liyanage" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#030014" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="canonical" href="https://kavisha.online/" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Kavisha Liyanage Portfolio" />
+    <meta property="og:site_name" content="Kavisha Liyanage" />
     <meta property="og:title" content="Kavisha Liyanage — Software Engineering & AI Portfolio" />
     <meta property="og:description" content="Full-stack web, mobile, and machine-learning projects by Kavisha Liyanage." />
     <meta property="og:url" content="https://kavisha.online/" />
@@ -40,20 +45,34 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Kavisha Liyanage",
-        "url": "https://kavisha.online/",
-        "image": "https://kavisha.online/portrait.webp",
-        "sameAs": [
-          "https://github.com/MacroMaster101",
-          "https://www.linkedin.com/in/kavisha-liyanage04/",
-          "https://www.facebook.com/kavisha.lakshan11/",
-          "https://www.instagram.com/kavisha_lakshan"
-        ],
-        "alumniOf": {
-          "@type": "CollegeOrUniversity",
-          "name": "Sri Lanka Institute of Information Technology"
-        }
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://kavisha.online/#website",
+            "url": "https://kavisha.online/",
+            "name": "Kavisha Liyanage",
+            "alternateName": ["Kavisha Liyanage Portfolio", "kavisha.online"],
+            "author": { "@id": "https://kavisha.online/#person" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://kavisha.online/#person",
+            "name": "Kavisha Liyanage",
+            "url": "https://kavisha.online/",
+            "image": "https://kavisha.online/portrait.webp",
+            "mainEntityOfPage": { "@id": "https://kavisha.online/#website" },
+            "sameAs": [
+              "https://github.com/MacroMaster101",
+              "https://www.linkedin.com/in/kavisha-liyanage04/",
+              "https://www.facebook.com/kavisha.lakshan11/",
+              "https://www.instagram.com/kavisha_lakshan"
+            ],
+            "alumniOf": {
+              "@type": "CollegeOrUniversity",
+              "name": "Sri Lanka Institute of Information Technology"
+            }
+          }
+        ]
       }
     </script>
     <title>Kavisha Liyanage — Software Engineering &amp; AI Portfolio</title>

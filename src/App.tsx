@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CustomCursor } from './components/ui/CustomCursor';
@@ -7,14 +7,9 @@ import { Portfolio } from './pages/Portfolio';
 import { Analytics } from '@vercel/analytics/react';
 
 function App() {
-  const [loading, setLoading] = useState(() => {
-    try {
-      return sessionStorage.getItem('intro-seen') !== '1' &&
-        !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    } catch {
-      return false;
-    }
-  });
+  // A fresh document load always gets the intro. Fast Refresh preserves this
+  // state during development, while a real browser refresh mounts it again.
+  const [loading, setLoading] = useState(true);
   const wasLoading = useRef(loading);
 
   useEffect(() => {
@@ -24,10 +19,9 @@ function App() {
     wasLoading.current = loading;
   }, [loading]);
 
-  const finishLoading = () => {
-    try { sessionStorage.setItem('intro-seen', '1'); } catch { /* storage unavailable */ }
+  const finishLoading = useCallback(() => {
     setLoading(false);
-  };
+  }, []);
 
   return (
     <ThemeProvider>
