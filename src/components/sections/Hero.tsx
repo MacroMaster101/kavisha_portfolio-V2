@@ -86,12 +86,7 @@ export function Hero() {
     };
     console.warn = filteredWarn;
 
-    const restoreTimer = window.setTimeout(() => {
-      if (console.warn === filteredWarn) console.warn = originalWarn;
-    }, 6000);
-
     return () => {
-      window.clearTimeout(restoreTimer);
       if (console.warn === filteredWarn) console.warn = originalWarn;
     };
   }, []);

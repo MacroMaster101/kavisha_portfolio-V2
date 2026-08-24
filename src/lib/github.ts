@@ -102,6 +102,12 @@ export function parseGithubRepos(value: unknown): GithubRepo[] {
   return value.map(parseGithubRepo).filter((repo): repo is GithubRepo => repo !== null);
 }
 
+export function countShippedProjects(repos: GithubRepo[]): number {
+  return repos.filter(
+    (repo) => !repo.fork && repo.name.toLowerCase() !== GITHUB_OWNER.toLowerCase(),
+  ).length;
+}
+
 export function parseGithubRepoCache(
   raw: string,
   ttlMs: number,

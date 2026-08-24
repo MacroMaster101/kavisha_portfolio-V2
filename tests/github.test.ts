@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseGithubRepo, parseGithubRepoCache, parseGithubRepos, safeHttpUrl } from '../src/lib/github';
+import {
+  countShippedProjects,
+  parseGithubRepo,
+  parseGithubRepoCache,
+  parseGithubRepos,
+  safeHttpUrl,
+} from '../src/lib/github';
 
 const validRepo = {
   id: 42,
@@ -79,4 +85,12 @@ test('accepts a fresh cache only after validating every repository', () => {
   );
   assert.equal(parsed?.length, 1);
   assert.equal(parsed?.[0].name, 'public-project');
+});
+
+test('counts shipped projects without forks or the profile repository', () => {
+  const project = parseGithubRepo(validRepo);
+  const fork = parseGithubRepo({ ...validRepo, id: 43, name: 'forked', html_url: 'https://github.com/MacroMaster101/forked', fork: true });
+  const profileRepo = parseGithubRepo({ ...validRepo, id: 44, name: 'MacroMaster101', html_url: 'https://github.com/MacroMaster101/MacroMaster101' });
+  assert.ok(project && fork && profileRepo);
+  assert.equal(countShippedProjects([project, fork, profileRepo]), 1);
 });

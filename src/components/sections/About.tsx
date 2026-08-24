@@ -1,12 +1,9 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Section } from '../ui/Section';
+import { countShippedProjects, fetchPublicGithubRepos } from '../../lib/github';
 
-const stats = [
-  { value: '5+', label: 'Projects shipped' },
-  { value: '3rd', label: 'Year @ SLIIT' },
-  { value: 'AI', label: 'Specialization' },
-  { value: 'LK', label: 'Based in Sri Lanka' },
-];
+const FALLBACK_PROJECT_COUNT = 19;
 
 const skills = [
   'TypeScript',
@@ -22,30 +19,45 @@ const skills = [
 ];
 
 export function About() {
+  const [projectsShipped, setProjectsShipped] = useState(FALLBACK_PROJECT_COUNT);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    fetchPublicGithubRepos(controller.signal)
+      .then((repos) => setProjectsShipped(countShippedProjects(repos)))
+      .catch(() => undefined)
+      .finally(() => window.clearTimeout(timeout));
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+
+  const stats = [
+    { value: String(projectsShipped), label: 'Projects shipped' },
+    { value: '3rd', label: 'Year @ SLIIT' },
+    { value: 'AI', label: 'Specialization' },
+    { value: 'LK', label: 'Based in Sri Lanka' },
+  ];
+
   return (
     <Section id="about" num="01." title="About Me">
       <div className="grid md:grid-cols-[3fr_2fr] gap-12 md:gap-16 items-start">
         {/* Left column: prose + tags + stats + skills */}
         <div className="space-y-5 text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
           <p>
-            Hello! My name is Kavisha and I&apos;m a software engineering &amp; AI intern candidate based in Nittambuwa, Sri Lanka.
-            I enjoy building things that live on the web and on mobile — whether that&apos;s a slick UI,
-            a secure backend, or a prediction model that turns raw data into something useful.
+            Hello! I&apos;m Kavisha, a third-year Information Technology undergraduate at SLIIT,
+            specializing in Artificial Intelligence and based in Nittambuwa, Sri Lanka.
           </p>
           <p>
-            I&apos;m pursuing a <span className="text-slate-900 dark:text-slate-100">B.Sc. (Hons) in Information Technology</span> at{' '}
-            <a
-              href="https://sliit.lk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-primary hover:underline underline-offset-4"
-            >
-              SLIIT
-            </a>
-            , specializing in Artificial Intelligence. Along the way I&apos;ve shipped projects like{' '}
-            <span className="text-brand-primary">TravelGenie</span> (full-stack web + mobile travel planner),{' '}
-            <span className="text-brand-primary">DengueRisk</span> (ML for public health), and a{' '}
-            <span className="text-brand-primary">secure campus E-Voting system</span>.
+            I build full-stack web, mobile, and machine-learning products with a focus on useful interfaces,
+            dependable backends, and real-world problem solving. My recent work includes{' '}
+            <span className="text-brand-primary">Mazora Network</span>, a production community platform;{' '}
+            <span className="text-brand-primary">Vero Salon</span>, a complete booking system;{' '}
+            <span className="text-brand-primary">TravelGenie</span>, an AI-powered travel planner; and{' '}
+            <span className="text-brand-primary">DengueRisk</span>, a public-health prediction project.
           </p>
           <p>
             Right now I&apos;m actively looking for a first internship where I can contribute to a real engineering team,
@@ -53,7 +65,7 @@ export function About() {
           </p>
 
           {/* Stat cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4" aria-live="polite">
             {stats.map((s, idx) => (
               <motion.div
                 key={s.label}
@@ -68,7 +80,6 @@ export function About() {
               </motion.div>
             ))}
           </div>
-
           {/* Skills strip */}
           <div className="pt-4">
             <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-2">A few technologies I&apos;ve been working with recently:</p>
