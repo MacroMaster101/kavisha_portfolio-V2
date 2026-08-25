@@ -106,8 +106,8 @@ export const PROJECT_METADATA: Record<string, {
     "allLanguages": [
       "TypeScript",
       "JavaScript",
-      "CSS",
-      "HTML"
+      "HTML",
+      "CSS"
     ],
     "latestRelease": null
   },
