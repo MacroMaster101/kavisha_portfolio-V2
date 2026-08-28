@@ -86,7 +86,7 @@ function createMonogramTargets(count: number, random: () => number) {
 function createBrainNetwork(compact: boolean) {
   const random = seededRandom(20260824);
   const nodes: BrainNode[] = [];
-  const targetCount = compact ? 210 : 360;
+  const targetCount = compact ? 120 : 180;
 
   // Two overlapping lobes form the calm neural silhouette before it morphs
   // into the KL monogram later in the loading sequence.
@@ -132,7 +132,7 @@ function createBrainNetwork(compact: boolean) {
       }))
       .filter(({ to, distance }) => to !== from && distance < 0.245)
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, compact ? 3 : 4);
+      .slice(0, compact ? 2 : 3);
 
     nearest.forEach(({ to }) => {
       const key = from < to ? `${from}:${to}` : `${to}:${from}`;
@@ -152,7 +152,7 @@ function createBrainNetwork(compact: boolean) {
       }))
       .filter(({ to, distance }) => to !== from && distance < 0.19)
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, compact ? 2 : 3);
+      .slice(0, 2);
 
     nearest.forEach(({ to }) => {
       const key = from < to ? `${from}:${to}` : `${to}:${from}`;
@@ -187,12 +187,13 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
     let pointerY: number | null = null;
     let touchReleaseTimer: number | undefined;
     let currentMorph = 0;
+    let lastDraw = 0;
     let compact = window.innerWidth < 640;
     let network = createBrainNetwork(compact);
     let points: ProjectedPoint[] = new Array(network.nodes.length);
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       width = window.innerWidth;
       height = window.innerHeight;
       const nextCompact = width < 640;
@@ -275,6 +276,13 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
     };
 
     const draw = (time: number) => {
+      // Thirty canvas frames per second is visually smooth for this ambient
+      // animation and leaves the main thread free to mount the portfolio.
+      if (!reduced && time - lastDraw < 32) {
+        frame = requestAnimationFrame(draw);
+        return;
+      }
+      lastDraw = time;
       context.clearRect(0, 0, width, height);
       projectBrain(time);
       context.lineWidth = dark ? 0.72 : 0.86;
@@ -302,13 +310,13 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
       drawEdges(network.monogramEdges, currentMorph);
 
       context.globalCompositeOperation = dark ? 'lighter' : 'source-over';
+      context.shadowBlur = dark ? 4 : 1.5;
+      context.shadowColor = dark ? 'rgba(129,140,248,.65)' : 'rgba(79,70,229,.35)';
       points.forEach((point, index) => {
         const depth = Math.max(0, Math.min(1, (point.z + 0.42) / 0.84));
         const signal = reduced ? 0 : (Math.sin(time * 0.003 + network.nodes[index].phase) + 1) / 2;
         const hue = 216 + depth * 70;
         const nodeRadius = 0.8 + depth * (dark ? 1.55 : 1.35) + signal * 0.35;
-        context.shadowBlur = dark ? 5 + signal * 7 : 2 + signal * 3;
-        context.shadowColor = `hsla(${hue}, 100%, ${dark ? 68 : 45}%, .7)`;
         context.fillStyle = `hsla(${hue}, ${dark ? 96 : 86}%, ${dark ? 68 : 42}%, ${0.48 + depth * 0.48})`;
         context.beginPath();
         context.arc(point.x, point.y, nodeRadius, 0, Math.PI * 2);
@@ -393,7 +401,7 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const startedAt = performance.now();
-    const runTime = reduced ? 480 : 2900;
+    const runTime = reduced ? 320 : 1550;
     let frame = 0;
     let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -410,7 +418,7 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
       }
 
       setExiting(true);
-      finishTimer = setTimeout(onFinish, reduced ? 100 : 760);
+      finishTimer = setTimeout(onFinish, reduced ? 60 : 300);
     };
 
     frame = requestAnimationFrame(tick);

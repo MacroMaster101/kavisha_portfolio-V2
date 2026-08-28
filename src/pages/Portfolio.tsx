@@ -12,7 +12,7 @@ import { Certifications } from '../components/sections/Certifications';
 import { Blogs } from '../components/sections/Blogs';
 import { Contact } from '../components/sections/Contact';
 
-export function Portfolio() {
+export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
   return (
     <div className="relative bg-[#f6f7fb] dark:bg-[#030014] min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300 font-sans">
       <a href="#main-content" className="fixed left-4 top-4 z-[200] -translate-y-24 rounded bg-brand-primary px-4 py-2 text-white focus:translate-y-0">
@@ -23,7 +23,7 @@ export function Portfolio() {
       <SideRails />
       <BottomNav />
       <main id="main-content" tabIndex={-1} className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0 focus:outline-none">
-        <Hero />
+        <Hero interactiveReady={interactiveReady} />
         <About />
         <Skills />
         <Projects />

@@ -35,10 +35,9 @@ function supportsSplineRenderer() {
   if (typeof document === 'undefined') return false;
 
   const canvas = document.createElement('canvas');
-  let context: WebGL2RenderingContext | null = null;
 
   try {
-    context = canvas.getContext('webgl2', {
+    const context = canvas.getContext('webgl2', {
       alpha: true,
       antialias: true,
       depth: true,
@@ -50,8 +49,6 @@ function supportsSplineRenderer() {
     return version.includes('WebGL 2') && typeof context.clearBufferfv === 'function';
   } catch {
     return false;
-  } finally {
-    context?.getExtension('WEBGL_lose_context')?.loseContext();
   }
 }
 
@@ -133,7 +130,7 @@ function useTypewriter(words: string[], reducedMotion: boolean, typeMs = 70, hol
   return reducedMotion ? words[0] : text;
 }
 
-export function Hero() {
+export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
   const reduceMotion = useReducedMotion() === true;
   const typed = useTypewriter(roles, reduceMotion);
   const [robotState, setRobotState] = useState<RobotState>('checking');
@@ -159,8 +156,10 @@ export function Hero() {
   }, []);
 
   // Verify WebGL2 before importing Spline. The visual backdrop/fallback renders
-  // immediately, while the interactive scene follows once content is usable.
+  // immediately. Do not initialize the large runtime beneath the intro loader.
   useEffect(() => {
+    if (!interactiveReady) return;
+
     let timer: number | undefined;
     const frame = window.requestAnimationFrame(() => {
       if (!supportsSplineRenderer()) {
@@ -174,14 +173,14 @@ export function Hero() {
       }
 
       setRobotState('waiting');
-      timer = window.setTimeout(() => setRobotState('ready'), 1200);
+      timer = window.setTimeout(() => setRobotState('ready'), 450);
     });
 
     return () => {
       window.cancelAnimationFrame(frame);
       if (timer) window.clearTimeout(timer);
     };
-  }, [reduceMotion]);
+  }, [interactiveReady, reduceMotion]);
 
   // setGlobalEvents(true) makes the robot's "look at cursor" behavior track the
   // mouse across the WHOLE window (navbar, side rails, every corner), not just over

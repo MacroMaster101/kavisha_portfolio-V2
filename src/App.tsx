@@ -29,7 +29,7 @@ function App() {
         {loading && <Loader onFinish={finishLoading} />}
         <CustomCursor />
         <div inert={loading ? true : undefined} aria-hidden={loading || undefined}>
-          <Portfolio />
+          <Portfolio interactiveReady={!loading} />
         </div>
         <Analytics />
       </MotionConfig>
