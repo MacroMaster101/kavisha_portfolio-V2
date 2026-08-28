@@ -1,6 +1,6 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, Mail } from 'lucide-react';
+import { ArrowUpRight, Bot, Mail } from 'lucide-react';
 import { RobotBackdrop } from '../ui/RobotBackdrop';
 
 // Tracks a CSS media query. Used to mount the (expensive) Spline robot in exactly
@@ -25,6 +25,73 @@ const Spline = lazy(() => import('@splinetool/react-spline'));
 // Public Spline scene — interactive robot that follows the cursor.
 // To swap: go to spline.design → open a community scene → click "Export" → "Code Export" → copy the .splinecode URL.
 const SPLINE_ROBOT = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
+
+type RobotState = 'checking' | 'waiting' | 'ready' | 'failed';
+
+// Spline uses WebGL2-only depth-buffer APIs. Some browsers expose a WebGL 1
+// fallback and then crash when the runtime calls clearBufferfv(), so require a
+// genuine WebGL2 context before the Spline bundle is allowed to mount.
+function supportsSplineRenderer() {
+  if (typeof document === 'undefined') return false;
+
+  const canvas = document.createElement('canvas');
+  let context: WebGL2RenderingContext | null = null;
+
+  try {
+    context = canvas.getContext('webgl2', {
+      alpha: true,
+      antialias: true,
+      depth: true,
+      stencil: true,
+    });
+    if (!context) return false;
+
+    const version = String(context.getParameter(context.VERSION));
+    return version.includes('WebGL 2') && typeof context.clearBufferfv === 'function';
+  } catch {
+    return false;
+  } finally {
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
+  }
+}
+
+function RobotFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center" aria-label="Decorative robot illustration">
+      <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] border border-brand-primary/25 bg-white/35 shadow-[0_20px_70px_rgba(99,102,241,.2)] backdrop-blur-sm dark:bg-slate-950/30 sm:h-36 sm:w-36">
+        <div className="absolute inset-3 rounded-[1.5rem] border border-brand-secondary/20" />
+        <Bot className="relative h-14 w-14 text-brand-primary drop-shadow-[0_0_18px_rgba(99,102,241,.45)] sm:h-20 sm:w-20" strokeWidth={1.35} />
+      </div>
+    </div>
+  );
+}
+
+class RobotErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode; onFailure: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onFailure();
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+function isSplineRendererFailure(value: unknown) {
+  const text = value instanceof Error
+    ? `${value.message} ${value.stack ?? ''}`
+    : String(value ?? '');
+
+  return /react-spline|renderSplineScene|clearBufferfv|WebGLRenderer|WebGL context|framebuffer is incomplete/i.test(text);
+}
 
 const roles = [
   'intelligent things for the web.',
@@ -69,7 +136,7 @@ function useTypewriter(words: string[], reducedMotion: boolean, typeMs = 70, hol
 export function Hero() {
   const reduceMotion = useReducedMotion() === true;
   const typed = useTypewriter(roles, reduceMotion);
-  const [robotReady, setRobotReady] = useState(reduceMotion);
+  const [robotState, setRobotState] = useState<RobotState>('checking');
 
   // Render the robot in exactly one spot per breakpoint (lg = 1024px) so only a
   // single Spline WebGL context is ever mounted. Two contexts caused heavy lag.
@@ -91,12 +158,29 @@ export function Hero() {
     };
   }, []);
 
-  // Keep the large WebGL runtime out of the critical rendering window. The visual
-  // backdrop renders immediately; the interactive scene follows once content is usable.
+  // Verify WebGL2 before importing Spline. The visual backdrop/fallback renders
+  // immediately, while the interactive scene follows once content is usable.
   useEffect(() => {
-    if (reduceMotion) return;
-    const timer = window.setTimeout(() => setRobotReady(true), 1200);
-    return () => window.clearTimeout(timer);
+    let timer: number | undefined;
+    const frame = window.requestAnimationFrame(() => {
+      if (!supportsSplineRenderer()) {
+        setRobotState('failed');
+        return;
+      }
+
+      if (reduceMotion) {
+        setRobotState('ready');
+        return;
+      }
+
+      setRobotState('waiting');
+      timer = window.setTimeout(() => setRobotState('ready'), 1200);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (timer) window.clearTimeout(timer);
+    };
   }, [reduceMotion]);
 
   // setGlobalEvents(true) makes the robot's "look at cursor" behavior track the
@@ -108,6 +192,32 @@ export function Hero() {
     setZoom?: (zoom: number) => void;
     setGlobalEvents?: (global: boolean) => void;
   } | null>(null);
+
+  const handleSplineFailure = useCallback(() => {
+    splineAppRef.current?.stop?.();
+    splineAppRef.current = null;
+    setRobotState('failed');
+  }, []);
+
+  // Spline performs much of its rendering asynchronously, outside React's error
+  // boundary. If a driver fails after the capability check, unmount it immediately.
+  useEffect(() => {
+    if (robotState !== 'ready') return;
+
+    const onError = (event: ErrorEvent) => {
+      if (isSplineRendererFailure(event.error ?? event.message)) handleSplineFailure();
+    };
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (isSplineRendererFailure(event.reason)) handleSplineFailure();
+    };
+
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onUnhandledRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onUnhandledRejection);
+    };
+  }, [handleSplineFailure, robotState]);
 
   const handleSplineLoad = useCallback(
     (app: { play?: () => void; stop?: () => void; setZoom?: (zoom: number) => void; setGlobalEvents?: (global: boolean) => void }) => {
@@ -137,21 +247,24 @@ export function Hero() {
 
   // The Spline robot canvas, reused in two spots: inline on mobile (between the
   // tagline and description) and in the right column on desktop.
-  const robotCanvas = (
-    <Suspense
-      fallback={
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full border-2 border-brand-primary/30 border-t-brand-primary animate-spin" />
-        </div>
-      }
-    >
-      <Spline
-        className="h-full w-full"
-        scene={SPLINE_ROBOT}
-        onLoad={handleSplineLoad}
-      />
-    </Suspense>
-  );
+  const fallbackRobot = <RobotFallback />;
+  const robotCanvas = robotState === 'ready' ? (
+    <RobotErrorBoundary fallback={fallbackRobot} onFailure={handleSplineFailure}>
+      <Suspense
+        fallback={
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-2 border-brand-primary/30 border-t-brand-primary" />
+          </div>
+        }
+      >
+        <Spline
+          className="h-full w-full"
+          scene={SPLINE_ROBOT}
+          onLoad={handleSplineLoad}
+        />
+      </Suspense>
+    </RobotErrorBoundary>
+  ) : fallbackRobot;
 
   return (
     <section
@@ -224,7 +337,7 @@ export function Hero() {
               {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                   its edges to blend into the page. In dark mode no mask is needed. */}
               <div className="relative h-full w-full [mask-image:radial-gradient(circle_at_center,#000_78%,transparent_98%)] dark:[mask-image:none]">
-                {robotReady && robotCanvas}
+                {robotCanvas}
               </div>
             </div>
           </motion.div>
@@ -295,7 +408,7 @@ export function Hero() {
             {/* In light mode the Spline canvas paints a dark square, so we soft-mask
                 its edges to blend into the page. In dark mode no mask is needed. */}
             <div className="relative h-full w-full [mask-image:radial-gradient(circle_at_center,#000_78%,transparent_98%)] dark:[mask-image:none]">
-              {robotReady && robotCanvas}
+              {robotCanvas}
             </div>
           </div>
 

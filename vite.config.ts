@@ -5,4 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/',
+  build: {
+    // Spline's physics/runtime chunks are intentionally lazy-loaded only after
+    // the WebGL2 capability gate passes, so they do not block initial rendering.
+    chunkSizeWarningLimit: 2100,
+  },
 })
