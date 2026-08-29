@@ -401,7 +401,7 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const startedAt = performance.now();
-    const runTime = reduced ? 320 : 2500;
+    const runTime = reduced ? 320 : 4500;
     let frame = 0;
     let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -418,7 +418,7 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
       }
 
       setExiting(true);
-      finishTimer = setTimeout(onFinish, reduced ? 60 : 420);
+      finishTimer = setTimeout(onFinish, reduced ? 60 : 500);
     };
 
     frame = requestAnimationFrame(tick);
