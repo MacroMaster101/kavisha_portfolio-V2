@@ -39,17 +39,29 @@ type SplineApp = {
 // Spline uses WebGL2-only depth-buffer APIs. Some browsers expose a WebGL 1
 // fallback and then crash when the runtime calls clearBufferfv(), so require a
 // genuine WebGL2 context before the Spline bundle is allowed to mount.
+//
+// Two things this probe must get right, or mobile silently falls back to the icon:
+//
+// 1. Ask for exactly what the Spline runtime asks for. Its real canvas is created
+//    with antialias/depth/stencil ALL false; probing with them true is a stricter
+//    request than the app ever makes, and a low-end mobile GPU that refuses the
+//    strict context makes us report "unsupported" for a device that would have
+//    rendered the scene fine.
+// 2. Release the probe's context. Browsers cap how many WebGL contexts may live at
+//    once (mobile limits are far lower than desktop). Leaving this one alive holds a
+//    slot, and the real Spline context can then fail to create.
 function supportsSplineRenderer() {
   if (typeof document === 'undefined') return false;
 
   const canvas = document.createElement('canvas');
+  let context: WebGL2RenderingContext | null = null;
 
   try {
-    const context = canvas.getContext('webgl2', {
+    context = canvas.getContext('webgl2', {
       alpha: true,
-      antialias: true,
-      depth: true,
-      stencil: true,
+      antialias: false,
+      depth: false,
+      stencil: false,
     });
     if (!context) return false;
 
@@ -57,6 +69,8 @@ function supportsSplineRenderer() {
     return version.includes('WebGL 2') && typeof context.clearBufferfv === 'function';
   } catch {
     return false;
+  } finally {
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
   }
 }
 
