@@ -7,7 +7,6 @@
 
 @theme {
   --color-brand-primary: var(--brand-primary);
-  --color-brand-primary-glow: var(--brand-primary-glow);
   --color-brand-secondary: var(--brand-secondary);
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -97,6 +96,14 @@ html.dark {
   scrollbar-color: rgb(71 85 105) rgb(3 0 20);
 }
 
+/* Keyboard focus ring. This must stay OUTSIDE the reduced-motion query: Tailwind's
+   preflight sets outline-style:none, so while this rule lived in that query the only
+   users with a visible focus indicator were those who had opted into reduced motion. */
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -104,10 +111,5 @@ html.dark {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
-  }
-
-  :focus-visible {
-    outline: 2px solid var(--brand-primary);
-    outline-offset: 3px;
   }
 }

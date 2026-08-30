@@ -1,3 +1,5 @@
+import { useReducedMotion } from 'framer-motion';
+
 // Orbital backdrop behind the hero robot. A soft brand-tinted glow, tilted
 // elliptical orbit rings with glowing dots traveling along them, and a few
 // twinkling stars. Everything is brand-colored and edge-faded so it blends into
@@ -84,4 +86,3 @@ export function RobotBackdrop() {
     </div>
   );
 }
-import { useReducedMotion } from 'framer-motion';

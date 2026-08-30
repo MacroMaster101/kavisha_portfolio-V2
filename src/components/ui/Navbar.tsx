@@ -5,6 +5,71 @@ import { useTheme } from '../../contexts/useTheme';
 
 const THEME_HINT_KEY = 'theme-hint-seen';
 
+// The theme toggle appears twice — once in the desktop bar, once in the mobile bar —
+// and both carry the same first-visit nudge. These two pieces were copy-pasted between
+// them, so a tweak to one silently left the other behind. `compact` covers the only
+// real difference: the mobile bar renders a smaller tooltip with no dismiss button.
+function ThemeHintPulse({ show }: { show: boolean }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.span
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute inset-0 rounded border border-brand-primary/60 animate-ping"
+        />
+      )}
+    </AnimatePresence>
+  );
+}
+
+function ThemeHintTooltip({
+  show,
+  nextTheme,
+  compact = false,
+  onDismiss,
+}: {
+  show: boolean;
+  nextTheme: string;
+  compact?: boolean;
+  onDismiss?: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: -6, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -6, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className={`absolute right-0 top-full z-50 ${compact ? 'mt-2' : 'mt-3'}`}
+        >
+          <div
+            className={`relative flex items-center rounded-md bg-brand-primary font-mono text-white shadow-xl shadow-brand-primary/40 whitespace-nowrap ${
+              compact ? 'gap-1.5 px-2.5 py-1.5 text-[11px]' : 'gap-2 px-3 py-2 text-[12px]'
+            }`}
+          >
+            <Sparkles size={compact ? 11 : 13} />
+            Try {nextTheme} mode
+            {onDismiss && (
+              <button
+                onClick={onDismiss}
+                aria-label="Dismiss"
+                className="ml-1 -mr-1 w-4 h-4 flex items-center justify-center rounded hover:bg-white/20 transition-colors"
+              >
+                <X size={11} />
+              </button>
+            )}
+            {/* Caret pointing up to the toggle */}
+            <span className="absolute -top-1 right-3 w-2 h-2 bg-brand-primary rotate-45" />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 const navItems = [
   { num: '01.', name: 'About', href: '#about' },
   { num: '02.', name: 'Skills', href: '#skills' },
@@ -222,44 +287,15 @@ export function Navbar() {
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
 
               {/* Pulse ring while the hint is showing — draws attention to the toggle */}
-              <AnimatePresence>
-                {showThemeHint && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute inset-0 rounded border border-brand-primary/60 animate-ping"
-                  />
-                )}
-              </AnimatePresence>
+              <ThemeHintPulse show={showThemeHint} />
             </motion.button>
 
             {/* Tooltip — first-visit nudge */}
-            <AnimatePresence>
-              {showThemeHint && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 top-full mt-3 z-50"
-                >
-                  <div className="relative flex items-center gap-2 px-3 py-2 rounded-md bg-brand-primary text-white text-[12px] font-mono shadow-xl shadow-brand-primary/40 whitespace-nowrap">
-                    <Sparkles size={13} />
-                    Try {theme === 'dark' ? 'light' : 'dark'} mode
-                    <button
-                      onClick={dismissHint}
-                      aria-label="Dismiss"
-                      className="ml-1 -mr-1 w-4 h-4 flex items-center justify-center rounded hover:bg-white/20 transition-colors"
-                    >
-                      <X size={11} />
-                    </button>
-                    {/* Caret pointing up to the toggle */}
-                    <span className="absolute -top-1 right-3 w-2 h-2 bg-brand-primary rotate-45" />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <ThemeHintTooltip
+              show={showThemeHint}
+              nextTheme={theme === 'dark' ? 'light' : 'dark'}
+              onDismiss={dismissHint}
+            />
           </div>
         </div>
 
@@ -272,34 +308,13 @@ export function Navbar() {
               className="relative w-9 h-9 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:text-brand-primary"
             >
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              <AnimatePresence>
-                {showThemeHint && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute inset-0 rounded border border-brand-primary/60 animate-ping"
-                  />
-                )}
-              </AnimatePresence>
+              <ThemeHintPulse show={showThemeHint} />
             </button>
-            <AnimatePresence>
-              {showThemeHint && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 top-full mt-2 z-50"
-                >
-                  <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white text-[11px] font-mono shadow-xl shadow-brand-primary/40 whitespace-nowrap">
-                    <Sparkles size={11} />
-                    Try {theme === 'dark' ? 'light' : 'dark'} mode
-                    <span className="absolute -top-1 right-3 w-2 h-2 bg-brand-primary rotate-45" />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <ThemeHintTooltip
+              show={showThemeHint}
+              nextTheme={theme === 'dark' ? 'light' : 'dark'}
+              compact
+            />
           </div>
         </div>
       </nav>

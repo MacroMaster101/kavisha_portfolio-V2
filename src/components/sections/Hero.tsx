@@ -31,7 +31,6 @@ type RobotState = 'checking' | 'waiting' | 'ready' | 'failed';
 type SplineApp = {
   play?: () => void;
   stop?: () => void;
-  setZoom?: (zoom: number) => void;
   setGlobalEvents?: (global: boolean) => void;
   setBackgroundColor?: (color: string) => void;
 };
@@ -243,12 +242,13 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
       // backdrop) show through, so the canvas has no visible rectangle and the robot
       // needs no edge mask hiding its hands and feet.
       app.setBackgroundColor?.('transparent');
-      // The scene's responsive camera crops the character on narrow canvases.
-      // Pulling it back keeps the head, face, hands, feet, and torso in the safe area.
-      app.setZoom?.(isDesktop ? 0.92 : 0.48);
+      // Deliberately no setZoom() here. This scene clamps zoom with its own limits and
+      // re-frames its camera per screen size, so the call had no effect: framing was
+      // measured identical at 0.22, 0.34, 0.48 and 0.92. Framing is driven by the size
+      // of the box in the markup instead — see the robotStage() call sites.
       app.setGlobalEvents?.(true);
     },
-    [isDesktop]
+    []
   );
 
   // Pause the render loop only when the browser TAB is hidden (so we don't burn GPU
@@ -286,6 +286,19 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
       </Suspense>
     </RobotErrorBoundary>
   ) : fallbackRobot;
+
+  // Backdrop + canvas stage. Both breakpoints render exactly this; only the sizing box
+  // differs. Keep it in ONE place — while this markup was duplicated, edits repeatedly
+  // landed on a single copy and the other branch silently kept stale styling.
+  const robotStage = (boxClassName: string) => (
+    <div className={boxClassName}>
+      <RobotBackdrop />
+      {/* No edge mask here: handleSplineLoad clears the scene background to transparent,
+          so the canvas has no square to hide. Masking would instead fade the robot's own
+          hands and feet near the canvas edges. */}
+      <div className="relative h-full w-full">{robotCanvas}</div>
+    </div>
+  );
 
   return (
     <section
@@ -358,15 +371,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
                 setZoom (its zoom limits clamp it), so the relationship is not monotonic:
                 measured at a 390px viewport, a 280px box shows head-to-knees while a
                 296px box cuts to a head close-up. 280px is the tuned maximum. */}
-            <div className="relative mx-auto aspect-square w-full max-w-[clamp(220px,58vw,280px)] overflow-hidden">
-              <RobotBackdrop />
-              {/* No edge mask here: handleSplineLoad clears the scene background to
-                  transparent, so the canvas has no square to hide. Masking instead would
-                  fade the robot's own hands and feet near the canvas edges. */}
-              <div className="relative h-full w-full">
-                {robotCanvas}
-              </div>
-            </div>
+            {robotStage('relative mx-auto aspect-square w-full max-w-[clamp(220px,58vw,280px)] overflow-hidden')}
           </motion.div>
         )}
 
@@ -431,15 +436,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           <div className="absolute inset-0 rounded-full bg-brand-primary/[0.07] blur-[100px] scale-90 pointer-events-none" />
 
           {/* Orbital backdrop panel with the robot composited on top */}
-          <div className="relative w-full aspect-square max-w-[480px] mx-auto">
-            <RobotBackdrop />
-            {/* No edge mask here: handleSplineLoad clears the scene background to
-                transparent, so the canvas has no square to hide. Masking instead would
-                fade the robot's own hands and feet near the canvas edges. */}
-            <div className="relative h-full w-full">
-              {robotCanvas}
-            </div>
-          </div>
+          {robotStage('relative w-full aspect-square max-w-[480px] mx-auto')}
 
         </motion.div>
         )}

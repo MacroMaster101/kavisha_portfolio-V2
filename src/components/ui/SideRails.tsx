@@ -1,17 +1,6 @@
 import { motion } from 'framer-motion';
 import { Mail } from 'lucide-react';
-import { Github, Linkedin, Facebook, Instagram, Discord, DiscordServer } from './BrandIcons';
-
-const socials = [
-  { Icon: Github, href: 'https://github.com/MacroMaster101', label: 'GitHub' },
-  { Icon: Linkedin, href: 'https://www.linkedin.com/in/kavisha-liyanage04/', label: 'LinkedIn' },
-  { Icon: Facebook, href: 'https://www.facebook.com/kavisha.lakshan11/', label: 'Facebook' },
-  { Icon: Instagram, href: 'https://www.instagram.com/kavisha_lakshan', label: 'Instagram' },
-  { Icon: Discord, href: 'https://discord.com/users/507947944301953025', label: 'Discord Friend' },
-  { Icon: DiscordServer, href: 'https://discord.gg/4ZdNrdMZhM', label: 'Discord Server' },
-];
-
-const EMAIL = 'lakshan.kavishatt@gmail.com';
+import { EMAIL, SOCIALS as socials } from '../../data/contact';
 
 export function SideRails() {
   return (

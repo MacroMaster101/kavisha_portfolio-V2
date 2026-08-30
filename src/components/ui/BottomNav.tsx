@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, User, Wrench, FolderGit2, Briefcase, GraduationCap,
@@ -33,6 +33,27 @@ const quickRight = [
   { id: 'projects', name: 'Work',    Icon: FolderGit2 },
   { id: 'contact',  name: 'Contact', Icon: Mail },
 ] as const;
+
+// Rendered for every quick item on both sides of the centre button. The two sides had
+// byte-identical markup copy-pasted, so a styling tweak to one left the other stale.
+type QuickItem = { id: string; name: string; Icon: (props: { size?: number }) => ReactNode };
+
+function QuickLink({ id, name, Icon, active }: QuickItem & { active: boolean }) {
+  return (
+    <a
+      href={`#${id}`}
+      aria-label={name}
+      className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
+        active
+          ? 'text-brand-primary bg-brand-primary/12'
+          : 'text-slate-500 dark:text-slate-500 hover:text-brand-primary'
+      }`}
+    >
+      <Icon size={18} />
+      <span className="font-mono text-[9px] leading-none">{name}</span>
+    </a>
+  );
+}
 
 export function BottomNav() {
   const [activeId, setActiveId] = useState<string>('about');
@@ -251,24 +272,9 @@ export function BottomNav() {
             <div className="absolute top-0 left-[25%] right-[25%] h-px rounded-full bg-gradient-to-r from-transparent via-brand-primary/25 to-transparent pointer-events-none" />
 
             {/* Left quick items (icon + label) */}
-            {quickLeft.map(({ id, name, Icon }) => {
-              const active = activeId === id;
-              return (
-                <a
-                  key={id}
-                  href={id === 'hero' ? '#hero' : `#${id}`}
-                  aria-label={name}
-                  className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
-                    active
-                      ? 'text-brand-primary bg-brand-primary/12'
-                      : 'text-slate-500 dark:text-slate-500 hover:text-brand-primary'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-mono text-[9px] leading-none">{name}</span>
-                </a>
-              );
-            })}
+            {quickLeft.map((item) => (
+              <QuickLink key={item.id} {...item} active={activeId === item.id} />
+            ))}
 
             {/* Center toggle button */}
             <button
@@ -295,24 +301,9 @@ export function BottomNav() {
             </button>
 
             {/* Right quick items (icon + label) */}
-            {quickRight.map(({ id, name, Icon }) => {
-              const active = activeId === id;
-              return (
-                <a
-                  key={id}
-                  href={`#${id}`}
-                  aria-label={name}
-                  className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition-all ${
-                    active
-                      ? 'text-brand-primary bg-brand-primary/12'
-                      : 'text-slate-500 dark:text-slate-500 hover:text-brand-primary'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-mono text-[9px] leading-none">{name}</span>
-                </a>
-              );
-            })}
+            {quickRight.map((item) => (
+              <QuickLink key={item.id} {...item} active={activeId === item.id} />
+            ))}
           </div>
         </div>
       </nav>
