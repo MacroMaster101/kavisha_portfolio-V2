@@ -28,6 +28,14 @@ const SPLINE_ROBOT = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splineco
 
 type RobotState = 'checking' | 'waiting' | 'ready' | 'failed';
 
+type SplineApp = {
+  play?: () => void;
+  stop?: () => void;
+  setZoom?: (zoom: number) => void;
+  setGlobalEvents?: (global: boolean) => void;
+  setBackgroundColor?: (color: string) => void;
+};
+
 // Spline uses WebGL2-only depth-buffer APIs. Some browsers expose a WebGL 1
 // fallback and then crash when the runtime calls clearBufferfv(), so require a
 // genuine WebGL2 context before the Spline bundle is allowed to mount.
@@ -185,12 +193,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
   // setGlobalEvents(true) makes the robot's "look at cursor" behavior track the
   // mouse across the WHOLE window (navbar, side rails, every corner), not just over
   // the canvas.
-  const splineAppRef = useRef<{
-    play?: () => void;
-    stop?: () => void;
-    setZoom?: (zoom: number) => void;
-    setGlobalEvents?: (global: boolean) => void;
-  } | null>(null);
+  const splineAppRef = useRef<SplineApp | null>(null);
 
   const handleSplineFailure = useCallback(() => {
     splineAppRef.current?.stop?.();
@@ -219,10 +222,15 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
   }, [handleSplineFailure, robotState]);
 
   const handleSplineLoad = useCallback(
-    (app: { play?: () => void; stop?: () => void; setZoom?: (zoom: number) => void; setGlobalEvents?: (global: boolean) => void }) => {
+    (app: SplineApp) => {
       splineAppRef.current = app;
+      // The scene ships an opaque background colour, which paints the canvas as a solid
+      // square over the page. Clearing it to transparent lets the page (and the orbit
+      // backdrop) show through, so the canvas has no visible rectangle and the robot
+      // needs no edge mask hiding its hands and feet.
+      app.setBackgroundColor?.('transparent');
       // The scene's responsive camera crops the character on narrow canvases.
-      // Pulling it back keeps the head, face, hands, and torso in the safe area.
+      // Pulling it back keeps the head, face, hands, feet, and torso in the safe area.
       app.setZoom?.(isDesktop ? 0.92 : 0.48);
       app.setGlobalEvents?.(true);
     },
@@ -331,11 +339,17 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
             transition={{ duration: 0.7, delay: 0.35 }}
             className="relative w-full mt-4 mb-2 overflow-hidden"
           >
+            {/* Do not enlarge this box to try to fit more of the robot in frame. The
+                Spline scene re-frames its own camera per screen size and ignores
+                setZoom (its zoom limits clamp it), so the relationship is not monotonic:
+                measured at a 390px viewport, a 280px box shows head-to-knees while a
+                296px box cuts to a head close-up. 280px is the tuned maximum. */}
             <div className="relative mx-auto aspect-square w-full max-w-[clamp(220px,58vw,280px)] overflow-hidden">
               <RobotBackdrop />
-              {/* In light mode the Spline canvas paints a dark square, so we soft-mask
-                  its edges to blend into the page. In dark mode no mask is needed. */}
-              <div className="relative h-full w-full [mask-image:radial-gradient(circle_at_center,#000_78%,transparent_98%)] dark:[mask-image:none]">
+              {/* No edge mask here: handleSplineLoad clears the scene background to
+                  transparent, so the canvas has no square to hide. Masking instead would
+                  fade the robot's own hands and feet near the canvas edges. */}
+              <div className="relative h-full w-full">
                 {robotCanvas}
               </div>
             </div>
@@ -398,15 +412,17 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="relative w-full"
         >
-          {/* Soft outer glow bleeding beyond the panel */}
-          <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-[100px] scale-90 pointer-events-none" />
+          {/* Soft outer glow bleeding beyond the panel. Kept faint on purpose: at higher
+              opacity the blurred disc's own edge reads as a round halo around the robot. */}
+          <div className="absolute inset-0 rounded-full bg-brand-primary/[0.07] blur-[100px] scale-90 pointer-events-none" />
 
           {/* Orbital backdrop panel with the robot composited on top */}
           <div className="relative w-full aspect-square max-w-[480px] mx-auto">
             <RobotBackdrop />
-            {/* In light mode the Spline canvas paints a dark square, so we soft-mask
-                its edges to blend into the page. In dark mode no mask is needed. */}
-            <div className="relative h-full w-full [mask-image:radial-gradient(circle_at_center,#000_78%,transparent_98%)] dark:[mask-image:none]">
+            {/* No edge mask here: handleSplineLoad clears the scene background to
+                transparent, so the canvas has no square to hide. Masking instead would
+                fade the robot's own hands and feet near the canvas edges. */}
+            <div className="relative h-full w-full">
               {robotCanvas}
             </div>
           </div>

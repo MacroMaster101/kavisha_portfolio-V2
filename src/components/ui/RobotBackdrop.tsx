@@ -25,15 +25,20 @@ export function RobotBackdrop() {
       className="absolute inset-0 pointer-events-none [--robot-glow-a:rgba(99,102,241,0.12)] [--robot-glow-b:rgba(168,85,247,0.05)] dark:[--robot-glow-a:rgba(99,102,241,0.20)] dark:[--robot-glow-b:rgba(168,85,247,0.08)]"
       aria-hidden
     >
-      {/* Soft circular brand glow. Default circle sizing (farthest-corner) with the
-          transparent stop pulled inward to ~52% keeps it a clean round glow that fades
-          well before any edge — no rectangular edges, and no `closest-side` keyword
-          (which trips a PostCSS gradient-syntax warning). */}
+      {/* Soft circular brand glow. Two things must hold at once or a hard shape appears:
+          (1) the ramp has to be LONG (30%->100%), because a short fade reads as a round
+          edge around the robot; (2) it has to hit `transparent` exactly at the box edges,
+          or the parent's overflow-hidden clips the still-tinted gradient into a SQUARE.
+          Sizing the ellipse 50% x 48% around the 50% 48% centre puts the ramp's end on
+          all four edge midpoints, so every edge reaches zero. Do not switch this to the
+          default farthest-corner sizing — that pushes 100% out to the corners and leaves
+          the edges ~40% opaque. (`closest-side` would express this but trips a PostCSS
+          gradient-syntax warning.) */}
       <div
         className="absolute inset-0"
         style={{
           backgroundImage:
-            'radial-gradient(circle at 50% 48%, var(--robot-glow-a), var(--robot-glow-b) 32%, transparent 52%)',
+            'radial-gradient(ellipse 50% 48% at 50% 48%, var(--robot-glow-a), var(--robot-glow-b) 30%, transparent 100%)',
         }}
       />
 

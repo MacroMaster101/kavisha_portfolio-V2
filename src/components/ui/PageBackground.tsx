@@ -2,7 +2,14 @@ import { motion } from 'framer-motion';
 
 // Ambient site-wide background: subtle grid + drifting brand-tinted glows + a few floating dots.
 // Lives at the page root so the look is continuous across sections.
-export function PageBackground() {
+//
+// `animate` is false while the intro loader covers the screen. The two drifting glows are
+// 520px/440px boxes with a 140px blur — among the most expensive things a browser can
+// composite — and animating them behind an opaque overlay burns GPU every frame for
+// pixels nobody can see. They stay mounted (so revealing the page costs no layout) but
+// hold still until the loader is gone.
+export function PageBackground({ animate = true }: { animate?: boolean }) {
+  const drift = (x: number[], y: number[]) => (animate ? { x, y } : undefined);
   return (
     <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" aria-hidden>
       {/* Subtle grid — slate-toned, very faint */}
@@ -11,12 +18,12 @@ export function PageBackground() {
       {/* Two soft brand glows that drift slowly — a touch stronger in light mode so the
           off-white canvas has gentle color and depth instead of reading flat. */}
       <motion.div
-        animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
+        animate={drift([0, 30, 0], [0, -20, 0])}
         transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute top-[10%] -left-40 w-[520px] h-[520px] rounded-full bg-brand-primary/[0.18] dark:bg-brand-primary/[0.14] blur-[140px]"
       />
       <motion.div
-        animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
+        animate={drift([0, -30, 0], [0, 20, 0])}
         transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
         className="absolute top-[40%] -right-40 w-[440px] h-[440px] rounded-full bg-brand-secondary/[0.14] dark:bg-brand-primary/[0.12] blur-[140px]"
       />
@@ -30,10 +37,7 @@ export function PageBackground() {
             left: `${(i * 53) % 100}%`,
             top: `${(i * 71) % 100}%`,
           }}
-          animate={{
-            y: [0, -16, 0],
-            opacity: [0.15, 0.45, 0.15],
-          }}
+          animate={animate ? { y: [0, -16, 0], opacity: [0.15, 0.45, 0.15] } : undefined}
           transition={{
             duration: 5 + (i % 4),
             repeat: Infinity,
