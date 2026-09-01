@@ -48,7 +48,11 @@ export const PROJECT_METADATA: Record<string, {
       "HTML",
       "Dockerfile"
     ],
-    "latestRelease": null
+    "latestRelease": {
+      "version": "v1.0.0",
+      "url": "https://github.com/MacroMaster101/discord_music_bot/releases/tag/v1.0.0",
+      "downloads": 0
+    }
   },
   "discord-j4fn-server-bot": {
     "allLanguages": [
