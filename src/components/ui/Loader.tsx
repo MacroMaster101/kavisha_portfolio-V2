@@ -309,20 +309,29 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
       drawEdges(network.edges, 1 - currentMorph);
       drawEdges(network.monogramEdges, currentMorph);
 
+      // Canvas shadowBlur per node is the single most expensive op here and is brutal on
+      // browsers without GPU acceleration. Instead, fake the glow with a cheap faint
+      // larger disc under each crisp core dot — additive blending ('lighter') in dark mode
+      // makes overlapping halos bloom just like the old shadow, at a fraction of the cost.
       context.globalCompositeOperation = dark ? 'lighter' : 'source-over';
-      context.shadowBlur = dark ? 4 : 1.5;
-      context.shadowColor = dark ? 'rgba(129,140,248,.65)' : 'rgba(79,70,229,.35)';
       points.forEach((point, index) => {
         const depth = Math.max(0, Math.min(1, (point.z + 0.42) / 0.84));
         const signal = reduced ? 0 : (Math.sin(time * 0.003 + network.nodes[index].phase) + 1) / 2;
         const hue = 216 + depth * 70;
         const nodeRadius = 0.8 + depth * (dark ? 1.55 : 1.35) + signal * 0.35;
-        context.fillStyle = `hsla(${hue}, ${dark ? 96 : 86}%, ${dark ? 68 : 42}%, ${0.48 + depth * 0.48})`;
+        const sat = dark ? 96 : 86;
+        const light = dark ? 68 : 42;
+        // soft glow halo (cheap — no shadowBlur)
+        context.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${(dark ? 0.13 : 0.09) + depth * 0.1})`;
+        context.beginPath();
+        context.arc(point.x, point.y, nodeRadius * 2.6, 0, Math.PI * 2);
+        context.fill();
+        // crisp core
+        context.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${0.48 + depth * 0.48})`;
         context.beginPath();
         context.arc(point.x, point.y, nodeRadius, 0, Math.PI * 2);
         context.fill();
       });
-      context.shadowBlur = 0;
       context.globalCompositeOperation = 'source-over';
 
       // The pulsing center line keeps the two calm hemispheres clearly separated.
@@ -382,7 +391,7 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
   return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" aria-hidden="true" />;
 }
 
-export function Loader({ onFinish }: { onFinish: () => void }) {
+export function Loader({ onFinish, onExitStart }: { onFinish: () => void; onExitStart?: () => void }) {
   const { theme } = useTheme();
   const reduced = useReducedMotion() === true;
   const dark = theme === 'dark';
@@ -417,6 +426,9 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
         return;
       }
 
+      // Tell the app to mount the portfolio now, hidden behind this fading loader, so
+      // the heavy first mount happens under cover instead of during the animation.
+      onExitStart?.();
       setExiting(true);
       finishTimer = setTimeout(onFinish, reduced ? 60 : 500);
     };
@@ -427,7 +439,7 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
       if (finishTimer) clearTimeout(finishTimer);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onFinish, reduced]);
+  }, [onFinish, onExitStart, reduced]);
 
   const activeStep = [...LOAD_STEPS].reverse().find((step) => progress >= step.at) ?? LOAD_STEPS[0];
   const activeMessage = messageOrder[Math.min(messageOrder.length - 1, Math.floor(progress / 21))];
@@ -439,8 +451,8 @@ export function Loader({ onFinish }: { onFinish: () => void }) {
       aria-live="polite"
       aria-label={`${activeStep.label}, ${progress}%`}
       animate={exiting
-        ? { opacity: 0, scale: 1.025, filter: 'blur(8px)' }
-        : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
+        ? { opacity: 0, scale: 1.025 }
+        : { opacity: 1, scale: 1 }}
       transition={{ duration: reduced ? 0.01 : 0.68, ease: [0.76, 0, 0.24, 1] }}
     >
       <div
