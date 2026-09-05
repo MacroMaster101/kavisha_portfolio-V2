@@ -391,7 +391,14 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
   return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" aria-hidden="true" />;
 }
 
-export function Loader({ onFinish, onExitStart }: { onFinish: () => void; onExitStart?: () => void }) {
+// How long the intro animates. The genuine first visit of a tab session runs longer so
+// the neural field has time to breathe and the visitor can play with it; every later
+// refresh in that session runs shorter so returning is snappy. (Reduced-motion visitors
+// get a near-instant version regardless — see the runTime branch below.)
+const INTRO_MS_FIRST = 6000;
+const INTRO_MS_REPEAT = 2600;
+
+export function Loader({ onFinish, onExitStart, firstLoad = true }: { onFinish: () => void; onExitStart?: () => void; firstLoad?: boolean }) {
   const { theme } = useTheme();
   const reduced = useReducedMotion() === true;
   const dark = theme === 'dark';
@@ -410,7 +417,7 @@ export function Loader({ onFinish, onExitStart }: { onFinish: () => void; onExit
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const startedAt = performance.now();
-    const runTime = reduced ? 320 : 4500;
+    const runTime = reduced ? 320 : (firstLoad ? INTRO_MS_FIRST : INTRO_MS_REPEAT);
     let frame = 0;
     let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -439,7 +446,7 @@ export function Loader({ onFinish, onExitStart }: { onFinish: () => void; onExit
       if (finishTimer) clearTimeout(finishTimer);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onFinish, onExitStart, reduced]);
+  }, [onFinish, onExitStart, reduced, firstLoad]);
 
   const activeStep = [...LOAD_STEPS].reverse().find((step) => progress >= step.at) ?? LOAD_STEPS[0];
   const activeMessage = messageOrder[Math.min(messageOrder.length - 1, Math.floor(progress / 21))];

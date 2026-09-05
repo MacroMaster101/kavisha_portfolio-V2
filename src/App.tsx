@@ -6,6 +6,21 @@ import { Loader } from './components/ui/Loader';
 import { Portfolio } from './pages/Portfolio';
 import { Analytics } from '@vercel/analytics/react';
 
+// Distinguish the genuine first visit of a tab session from later refreshes so the intro
+// can run longer the first time and snappier afterwards. Computed once per page load at
+// module scope (before React), so it's read correctly even under StrictMode's double
+// mount in dev. The intro still PLAYS on every load — only its duration changes.
+const IS_FIRST_LOAD = (() => {
+  try {
+    const seen = sessionStorage.getItem('kl-intro-seen') === '1';
+    sessionStorage.setItem('kl-intro-seen', '1');
+    return !seen;
+  } catch {
+    // Storage unavailable (private mode) — treat every load as a first load.
+    return true;
+  }
+})();
+
 function App() {
   // The intro plays on every page load / refresh. Reduced-motion visitors still get a
   // near-instant version instead of the full animation (see runTime in Loader).
@@ -37,7 +52,7 @@ function App() {
   return (
     <ThemeProvider>
       <MotionConfig reducedMotion="user">
-        {loading && <Loader onFinish={finishLoading} onExitStart={revealContent} />}
+        {loading && <Loader onFinish={finishLoading} onExitStart={revealContent} firstLoad={IS_FIRST_LOAD} />}
         <CustomCursor />
         {showContent && (
           <div inert={loading ? true : undefined} aria-hidden={loading || undefined}>
