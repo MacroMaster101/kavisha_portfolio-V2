@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Folder, Star, GitFork, Download } from 'lucide-react';
 import { Section } from '../ui/Section';
@@ -93,6 +93,11 @@ function getRepoCategories(repo: GithubRepo): ProjectCategory[] {
 // in returning visitors' browsers (e.g. one that cached a now-private repo).
 const CACHE_KEY = 'gh_repos_v9';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+// The "Everything Else" grid starts collapsed to keep the section compact: it shows
+// INITIAL_VISIBLE cards, then reveals LOAD_STEP more each time "See more" is clicked.
+const INITIAL_VISIBLE = 12;
+const LOAD_STEP = 3;
 
 // Names of repos we want pinned as "Featured" (in display order, lowercased).
 // Anything matching will appear in the featured section.
@@ -425,6 +430,7 @@ export function Projects() {
   const [loading, setLoading] = useState(!initialState.hasFreshCache);
   const [error, setError] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
 
   useEffect(() => {
     if (initialState.hasFreshCache) return;
@@ -468,8 +474,25 @@ export function Projects() {
   const filteredRest =
     activeCategory === 'All' ? rest : rest.filter(r => getRepoCategories(r).includes(activeCategory));
 
+  // Only render up to visibleCount cards; the rest stay hidden behind "See more".
+  const visibleRest = filteredRest.slice(0, visibleCount);
+  const remaining = filteredRest.length - visibleRest.length;
+
   const handleCategory = (c: Category) => {
     setActiveCategory(c);
+    // Re-collapse when switching categories so each filter starts compact.
+    setVisibleCount(INITIAL_VISIBLE);
+  };
+
+  // Collapsing shortens the grid, which would otherwise strand the viewport in the
+  // whitespace/footer below. Scroll the button row (bottom of the now-collapsed list)
+  // back into view after the DOM has re-rendered.
+  const collapseAnchorRef = useRef<HTMLDivElement>(null);
+  const handleShowLess = () => {
+    setVisibleCount(INITIAL_VISIBLE);
+    requestAnimationFrame(() =>
+      collapseAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    );
   };
 
   return (
@@ -634,7 +657,7 @@ export function Projects() {
             )}
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-              {filteredRest.map((repo, idx) => {
+              {visibleRest.map((repo, idx) => {
                 const techStack = repoStack(repo);
                 return (
                   <motion.article
@@ -730,6 +753,28 @@ export function Projects() {
                 );
               })}
             </div>
+
+            {(remaining > 0 || visibleCount > INITIAL_VISIBLE) && (
+              <div ref={collapseAnchorRef} className="mt-12 flex flex-wrap items-center justify-center gap-3">
+                {remaining > 0 && (
+                  <button
+                    onClick={() => setVisibleCount(c => c + LOAD_STEP)}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-mono font-medium text-brand-primary border border-brand-primary rounded-full hover:bg-brand-primary/10 hover:-translate-y-0.5 transition-all"
+                  >
+                    See more
+                    <span className="text-brand-primary/70">({remaining})</span>
+                  </button>
+                )}
+                {visibleCount > INITIAL_VISIBLE && (
+                  <button
+                    onClick={handleShowLess}
+                    className="inline-flex items-center px-6 py-2.5 text-sm font-mono font-medium text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-full hover:border-brand-primary hover:text-brand-primary transition-all"
+                  >
+                    Show less
+                  </button>
+                )}
+              </div>
+            )}
 
           </div>
         </section>
