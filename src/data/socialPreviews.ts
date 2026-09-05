@@ -137,6 +137,15 @@ export const PROJECT_METADATA: Record<string, {
     ],
     "latestRelease": null
   },
+  "skillbridge-lk": {
+    "allLanguages": [
+      "JavaScript",
+      "CSS",
+      "PLpgSQL",
+      "HTML"
+    ],
+    "latestRelease": null
+  },
   "stremio_discord_rich_presence": {
     "allLanguages": [
       "JavaScript",
