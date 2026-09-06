@@ -28,6 +28,7 @@ export const PROJECT_METADATA: Record<string, {
     "allLanguages": [
       "TypeScript",
       "CSS",
+      "PLpgSQL",
       "JavaScript"
     ],
     "latestRelease": null
