@@ -116,6 +116,10 @@ export const PROJECT_METADATA: Record<string, {
     ],
     "latestRelease": null
   },
+  "kldevworks": {
+    "allLanguages": [],
+    "latestRelease": null
+  },
   "macromaster101": {
     "allLanguages": [
       "JavaScript"
