@@ -160,7 +160,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.11",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.11/Stremio-Discord-Presence-Setup-1.0.11.exe",
-      "downloads": 14
+      "downloads": 19
     }
   },
   "thilak_products_website": {
@@ -186,6 +186,18 @@ export const PROJECT_METADATA: Record<string, {
       "JavaScript"
     ],
     "latestRelease": null
+  },
+  "valheim-auto-cleanup": {
+    "allLanguages": [
+      "C#",
+      "Shell",
+      "PowerShell"
+    ],
+    "latestRelease": {
+      "version": "v1.0.0",
+      "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.0/ValheimAutoCleanup-1.0.0.zip",
+      "downloads": 0
+    }
   },
   "vero_salon_website": {
     "allLanguages": [
