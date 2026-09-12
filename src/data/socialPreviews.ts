@@ -194,9 +194,9 @@ export const PROJECT_METADATA: Record<string, {
       "PowerShell"
     ],
     "latestRelease": {
-      "version": "v1.0.0",
-      "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.0/ValheimAutoCleanup-1.0.0.zip",
-      "downloads": 0
+      "version": "v1.0.2",
+      "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.2/ValheimAutoCleanup-1.0.2.zip",
+      "downloads": 1
     }
   },
   "vero_salon_website": {
