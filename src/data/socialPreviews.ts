@@ -56,8 +56,8 @@ export const PROJECT_METADATA: Record<string, {
       "Dockerfile"
     ],
     "latestRelease": {
-      "version": "v1.1.1",
-      "url": "https://github.com/MacroMaster101/discord_music_bot/releases/tag/v1.1.1",
+      "version": "v1.2.0",
+      "url": "https://github.com/MacroMaster101/discord_music_bot/releases/tag/v1.2.0",
       "downloads": 0
     }
   },
@@ -166,7 +166,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.11",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.11/Stremio-Discord-Presence-Setup-1.0.11.exe",
-      "downloads": 74
+      "downloads": 86
     }
   },
   "thilak_products_website": {
@@ -202,7 +202,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.3",
       "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.3/ValheimAutoCleanup-1.0.3.zip",
-      "downloads": 3
+      "downloads": 4
     }
   },
   "vero_salon_website": {
