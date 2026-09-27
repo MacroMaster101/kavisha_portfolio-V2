@@ -24,6 +24,10 @@ export const PROJECT_METADATA: Record<string, {
   allLanguages: string[];
   latestRelease?: { version: string; url: string; downloads: number } | null;
 }> = {
+  "astrapair": {
+    "allLanguages": [],
+    "latestRelease": null
+  },
   "brakmasra": {
     "allLanguages": [
       "TypeScript",
@@ -167,7 +171,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.11",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.11/Stremio-Discord-Presence-Setup-1.0.11.exe",
-      "downloads": 99
+      "downloads": 112
     }
   },
   "thilak_products_website": {
@@ -203,7 +207,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.3",
       "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.3/ValheimAutoCleanup-1.0.3.zip",
-      "downloads": 5
+      "downloads": 6
     }
   },
   "vero_salon_website": {
