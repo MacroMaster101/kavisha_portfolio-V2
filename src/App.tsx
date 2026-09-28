@@ -5,6 +5,7 @@ import { CustomCursor } from './components/ui/CustomCursor';
 import { Loader } from './components/ui/Loader';
 import { Portfolio } from './pages/Portfolio';
 import { Analytics } from '@vercel/analytics/react';
+import { warmSplineScene } from './lib/splineScene';
 
 // Distinguish the genuine first visit of a tab session from later refreshes so the intro
 // can run longer the first time and snappier afterwards. Computed once per page load at
@@ -40,6 +41,10 @@ function App() {
     }
     wasLoading.current = loading;
   }, [loading]);
+
+  // The Hero (and its robot) is unmounted during the intro, so start the robot's scene
+  // download from here, where it can use the intro's time. See warmSplineScene.
+  useEffect(() => warmSplineScene(), []);
 
   const finishLoading = useCallback(() => setLoading(false), []);
 

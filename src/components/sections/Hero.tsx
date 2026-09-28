@@ -2,6 +2,7 @@ import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState, ty
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Bot, Mail } from 'lucide-react';
 import { RobotBackdrop } from '../ui/RobotBackdrop';
+import { SPLINE_ROBOT } from '../../lib/splineScene';
 
 // Tracks a CSS media query. Used to mount the (expensive) Spline robot in exactly
 // ONE place per breakpoint — never two WebGL contexts at once.
@@ -22,10 +23,6 @@ function useMediaQuery(query: string) {
 // Lazy-load Spline so it doesn't bloat the initial bundle. SplineScene forces the
 // runtime's WebGL pipeline (see the component for why).
 const Spline = lazy(() => import('../ui/SplineScene'));
-
-// Public Spline scene — interactive robot that follows the cursor.
-// To swap: go to spline.design → open a community scene → click "Export" → "Code Export" → copy the .splinecode URL.
-const SPLINE_ROBOT = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
 
 type RobotState = 'checking' | 'waiting' | 'ready' | 'failed';
 
