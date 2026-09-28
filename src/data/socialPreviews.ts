@@ -169,9 +169,9 @@ export const PROJECT_METADATA: Record<string, {
       "NSIS"
     ],
     "latestRelease": {
-      "version": "v1.0.11",
-      "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.11/Stremio-Discord-Presence-Setup-1.0.11.exe",
-      "downloads": 112
+      "version": "v1.0.13",
+      "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.13/Stremio-Discord-Presence-Setup-1.0.13.exe",
+      "downloads": 5
     }
   },
   "thilak_products_website": {
