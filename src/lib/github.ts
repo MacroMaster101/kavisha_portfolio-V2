@@ -52,6 +52,50 @@ function parseRelease(value: unknown): LatestRelease | null {
   return { version, url, downloads };
 }
 
+// Distills a raw `GET /repos/{owner}/{repo}/releases/latest` response into what a card
+// needs. Mirrors toLatestRelease() in scripts/fetch-social-previews.mjs so live and
+// build-time data agree: primary (largest) asset URL, or the release page if none.
+export function parseGithubReleaseResponse(value: unknown): LatestRelease | null {
+  if (!isRecord(value) || value.draft === true) return null;
+  const assets = (Array.isArray(value.assets) ? value.assets : []).filter(
+    (asset): asset is Record<string, unknown> =>
+      isRecord(asset) &&
+      typeof asset.browser_download_url === 'string' &&
+      finiteNumber(asset.download_count) !== null &&
+      finiteNumber(asset.size) !== null,
+  );
+  const primary = [...assets].sort((a, b) => (b.size as number) - (a.size as number))[0];
+  const version = typeof value.tag_name === 'string' && value.tag_name
+    ? value.tag_name
+    : typeof value.name === 'string' && value.name ? value.name : 'latest';
+  return parseRelease({
+    version,
+    url: primary?.browser_download_url ?? value.html_url,
+    downloads: assets.reduce((sum, asset) => sum + Math.max(0, asset.download_count as number), 0),
+  });
+}
+
+// Live lookup so a new release shows up without waiting for the daily metadata refresh.
+// Resolves null when the repo has no published release, undefined when GitHub could not
+// answer (rate limit, network) so callers keep whatever release data they already have.
+export async function fetchLatestRelease(
+  repoName: string,
+  signal: AbortSignal,
+): Promise<LatestRelease | null | undefined> {
+  if (!/^[A-Za-z0-9._-]{1,100}$/.test(repoName)) return undefined;
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${encodeURIComponent(repoName)}/releases/latest`,
+      { signal, headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } },
+    );
+    if (response.status === 404) return null;
+    if (!response.ok) return undefined;
+    return parseGithubReleaseResponse(await response.json()) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function parseGithubRepo(value: unknown): GithubRepo | null {
   if (!isRecord(value)) return null;
 
