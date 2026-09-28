@@ -10,12 +10,14 @@ const skills = [
   'Next.js',
   'React Native',
   'Expo',
-  'React',
-  'Node.js',
   'Supabase',
-  'Neon',
+  'Drizzle ORM',
   'PostgreSQL',
+  'Electron',
+  'C# / .NET',
+  'Docker',
   'Python',
+  'GitHub Actions',
 ];
 
 export function About() {
@@ -120,7 +122,9 @@ export function About() {
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute -top-2 -left-2 md:-top-3 md:-left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
             >
-              <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5" />
+              {/* React's cyan is too pale on the white light-mode badge; use react.dev's darker blue there. */}
+              <img src="https://cdn.simpleicons.org/react/087EA4" alt="React" className="w-3.5 h-3.5 block dark:hidden" />
+              <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5 hidden dark:block" />
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">React</span>
             </motion.div>
 
