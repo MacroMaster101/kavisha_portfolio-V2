@@ -1,0 +1,24 @@
+version: 2
+
+# Version-update PRs target dev so they follow feature → dev → main.
+# Automatic security-update PRs are left off on purpose: they always target main,
+# which only accepts PRs from dev. Alerts stay on; fix them via a PR into dev.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
