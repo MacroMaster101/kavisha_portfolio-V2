@@ -5,10 +5,12 @@ import { Section } from '../ui/Section';
 import { Github } from '../ui/BrandIcons';
 import { PROJECT_METADATA, SOCIAL_PREVIEWS } from '../../data/socialPreviews';
 import {
+  fetchLatestRelease,
   fetchPublicGithubRepos,
   parseGithubRepoCache,
   safeHttpUrl,
   type GithubRepo,
+  type LatestRelease,
 } from '../../lib/github';
 
 // Latest GitHub Release for a repo, distilled to what the card needs: a version label,
@@ -91,8 +93,9 @@ function getRepoCategories(repo: GithubRepo): ProjectCategory[] {
 
 // Bump this when the cached shape or fallback set changes, to discard stale caches
 // in returning visitors' browsers (e.g. one that cached a now-private repo).
-const CACHE_KEY = 'gh_repos_v9';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_KEY = 'gh_repos_v10';
+// Short enough that a newly published release reaches returning visitors the same hour.
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 // The "Everything Else" grid starts collapsed to keep the section compact: it shows
 // INITIAL_VISIBLE cards, then reveals LOAD_STEP more each time "See more" is clicked.
@@ -365,21 +368,32 @@ const FALLBACK_REPOS: GithubRepo[] = [
   },
 ];
 
-const mergeRepos = (repos: GithubRepo[]) => {
+// Release precedence: a live GitHub lookup beats a cached/incoming value, which beats the
+// build-time snapshot. The snapshot is up to a day old, so it must never override newer data.
+const mergeRepos = (repos: GithubRepo[], liveReleases?: ReadonlyMap<string, LatestRelease | null>) => {
   const byName = new Map<string, GithubRepo>();
 
   for (const repo of FALLBACK_REPOS) {
-    byName.set(repo.name.toLowerCase(), repo);
+    const key = repo.name.toLowerCase();
+    const generated = PROJECT_METADATA[key];
+    byName.set(key, {
+      ...repo,
+      allLanguages: generated?.allLanguages?.length ? generated.allLanguages : repo.allLanguages,
+      latestRelease: generated?.latestRelease ?? repo.latestRelease ?? null,
+    });
   }
 
   for (const incoming of repos) {
-    const generated = PROJECT_METADATA[incoming.name.toLowerCase()];
+    const key = incoming.name.toLowerCase();
+    const generated = PROJECT_METADATA[key];
     const repo: GithubRepo = {
       ...incoming,
-      description: REPO_DESCRIPTION_OVERRIDES[incoming.name.toLowerCase()] ?? incoming.description,
+      description: REPO_DESCRIPTION_OVERRIDES[key] ?? incoming.description,
       allLanguages: generated?.allLanguages?.length ? generated.allLanguages : incoming.allLanguages,
-      latestRelease: generated?.latestRelease ?? incoming.latestRelease,
-      homepage: REPO_HOMEPAGE_OVERRIDES[incoming.name.toLowerCase()] ?? safeHttpUrl(incoming.homepage),
+      latestRelease: liveReleases?.has(key)
+        ? liveReleases.get(key) ?? null
+        : incoming.latestRelease ?? generated?.latestRelease ?? null,
+      homepage: REPO_HOMEPAGE_OVERRIDES[key] ?? safeHttpUrl(incoming.homepage),
     };
     byName.set(repo.name.toLowerCase(), {
       ...byName.get(repo.name.toLowerCase()),
@@ -437,13 +451,22 @@ export function Projects() {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 8000);
     fetchPublicGithubRepos(controller.signal)
-      .then(data => {
+      .then(async data => {
         const sorted = data.sort(
           (a, b) =>
             b.stargazers_count - a.stargazers_count ||
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
         );
-        const mergedRepos = mergeRepos(sorted);
+        // Only repos already known to publish releases are re-checked live, which keeps
+        // the unauthenticated API budget (60/hour per visitor) to a handful of requests.
+        // Repos gaining their first release are picked up by the daily metadata refresh.
+        const releaseRepos = sorted.filter(repo => PROJECT_METADATA[repo.name.toLowerCase()]?.latestRelease);
+        const liveReleases = new Map<string, LatestRelease | null>();
+        await Promise.all(releaseRepos.map(async repo => {
+          const release = await fetchLatestRelease(repo.name, controller.signal);
+          if (release !== undefined) liveReleases.set(repo.name.toLowerCase(), release);
+        }));
+        const mergedRepos = mergeRepos(sorted, liveReleases);
         try {
           localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mergedRepos, timestamp: Date.now() }));
         } catch { /* ignore */ }
