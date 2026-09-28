@@ -10,9 +10,10 @@ const lookingFor = [
 ];
 
 const stack = [
-  'React', 'Next.js', 'React Native', 'Expo', 'Node.js', 'Express', 'Prisma', 'Flask',
-  'Java', 'Python', 'JavaScript', 'TypeScript', 'PostgreSQL', 'Supabase', 'Neon',
-  'MongoDB', 'MS SQL Server', 'JWT',
+  'React', 'Next.js', 'React Native', 'Expo', 'Electron', 'Node.js', 'Express', 'Spring Boot',
+  'Flask', 'Java', 'Python', 'JavaScript', 'TypeScript', 'C# / .NET', 'PostgreSQL', 'Supabase',
+  'Neon', 'MongoDB', 'MS SQL Server', 'Prisma', 'Drizzle ORM', 'Zod', 'JWT', 'Vitest',
+  'Playwright', 'Docker', 'GitHub Actions', 'AWS EC2',
 ];
 
 const strengths = [
