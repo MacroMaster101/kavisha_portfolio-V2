@@ -216,6 +216,8 @@ function SkillLogo({ skill }: { skill: Skill }) {
       <img
         src={light}
         alt={`${skill.name} logo`}
+        width={32}
+        height={32}
         loading="lazy"
         onError={() => setFailed(true)}
         className={`${imgClass} block dark:hidden`}
@@ -224,6 +226,8 @@ function SkillLogo({ skill }: { skill: Skill }) {
       <img
         src={dark}
         alt={`${skill.name} logo`}
+        width={32}
+        height={32}
         loading="lazy"
         onError={() => setFailed(true)}
         className={`${imgClass} hidden dark:block ${skill.darkInvert ? 'brightness-0 invert' : ''} ${skill.darkBoost ? 'brightness-200' : ''}`}

@@ -195,9 +195,13 @@ function ProjectImage({
           <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </div>
       )}
+      {/* GitHub social previews are 1280×640. The attributes give the browser the 2:1
+          ratio before the image loads; CSS (w-full h-full) still controls the size. */}
       <img
         src={sources[srcIndex]}
         alt={alt}
+        width={1280}
+        height={640}
         loading={loading}
         onLoad={() => setLoaded(true)}
         onError={() => {
