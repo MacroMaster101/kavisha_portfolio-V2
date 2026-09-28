@@ -1,9 +1,10 @@
 name: Refresh social previews
 
-# Keeps src/data/socialPreviews.ts in sync with the social-preview images
-# uploaded to your GitHub repos. Runs the generator on a schedule (and on demand),
-# and commits the result only when it actually changes. The commit triggers
-# Vercel's normal auto-deploy, so new previews go live with no manual steps.
+# Keeps src/data/socialPreviews.ts in sync with the social-preview images and
+# release metadata of your GitHub repos. Runs the generator on a schedule (and on
+# demand) and commits the result to `dev` only when it actually changes. `main` is
+# protected (PRs from dev only), so refreshed data ships with the next dev → main
+# merge; project cards also check known releases live in the browser meanwhile.
 
 on:
   schedule:
@@ -12,7 +13,7 @@ on:
   workflow_dispatch: {} # lets you trigger it manually from the Actions tab
 
 permissions:
-  contents: write # needed to push the updated file back
+  contents: read
 
 concurrency:
   group: social-previews
@@ -21,14 +22,18 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to push the updated file back to dev
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: dev
 
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Regenerate social previews
         env:
@@ -46,4 +51,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data/socialPreviews.ts
           git commit -m "chore: refresh social previews"
-          git push
+          git push origin HEAD:dev

@@ -4,6 +4,7 @@ import {
   countShippedProjects,
   parseGithubRepo,
   parseGithubRepoCache,
+  parseGithubReleaseResponse,
   parseGithubRepos,
   safeHttpUrl,
 } from '../src/lib/github';
@@ -85,6 +86,31 @@ test('accepts a fresh cache only after validating every repository', () => {
   );
   assert.equal(parsed?.length, 1);
   assert.equal(parsed?.[0].name, 'public-project');
+});
+
+test('picks the largest asset and totals downloads from a latest-release response', () => {
+  const release = parseGithubReleaseResponse({
+    tag_name: 'v1.0.12',
+    html_url: 'https://github.com/MacroMaster101/app/releases/tag/v1.0.12',
+    assets: [
+      { browser_download_url: 'https://github.com/MacroMaster101/app/releases/download/v1.0.12/small.yml', size: 10, download_count: 4 },
+      { browser_download_url: 'https://github.com/MacroMaster101/app/releases/download/v1.0.12/Setup.exe', size: 9000, download_count: 20 },
+    ],
+  });
+  assert.deepEqual(release, {
+    version: 'v1.0.12',
+    url: 'https://github.com/MacroMaster101/app/releases/download/v1.0.12/Setup.exe',
+    downloads: 24,
+  });
+});
+
+test('falls back to the release page and rejects drafts or off-site URLs', () => {
+  assert.deepEqual(
+    parseGithubReleaseResponse({ tag_name: 'v2.0.0', html_url: 'https://github.com/MacroMaster101/app/releases/tag/v2.0.0', assets: [] }),
+    { version: 'v2.0.0', url: 'https://github.com/MacroMaster101/app/releases/tag/v2.0.0', downloads: 0 },
+  );
+  assert.equal(parseGithubReleaseResponse({ draft: true, tag_name: 'v3', html_url: 'https://github.com/x' }), null);
+  assert.equal(parseGithubReleaseResponse({ tag_name: 'v3', html_url: 'https://evil.example/x', assets: [] }), null);
 });
 
 test('counts shipped projects without forks or the profile repository', () => {
