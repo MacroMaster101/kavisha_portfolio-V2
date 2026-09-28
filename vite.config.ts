@@ -16,7 +16,7 @@ export default defineConfig({
     // graph so it is fetched only when the code actually imports it (post-loader).
     modulePreload: {
       resolveDependencies: (_filename, deps) =>
-        deps.filter((dep) => !/react-spline|splinetool/.test(dep)),
+        deps.filter((dep) => !/SplineScene|splinetool/.test(dep)),
     },
   },
 })
