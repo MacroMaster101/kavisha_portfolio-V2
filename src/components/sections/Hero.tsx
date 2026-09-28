@@ -19,8 +19,9 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-// Lazy-load Spline so it doesn't bloat the initial bundle.
-const Spline = lazy(() => import('@splinetool/react-spline'));
+// Lazy-load Spline so it doesn't bloat the initial bundle. SplineScene forces the
+// runtime's WebGL pipeline (see the component for why).
+const Spline = lazy(() => import('../ui/SplineScene'));
 
 // Public Spline scene — interactive robot that follows the cursor.
 // To swap: go to spline.design → open a community scene → click "Export" → "Code Export" → copy the .splinecode URL.
@@ -108,7 +109,7 @@ function isSplineRendererFailure(value: unknown) {
     ? `${value.message} ${value.stack ?? ''}`
     : String(value ?? '');
 
-  return /react-spline|renderSplineScene|clearBufferfv|WebGLRenderer|WebGL context|framebuffer is incomplete/i.test(text);
+  return /SplineScene|renderSplineScene|clearBufferfv|WebGLRenderer|WebGL context|framebuffer is incomplete/i.test(text);
 }
 
 const roles = [
@@ -160,13 +161,24 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
   // single Spline WebGL context is ever mounted. Two contexts caused heavy lag.
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  // Older published Spline scenes are migrated in memory by the current runtime.
-  // The runtime reports that expected migration as a console warning even though
-  // loading succeeds. Filter only that exact vendor notice during scene startup.
+  // Filter two known, harmless vendor notices during scene startup — nothing else:
+  // 1. Older published Spline scenes are migrated in memory by the current runtime,
+  //    which reports that expected migration as a warning even though loading succeeds.
+  // 2. On Windows, Chrome compiles WebGL shaders through Direct3D, whose compiler
+  //    emits X3595 ("gradient instruction used in a loop") for the scene's own
+  //    material shaders. It is a driver diagnostic, not an error, and the shaders
+  //    live in the published scene, so there is nothing to fix on our side.
   useEffect(() => {
     const originalWarn = console.warn;
     const filteredWarn = (...args: unknown[]) => {
       if (args[0] === 'updating from ' && args[2] === 'to ') return;
+      // Three passes the label and the driver log as separate arguments.
+      const text = args.filter((arg): arg is string => typeof arg === 'string').join(' ');
+      if (
+        text.startsWith('THREE.WebGLProgram: Program Info Log:') &&
+        /warning X3595/.test(text) &&
+        !/error/i.test(text)
+      ) return;
       originalWarn(...args);
     };
     console.warn = filteredWarn;

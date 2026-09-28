@@ -19,7 +19,6 @@
     "social-previews": "node --env-file-if-exists=.env scripts/fetch-social-previews.mjs"
   },
   "dependencies": {
-    "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^2.0.57",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^13.4.4",
