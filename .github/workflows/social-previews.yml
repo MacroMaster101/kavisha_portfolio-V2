@@ -3,8 +3,10 @@ name: Refresh social previews
 # Keeps src/data/socialPreviews.ts in sync with the social-preview images and
 # release metadata of your GitHub repos. Runs the generator on a schedule (and on
 # demand) and commits the result to `dev` only when it actually changes. `main` is
-# protected (PRs from dev only), so refreshed data ships with the next dev → main
-# merge; project cards also check known releases live in the browser meanwhile.
+# protected (PRs from dev only), so the `release` job then opens a dev → main pull
+# request, waits for the required checks and merges it — but only while that file
+# is the sole difference between the branches. Unreleased work on dev is never
+# shipped from here; the refreshed data then waits for your next manual release.
 
 on:
   schedule:
@@ -57,11 +59,12 @@ jobs:
     needs: refresh
     runs-on: ubuntu-latest
     permissions:
-      contents: write # merge the release pull request
-      pull-requests: write # open it
-      actions: write # dispatch the required checks
+      contents: read
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Fine-grained personal access token (Contents + Pull requests: read/write on
+      # this repo). Pull requests opened with the built-in GITHUB_TOKEN do not
+      # trigger workflows, so main's required checks would never run on them.
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       GH_REPO: ${{ github.repository }}
     steps:
       - name: Checkout
@@ -100,29 +103,24 @@ jobs:
           fi
           echo "number=$number" >> "$GITHUB_OUTPUT"
 
-      # Bot-authored commits and pull requests do not trigger workflows, so the
-      # checks main requires are dispatched on dev and reported on its head commit.
-      - name: Run the required checks
+      - name: Wait for the required checks
         if: steps.scope.outputs.release == 'true'
         env:
-          SHA: ${{ steps.scope.outputs.sha }}
+          NUMBER: ${{ steps.pr.outputs.number }}
         run: |
-          gh workflow run ci.yml --ref dev
-          gh workflow run branch-flow.yml --ref dev
           for attempt in $(seq 1 60); do
             sleep 15
-            pending=0
-            for check in verify source-branch; do
-              state="$(gh api "repos/$GH_REPO/commits/$SHA/check-runs?check_name=$check" \
-                --jq '.check_runs | sort_by(.started_at) | last | if . == null then "missing" elif .status != "completed" then "pending" else .conclusion end')"
-              echo "$check: $state"
-              case "$state" in
-                success) ;;
-                missing | pending) pending=1 ;;
-                *) echo "::error::$check finished with $state."; exit 1 ;;
-              esac
-            done
-            if [ "$pending" = 0 ]; then exit 0; fi
+            failed="$(gh pr checks "$NUMBER" --required --json name,bucket \
+              --jq '[.[] | select(.bucket == "fail" or .bucket == "cancel") | .name] | join(", ")' 2>/dev/null || true)"
+            if [ -n "$failed" ]; then
+              echo "::error::Required checks failed: $failed."
+              exit 1
+            fi
+            state="$(gh pr view "$NUMBER" --json mergeStateStatus --jq '.mergeStateStatus')"
+            echo "merge state: $state"
+            case "$state" in
+              CLEAN | UNSTABLE | HAS_HOOKS) exit 0 ;;
+            esac
           done
           echo "::error::Timed out waiting for the required checks."
           exit 1

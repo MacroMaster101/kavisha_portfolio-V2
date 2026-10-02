@@ -4,9 +4,6 @@ on:
   push:
     branches: [main, dev]
   pull_request:
-  # Dispatched on dev by social-previews.yml: its bot commits and pull requests
-  # do not trigger workflows, and main requires `verify` on the released commit.
-  workflow_dispatch: {}
 
 permissions:
   contents: read
