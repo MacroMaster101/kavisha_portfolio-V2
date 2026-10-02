@@ -19,7 +19,7 @@
     "social-previews": "node --env-file-if-exists=.env scripts/fetch-social-previews.mjs"
   },
   "dependencies": {
-    "@splinetool/runtime": "^2.0.57",
+    "@splinetool/runtime": "^2.0.58",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^13.4.4",
     "lucide-react": "^1.48.0",
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.8",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
