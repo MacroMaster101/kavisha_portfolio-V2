@@ -106,6 +106,7 @@ export const PROJECT_METADATA: Record<string, {
     "allLanguages": [
       "TypeScript",
       "CSS",
+      "PLpgSQL",
       "JavaScript"
     ],
     "latestRelease": null
@@ -169,9 +170,9 @@ export const PROJECT_METADATA: Record<string, {
       "NSIS"
     ],
     "latestRelease": {
-      "version": "v1.0.11",
-      "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.11/Stremio-Discord-Presence-Setup-1.0.11.exe",
-      "downloads": 112
+      "version": "v1.0.13",
+      "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.13/Stremio-Discord-Presence-Setup-1.0.13.exe",
+      "downloads": 58
     }
   },
   "thilak_products_website": {
@@ -207,7 +208,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.3",
       "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.3/ValheimAutoCleanup-1.0.3.zip",
-      "downloads": 6
+      "downloads": 11
     }
   },
   "vero_salon_website": {
