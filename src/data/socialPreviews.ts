@@ -2,7 +2,7 @@
 // Metadata is resolved outside the browser so client loads need only one public API request.
 
 export const SOCIAL_PREVIEWS: Record<string, string> = {
-  "brakmasra": "https://repository-images.githubusercontent.com/1342726548/c0d22490-87b3-4f65-a764-d992e02b21e7",
+  "brakmasra": "https://repository-images.githubusercontent.com/1342726548/2bf13ceb-3238-4d75-b504-fc74781c8e76",
   "denguerisk": "https://repository-images.githubusercontent.com/1179074622/29e5b9d1-125a-41a8-97c2-28b88cb7a99f",
   "discord_music_bot": "https://repository-images.githubusercontent.com/1111201356/c97a3b09-2120-4148-b682-4cf1b5d8427b",
   "discord-j4fn-server-bot": "https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62",
@@ -17,7 +17,7 @@ export const SOCIAL_PREVIEWS: Record<string, string> = {
   "stremio_discord_rich_presence": "https://repository-images.githubusercontent.com/1258308482/5e5f4667-39b8-42a9-b39a-498e56bd0fa5",
   "travel_genie": "https://repository-images.githubusercontent.com/1219954621/614682d9-723c-4ef7-8402-4e198faef8b4",
   "travel_genie_app": "https://repository-images.githubusercontent.com/1240803395/d312e254-6820-4551-a7c9-b9d4fbb2a8d8",
-  "valheim-auto-cleanup": "https://repository-images.githubusercontent.com/1362563568/78bd8024-8941-47c0-a421-8f0a74786041",
+  "valheim-auto-cleanup": "https://repository-images.githubusercontent.com/1362563568/3a7d9c5c-2b97-4510-80fc-86ca05cf7b93",
   "vero_salon_website": "https://repository-images.githubusercontent.com/1276927785/7f8ef0a6-3961-4ba7-b3a2-ec4390fcaf33",
   "web-voting-system": "https://repository-images.githubusercontent.com/1179071882/d7aefbd2-d7ce-445e-9fac-26e4bf245d6b"
 };
