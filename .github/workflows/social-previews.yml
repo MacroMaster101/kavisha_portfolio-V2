@@ -52,3 +52,84 @@ jobs:
           git add src/data/socialPreviews.ts
           git commit -m "chore: refresh social previews"
           git push origin HEAD:dev
+
+  release:
+    needs: refresh
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # merge the release pull request
+      pull-requests: write # open it
+      actions: write # dispatch the required checks
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Check what dev would release
+        id: scope
+        run: |
+          git fetch origin main
+          changed="$(git diff --name-only origin/main HEAD)"
+          if [ -z "$changed" ]; then
+            echo "dev matches main; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          elif [ "$changed" != "src/data/socialPreviews.ts" ]; then
+            echo "dev holds other unreleased changes; leaving the release to a manual pull request:"
+            echo "$changed"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open the release pull request
+        if: steps.scope.outputs.release == 'true'
+        id: pr
+        run: |
+          number="$(gh pr list --base main --head dev --state open --json number --jq '.[0].number // empty')"
+          if [ -z "$number" ]; then
+            gh pr create --base main --head dev \
+              --title "Release: refresh social previews" \
+              --body "Automated release of refreshed repository previews and release metadata (src/data/socialPreviews.ts only)."
+            number="$(gh pr list --base main --head dev --state open --json number --jq '.[0].number')"
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # Bot-authored commits and pull requests do not trigger workflows, so the
+      # checks main requires are dispatched on dev and reported on its head commit.
+      - name: Run the required checks
+        if: steps.scope.outputs.release == 'true'
+        env:
+          SHA: ${{ steps.scope.outputs.sha }}
+        run: |
+          gh workflow run ci.yml --ref dev
+          gh workflow run branch-flow.yml --ref dev
+          for attempt in $(seq 1 60); do
+            sleep 15
+            pending=0
+            for check in verify source-branch; do
+              state="$(gh api "repos/$GH_REPO/commits/$SHA/check-runs?check_name=$check" \
+                --jq '.check_runs | sort_by(.started_at) | last | if . == null then "missing" elif .status != "completed" then "pending" else .conclusion end')"
+              echo "$check: $state"
+              case "$state" in
+                success) ;;
+                missing | pending) pending=1 ;;
+                *) echo "::error::$check finished with $state."; exit 1 ;;
+              esac
+            done
+            if [ "$pending" = 0 ]; then exit 0; fi
+          done
+          echo "::error::Timed out waiting for the required checks."
+          exit 1
+
+      - name: Merge into main
+        if: steps.scope.outputs.release == 'true'
+        env:
+          NUMBER: ${{ steps.pr.outputs.number }}
+          SHA: ${{ steps.scope.outputs.sha }}
+        run: gh pr merge "$NUMBER" --merge --match-head-commit "$SHA"
