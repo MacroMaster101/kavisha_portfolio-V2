@@ -2,7 +2,7 @@
 // Metadata is resolved outside the browser so client loads need only one public API request.
 
 export const SOCIAL_PREVIEWS: Record<string, string> = {
-  "brakmasra": "https://repository-images.githubusercontent.com/1342726548/2ead8003-97e6-4042-9f8a-a9dda348cd19",
+  "brakmasra": "https://repository-images.githubusercontent.com/1342726548/c0d22490-87b3-4f65-a764-d992e02b21e7",
   "denguerisk": "https://repository-images.githubusercontent.com/1179074622/29e5b9d1-125a-41a8-97c2-28b88cb7a99f",
   "discord_music_bot": "https://repository-images.githubusercontent.com/1111201356/c97a3b09-2120-4148-b682-4cf1b5d8427b",
   "discord-j4fn-server-bot": "https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62",
