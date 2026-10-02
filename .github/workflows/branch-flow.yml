@@ -2,15 +2,10 @@ name: Branch flow
 
 # Enforces feature → dev → main: pull requests into main must come from dev.
 # The `source-branch` job is a required status check in the main ruleset.
-#
-# Pull requests opened with a workflow's GITHUB_TOKEN do not trigger workflows, so
-# the automated preview release (social-previews.yml) dispatches this workflow on
-# `dev` instead; the check then lands on the same commit the release PR points at.
 
 on:
   pull_request:
     branches: [main]
-  workflow_dispatch: {}
 
 permissions: {}
 
@@ -20,20 +15,10 @@ jobs:
     steps:
       - name: Require dev as the source branch
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
           HEAD_REF: ${{ github.head_ref }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           BASE_REPO: ${{ github.repository }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ "$REF_NAME" != "dev" ]; then
-              echo "::error::Manual runs only vouch for dev (got $REF_NAME)."
-              exit 1
-            fi
-            echo "Source branch is dev."
-            exit 0
-          fi
           if [ "$HEAD_REF" != "dev" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
             echo "::error::Pull requests into main must come from this repository's dev branch (got $HEAD_REPO:$HEAD_REF)."
             exit 1
