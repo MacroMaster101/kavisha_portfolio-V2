@@ -92,6 +92,16 @@ export const PROJECT_METADATA: Record<string, {
     ],
     "latestRelease": null
   },
+  "it24101927_lab11_project": {
+    "allLanguages": [
+      "C#",
+      "JavaScript",
+      "CSS",
+      "Dockerfile",
+      "HTML"
+    ],
+    "latestRelease": null
+  },
   "it3012---it24101927": {
     "allLanguages": [],
     "latestRelease": null
@@ -174,7 +184,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.13",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.13/Stremio-Discord-Presence-Setup-1.0.13.exe",
-      "downloads": 151
+      "downloads": 154
     }
   },
   "thilak_products_website": {
