@@ -27,7 +27,13 @@ export const PROJECT_METADATA: Record<string, {
   latestRelease?: { version: string; url: string; downloads: number } | null;
 }> = {
   "astrapair": {
-    "allLanguages": [],
+    "allLanguages": [
+      "TypeScript",
+      "PLpgSQL",
+      "JavaScript",
+      "CSS",
+      "HTML"
+    ],
     "latestRelease": null
   },
   "brakmasra": {
@@ -83,6 +89,16 @@ export const PROJECT_METADATA: Record<string, {
       "HTML",
       "Python",
       "Dockerfile"
+    ],
+    "latestRelease": null
+  },
+  "ecocycle-webapp": {
+    "allLanguages": [
+      "C#",
+      "JavaScript",
+      "Dart",
+      "CSS",
+      "Python"
     ],
     "latestRelease": null
   },
@@ -160,6 +176,12 @@ export const PROJECT_METADATA: Record<string, {
     ],
     "latestRelease": null
   },
+  "pacman-search-cs188": {
+    "allLanguages": [
+      "Python"
+    ],
+    "latestRelease": null
+  },
   "salon_vero_app": {
     "allLanguages": [
       "TypeScript",
@@ -185,7 +207,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.13",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.13/Stremio-Discord-Presence-Setup-1.0.13.exe",
-      "downloads": 206
+      "downloads": 217
     }
   },
   "thilak_products_website": {
