@@ -39,12 +39,12 @@ const education: Edu[] = [
 
 export function Education() {
   return (
-    <Section id="education" num="05." title="Academic Journey">
+    <Section id="education" title="Academic Journey">
       <ol className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 md:ml-4 space-y-12">
         {education.map((edu, i) => (
           <li key={i} className="relative pl-8 md:pl-12 group">
             {/* Marker */}
-            <span className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white dark:bg-[#030014] border-2 border-brand-primary group-hover:scale-125 transition-transform" />
+            <span className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white dark:bg-page-dark border-2 border-brand-primary group-hover:scale-125 transition-transform" />
 
             <p className="font-mono text-sm text-brand-primary mb-1">{edu.period}</p>
             <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug">

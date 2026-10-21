@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Mail } from 'lucide-react';
-import { EMAIL, SOCIALS as socials } from '../../data/contact';
+import { EMAIL } from '../../data/contact';
+import { SocialLinks } from './SocialLinks';
 
 export function SideRails() {
   return (
@@ -12,22 +13,10 @@ export function SideRails() {
         transition={{ delay: 1.6, duration: 0.8 }}
         className="hidden lg:flex fixed left-10 xl:left-12 bottom-0 z-30 flex-col items-center gap-6 after:content-[''] after:block after:w-px after:h-24 after:bg-slate-400 dark:after:bg-slate-500"
       >
-        <ul className="flex flex-col items-center gap-5 text-slate-500 dark:text-slate-400">
-          {socials.map(({ Icon, href, label }) => (
-            <li key={label}>
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                title={label}
-                className="inline-block p-1 hover:text-brand-primary hover:-translate-y-1 transition-all duration-200"
-              >
-                <Icon size={20} />
-              </a>
-            </li>
-          ))}
-        </ul>
+        <SocialLinks
+          className="flex flex-col items-center gap-5 text-slate-500 dark:text-slate-400"
+          linkClassName="inline-block p-1 hover:text-brand-primary hover:-translate-y-1 transition-all duration-200"
+        />
       </motion.aside>
 
       {/* Right rail — vertical email */}

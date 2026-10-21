@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Section } from '../ui/Section';
 import { countShippedProjects, fetchPublicGithubRepos, readGithubRepoCache } from '../../lib/github';
+import { PulseDot } from '../ui/PulseDot';
 
 const FALLBACK_PROJECT_COUNT = 19;
 
@@ -18,6 +19,38 @@ const skills = [
   'Docker',
   'Python',
   'GitHub Actions',
+];
+
+// Floating tech badges around the portrait — tighter offsets on mobile so they don't clip.
+const FLOAT = { y: [0, -6, 0] };
+const techBadges = [
+  {
+    label: 'React',
+    position: '-top-2 -left-2 md:-top-3 md:-left-4',
+    duration: 3.5,
+    delay: 0,
+    // React's cyan is too pale on the white light-mode badge; use react.dev's darker blue there.
+    icon: (
+      <>
+        <img src="https://cdn.simpleicons.org/react/087EA4" alt="React" className="w-3.5 h-3.5 block dark:hidden" />
+        <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5 hidden dark:block" />
+      </>
+    ),
+  },
+  {
+    label: 'Python',
+    position: 'top-1/4 -right-3 md:-right-6',
+    duration: 4,
+    delay: 0.5,
+    icon: <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" className="w-3.5 h-3.5" />,
+  },
+  {
+    label: 'Node.js',
+    position: 'bottom-1/4 -left-3 md:-left-7',
+    duration: 4.2,
+    delay: 1,
+    icon: <img src="https://cdn.simpleicons.org/nodedotjs/5FA04E" alt="Node.js" className="w-3.5 h-3.5" />,
+  },
 ];
 
 export function About() {
@@ -44,7 +77,7 @@ export function About() {
   ];
 
   return (
-    <Section id="about" num="01." title="About Me">
+    <Section id="about" title="About Me">
       <div className="grid md:grid-cols-[3fr_2fr] gap-12 md:gap-16 items-start">
         {/* Left column: prose + tags + stats + skills */}
         <div className="space-y-5 text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
@@ -115,38 +148,20 @@ export function About() {
               />
             </div>
 
-            {/* Floating tech badges — tighter offsets on mobile so they don't clip the viewport */}
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-2 -left-2 md:-top-3 md:-left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
-            >
-              {/* React's cyan is too pale on the white light-mode badge; use react.dev's darker blue there. */}
-              <img src="https://cdn.simpleicons.org/react/087EA4" alt="React" className="w-3.5 h-3.5 block dark:hidden" />
-              <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" className="w-3.5 h-3.5 hidden dark:block" />
-              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">React</span>
-            </motion.div>
+            {techBadges.map(({ label, position, duration, delay, icon }) => (
+              <motion.div
+                key={label}
+                animate={FLOAT}
+                transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}
+                className={`absolute ${position} z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40`}
+              >
+                {icon}
+                <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">{label}</span>
+              </motion.div>
+            ))}
 
             <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute top-1/4 -right-3 md:-right-6 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
-            >
-              <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" className="w-3.5 h-3.5" />
-              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Python</span>
-            </motion.div>
-
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute bottom-1/4 -left-3 md:-left-7 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40"
-            >
-              <img src="https://cdn.simpleicons.org/nodedotjs/5FA04E" alt="Node.js" className="w-3.5 h-3.5" />
-              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">Node.js</span>
-            </motion.div>
-
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
+              animate={FLOAT}
               transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
               className="absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white shadow-lg shadow-brand-primary/40"
             >
@@ -163,10 +178,7 @@ export function About() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="absolute -top-1 right-2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/40 backdrop-blur-sm"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-            </span>
+            <PulseDot className="h-2 w-2" />
             <span className="font-mono text-[10px] text-green-600 dark:text-green-400">Available</span>
           </motion.div>
         </div>

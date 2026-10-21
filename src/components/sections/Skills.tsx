@@ -238,7 +238,7 @@ function SkillLogo({ skill }: { skill: Skill }) {
 
 export function Skills() {
   return (
-    <Section id="skills" num="02." title="My Toolkit">
+    <Section id="skills" title="My Toolkit">
       <p className="text-slate-500 dark:text-slate-400 max-w-2xl mb-14 text-[15px] leading-relaxed">
         Languages, frameworks, and tools I reach for when building real things.
       </p>

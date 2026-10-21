@@ -1,13 +1,13 @@
 import { type ReactNode } from 'react';
+import { sectionNum } from '../../data/sections';
 
 interface SectionProps {
   id: string;
-  num: string;
   title: string;
   children: ReactNode;
 }
 
-export function Section({ id, num, title, children }: SectionProps) {
+export function Section({ id, title, children }: SectionProps) {
   return (
     <section
       id={id}
@@ -17,7 +17,7 @@ export function Section({ id, num, title, children }: SectionProps) {
         <header className="flex items-center gap-3 md:gap-4 mb-12 md:mb-16">
           <h2 className="flex items-baseline gap-2 md:gap-4 min-w-0">
             <span className="font-mono text-brand-primary text-base md:text-xl font-normal shrink-0">
-              {num}
+              {sectionNum(id)}
             </span>
             <span className="text-xl sm:text-2xl md:text-3xl lg:text-[32px] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {title}
