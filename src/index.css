@@ -32,19 +32,15 @@
 
   html {
     scroll-behavior: smooth;
-    /* Sections target #anchors. Offset for fixed navbar so titles aren't cut off. */
+    /* Sections target #anchors. Offset for fixed navbar so titles aren't cut off.
+       The only anchor offset: a scroll-margin on sections would add to this one. */
     scroll-padding-top: 90px;
   }
 
-  /* Each section gets a scroll-margin so #anchor jumps land below the fixed navbar. */
-  section[id] {
-    scroll-margin-top: 80px;
-  }
-
-  /* Selection color */
+  /* Selection color. Text keeps its own colour: a forced white was unreadable on the
+     pale highlight Portfolio.tsx sets in light mode. */
   ::selection {
     background: var(--brand-primary-glow);
-    color: #fff;
   }
 }
 /* Sliding sweep used by image loading skeletons (see ProjectImage in Projects.tsx). */
