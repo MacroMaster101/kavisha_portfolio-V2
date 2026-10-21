@@ -79,7 +79,7 @@ export function About() {
   return (
     <Section id="about" title="About Me">
       <div className="grid md:grid-cols-[3fr_2fr] gap-12 md:gap-16 items-start">
-        {/* Left column: prose + tags + stats + skills */}
+        {/* Left column: prose + stats + skills */}
         <div className="space-y-5 text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
           <p>
             Hello! I&apos;m Kavisha, a third-year Information Technology undergraduate at SLIIT,

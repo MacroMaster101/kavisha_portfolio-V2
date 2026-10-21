@@ -52,7 +52,7 @@ export function safeHttpUrl(value: unknown, allowedHosts?: readonly string[]): s
 function parseRelease(value: unknown): LatestRelease | null {
   if (!isRecord(value)) return null;
   const version = typeof value.version === 'string' ? value.version.slice(0, 80) : '';
-  const url = safeHttpUrl(value.url, ['github.com', 'objects.githubusercontent.com']);
+  const url = safeHttpUrl(value.url, ['github.com']);
   const downloads = finiteNumber(value.downloads);
   if (!version || !url || downloads === null || downloads < 0) return null;
   return { version, url, downloads };
