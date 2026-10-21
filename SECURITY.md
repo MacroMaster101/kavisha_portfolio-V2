@@ -28,4 +28,4 @@ Useful details to include:
 
 In scope: this repository's source, its GitHub Actions workflows, and the security headers served by the deployed site.
 
-Out of scope: third-party services the site links to or embeds (GitHub, Spline, Vercel, Google Fonts) — please report those to their owners.
+Out of scope: third-party services the site links to or loads from (GitHub, Vercel, Google Fonts, jsDelivr, Simple Icons) — please report those to their owners. The Spline runtime and scene are self-hosted, so they are in scope.
