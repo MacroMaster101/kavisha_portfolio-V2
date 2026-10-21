@@ -260,20 +260,11 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
     []
   );
 
-  // Pause the render loop only when the browser TAB is hidden (so we don't burn GPU
-  // in the background), and resume in place when it's shown again. We deliberately do
-  // NOT pause on scroll — calling play() after stop() makes Spline replay the robot's
-  // intro animation, which looked jarring when scrolling back up to the hero.
-  useEffect(() => {
-    const onVisibility = () => {
-      const app = splineAppRef.current;
-      if (!app) return;
-      if (document.hidden) app.stop?.();
-      else app.play?.();
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, []);
+  // Deliberately no stop()/play() on tab visibility or scroll: play() re-activates the
+  // scene's events, so its Start event fires again and the robot replays its intro on
+  // every return to the tab. Nothing is lost by leaving it running — the render loop is
+  // requestAnimationFrame-driven, which browsers suspend in hidden tabs, and the
+  // runtime's own clock already handles visibility changes.
 
   // The Spline robot canvas, reused in two spots: inline on mobile (between the
   // tagline and description) and in the right column on desktop.
