@@ -168,9 +168,44 @@ export function parseGithubRepoCache(
   }
 }
 
-export async function fetchPublicGithubRepos(signal: AbortSignal): Promise<GithubRepo[]> {
+// Bump this when the cached shape or fallback set changes, to discard stale caches
+// in returning visitors' browsers (e.g. one that cached a now-private repo).
+export const GITHUB_REPO_CACHE_KEY = 'gh_repos_v10';
+// Short enough that a newly published release reaches returning visitors the same hour.
+export const GITHUB_REPO_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+// The repo list Projects cached within the TTL, or null. About reads it too, so a
+// cached visit makes no repo-list request at all.
+export function readGithubRepoCache(): GithubRepo[] | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(GITHUB_REPO_CACHE_KEY);
+    return cached ? parseGithubRepoCache(cached, GITHUB_REPO_CACHE_TTL) : null;
+  } catch {
+    try { localStorage.removeItem(GITHUB_REPO_CACHE_KEY); } catch { /* storage unavailable */ }
+    return null;
+  }
+}
+
+const REPOS_TIMEOUT_MS = 8000;
+let reposRequest: Promise<GithubRepo[]> | null = null;
+
+// One request per page load, shared by every section that needs the list (About's count,
+// Projects' cards), so a visit spends one call of the 60/hour unauthenticated budget.
+// It isn't tied to any caller's lifetime — callers that unmount just ignore the result —
+// and it rejects with a TimeoutError after 8 s. A failed request is forgotten so a later
+// caller can retry.
+export function fetchPublicGithubRepos(): Promise<GithubRepo[]> {
+  reposRequest ??= requestPublicGithubRepos().catch((error: unknown) => {
+    reposRequest = null;
+    throw error;
+  });
+  return reposRequest;
+}
+
+async function requestPublicGithubRepos(): Promise<GithubRepo[]> {
   const response = await fetch(GITHUB_API, {
-    signal,
+    signal: AbortSignal.timeout(REPOS_TIMEOUT_MS),
     headers: {
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',

@@ -7,7 +7,8 @@ import { PROJECT_METADATA, SOCIAL_PREVIEWS } from '../../data/socialPreviews';
 import {
   fetchLatestRelease,
   fetchPublicGithubRepos,
-  parseGithubRepoCache,
+  GITHUB_REPO_CACHE_KEY,
+  readGithubRepoCache,
   safeHttpUrl,
   type GithubRepo,
   type LatestRelease,
@@ -88,7 +89,8 @@ function getRepoCategories(repo: GithubRepo): ProjectCategory[] {
 
   if (has('portfolio')) add('Portfolio');
   if (hasTerm('discord') && hasTerm('bot')) add('Discord Bot');
-  if (has('mobile-app', 'mobile app', 'react-native', 'react native', 'flutter', 'android', 'ios', 'kotlin', 'swift', 'expo'))
+  // hasTerm, not has: a substring 'ios' would match "axios", "studios", "portfolios".
+  if (hasTerm('mobile-app', 'mobile app', 'react-native', 'react native', 'flutter', 'android', 'ios', 'kotlin', 'swift', 'expo'))
     add('Mobile App');
   if (hasTerm('machine-learning', 'machine learning', 'ml', 'ai', 'tensorflow', 'pytorch', 'jupyter', 'data-science', 'nlp'))
     add('AI/ML');
@@ -99,12 +101,6 @@ function getRepoCategories(repo: GithubRepo): ProjectCategory[] {
 
   return categories.length > 0 ? categories : ['Other'];
 }
-
-// Bump this when the cached shape or fallback set changes, to discard stale caches
-// in returning visitors' browsers (e.g. one that cached a now-private repo).
-const CACHE_KEY = 'gh_repos_v10';
-// Short enough that a newly published release reaches returning visitors the same hour.
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 // The "Everything Else" grid starts collapsed to keep the section compact: it shows
 // INITIAL_VISIBLE cards, then reveals LOAD_STEP more each time "See more" is clicked.
@@ -389,8 +385,11 @@ const mergeRepos = (repos: GithubRepo[], liveReleases?: ReadonlyMap<string, Late
   for (const repo of FALLBACK_REPOS) {
     const key = repo.name.toLowerCase();
     const generated = PROJECT_METADATA[key];
+    // Same overrides as live data, so first-time and rate-limited visitors see the same copy.
     byName.set(key, {
       ...repo,
+      description: REPO_DESCRIPTION_OVERRIDES[key] ?? repo.description,
+      homepage: REPO_HOMEPAGE_OVERRIDES[key] ?? repo.homepage,
       allLanguages: generated?.allLanguages?.length ? generated.allLanguages : repo.allLanguages,
       latestRelease: generated?.latestRelease ?? repo.latestRelease ?? null,
     });
@@ -434,18 +433,8 @@ const mergeRepos = (repos: GithubRepo[], liveReleases?: ReadonlyMap<string, Late
 };
 
 const readCachedRepos = (): GithubRepo[] | null => {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-
-    const repos = parseGithubRepoCache(cached, CACHE_TTL);
-    return repos ? mergeRepos(repos) : null;
-  } catch {
-    try { localStorage.removeItem(CACHE_KEY); } catch { /* storage unavailable */ }
-    return null;
-  }
+  const repos = readGithubRepoCache();
+  return repos ? mergeRepos(repos) : null;
 };
 
 export function Projects() {
@@ -461,11 +450,14 @@ export function Projects() {
 
   useEffect(() => {
     if (initialState.hasFreshCache) return;
+    // Aborted only on unmount. The repo list is a shared request with its own timeout;
+    // the release lookups get a timeout of their own here.
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 8000);
-    fetchPublicGithubRepos(controller.signal)
+    const releaseSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
+    fetchPublicGithubRepos()
       .then(async data => {
-        const sorted = data.sort(
+        // Copy before sorting: the array is shared with About.
+        const sorted = [...data].sort(
           (a, b) =>
             b.stargazers_count - a.stargazers_count ||
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
@@ -476,27 +468,24 @@ export function Projects() {
         const releaseRepos = sorted.filter(repo => PROJECT_METADATA[repo.name.toLowerCase()]?.latestRelease);
         const liveReleases = new Map<string, LatestRelease | null>();
         await Promise.all(releaseRepos.map(async repo => {
-          const release = await fetchLatestRelease(repo.name, controller.signal);
+          const release = await fetchLatestRelease(repo.name, releaseSignal);
           if (release !== undefined) liveReleases.set(repo.name.toLowerCase(), release);
         }));
+        if (controller.signal.aborted) return;
         const mergedRepos = mergeRepos(sorted, liveReleases);
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mergedRepos, timestamp: Date.now() }));
+          localStorage.setItem(GITHUB_REPO_CACHE_KEY, JSON.stringify({ data: mergedRepos, timestamp: Date.now() }));
         } catch { /* ignore */ }
         setRepos(mergedRepos);
       })
-      .catch((reason: unknown) => {
-        // On API failure, keep showing cached/bundled fallback data.
-        if (!(reason instanceof DOMException && reason.name === 'AbortError')) setError(true);
+      .catch(() => {
+        // On API failure or timeout, keep showing the bundled fallback data and say so.
+        if (!controller.signal.aborted) setError(true);
       })
       .finally(() => {
-        window.clearTimeout(timeout);
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
-    return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [initialState.hasFreshCache]);
 
   // Split into featured + rest

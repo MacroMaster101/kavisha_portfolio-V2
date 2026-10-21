@@ -20,8 +20,9 @@ const hubItems = [
   { id: 'contact',        name: 'Contact', Icon: Mail },
 ] as const;
 
-// Sections used for active-state detection (real anchors only, skip 'hero').
-const detectableIds = hubItems.filter((i) => i.id !== 'hero').map((i) => i.id);
+// Sections used for active-state detection, in page order. 'hero' is included so the
+// Home links light up while the visitor is still above About.
+const detectableIds = hubItems.map((i) => i.id);
 
 // Quick icons in the collapsed bar (left and right of the center menu button).
 // Icons clearly map to their destination, with a short label under each.
@@ -56,7 +57,7 @@ function QuickLink({ id, name, Icon, active }: QuickItem & { active: boolean }) 
 }
 
 export function BottomNav() {
-  const [activeId, setActiveId] = useState<string>('about');
+  const [activeId, setActiveId] = useState<string>('hero');
   const [visible, setVisible] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
   const hubRef = useRef<HTMLDivElement>(null);
@@ -64,8 +65,8 @@ export function BottomNav() {
 
   // Track which section is in view by measuring scroll position against section bounds.
   // IntersectionObserver was unreliable for short sections (Skills, Projects, Experience),
-  // so we do a manual check: the "active" section is whichever one's top is closest to
-  // the top of the viewport (minus the navbar offset).
+  // so we do a manual check: the "active" section is the last one whose top has crossed
+  // a line 30% down the viewport.
   useEffect(() => {
     const detect = () => {
       const sections = detectableIds
@@ -74,9 +75,8 @@ export function BottomNav() {
 
       if (sections.length === 0) return;
 
-      // Detection point: 30% down from the top of the viewport. Whichever section's
-      // top has crossed above this line (and whose bottom hasn't crossed below it)
-      // is the active one.
+      // Detection point: 30% down from the top of the viewport. The last section whose
+      // top has crossed above this line is the active one.
       const detectionLine = window.innerHeight * 0.3;
 
       let current = sections[0].id;
