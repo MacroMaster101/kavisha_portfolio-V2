@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { Mail } from 'lucide-react';
-import { EMAIL, SOCIALS as socials } from '../../data/contact';
+import { EMAIL, GITHUB_URL } from '../../data/contact';
+import { sectionNum } from '../../data/sections';
+import { SocialLinks } from '../ui/SocialLinks';
 
 export function Contact() {
   return (
@@ -13,7 +15,7 @@ export function Contact() {
           transition={{ duration: 0.6 }}
           className="max-w-[640px] mx-auto text-center"
         >
-          <p className="font-mono text-brand-primary text-sm mb-4">08. What&apos;s Next?</p>
+          <p className="font-mono text-brand-primary text-sm mb-4">{sectionNum('contact')} What&apos;s Next?</p>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 dark:text-slate-100 mb-6 tracking-tight">
             Get In Touch
           </h2>
@@ -30,33 +32,17 @@ export function Contact() {
           </a>
 
           {/* Mobile-only social row (desktop has the side rail) */}
-          <ul className="lg:hidden mt-12 flex items-center justify-center gap-6 text-slate-500 dark:text-slate-400">
-            {socials.map(({ Icon, href, label }) => (
-              <li key={label}>
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  title={label}
-                  className="hover:text-brand-primary transition-colors"
-                >
-                  <Icon size={20} />
-                </a>
-              </li>
-            ))}
-            <li>
-              <a href={`mailto:${EMAIL}`} aria-label="Email" className="hover:text-brand-primary transition-colors">
-                <Mail size={20} />
-              </a>
-            </li>
-          </ul>
+          <SocialLinks
+            className="lg:hidden mt-12 flex items-center justify-center gap-6 text-slate-500 dark:text-slate-400"
+            linkClassName="hover:text-brand-primary transition-colors"
+            withEmail
+          />
         </motion.div>
       </section>
 
       <footer className="py-8 px-6 text-center">
         <a
-          href="https://github.com/MacroMaster101/kavisha_portfolio-V2"
+          href={`${GITHUB_URL}/kavisha_portfolio-V2`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex flex-col items-center gap-1 font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-brand-primary transition-colors"

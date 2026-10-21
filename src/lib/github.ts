@@ -21,7 +21,13 @@ export interface GithubRepo {
   latestRelease?: LatestRelease | null;
 }
 
-const GITHUB_OWNER = 'MacroMaster101';
+// Shared with scripts/fetch-social-previews.mjs, which imports this file directly.
+export const GITHUB_OWNER = 'MacroMaster101';
+export const REPO_NAME_RE = /^[A-Za-z0-9._-]{1,100}$/;
+export const GITHUB_API_HEADERS = {
+  Accept: 'application/vnd.github+json',
+  'X-GitHub-Api-Version': '2022-11-28',
+} as const;
 const GITHUB_API = `https://api.github.com/users/${GITHUB_OWNER}/repos?sort=updated&per_page=100&type=public`;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -53,8 +59,8 @@ function parseRelease(value: unknown): LatestRelease | null {
 }
 
 // Distills a raw `GET /repos/{owner}/{repo}/releases/latest` response into what a card
-// needs. Mirrors toLatestRelease() in scripts/fetch-social-previews.mjs so live and
-// build-time data agree: primary (largest) asset URL, or the release page if none.
+// needs. scripts/fetch-social-previews.mjs uses it too, so live and build-time data
+// agree: primary (largest) asset URL, or the release page if none.
 export function parseGithubReleaseResponse(value: unknown): LatestRelease | null {
   if (!isRecord(value) || value.draft === true) return null;
   const assets = (Array.isArray(value.assets) ? value.assets : []).filter(
@@ -82,11 +88,11 @@ export async function fetchLatestRelease(
   repoName: string,
   signal: AbortSignal,
 ): Promise<LatestRelease | null | undefined> {
-  if (!/^[A-Za-z0-9._-]{1,100}$/.test(repoName)) return undefined;
+  if (!REPO_NAME_RE.test(repoName)) return undefined;
   try {
     const response = await fetch(
       `https://api.github.com/repos/${GITHUB_OWNER}/${encodeURIComponent(repoName)}/releases/latest`,
-      { signal, headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } },
+      { signal, headers: GITHUB_API_HEADERS },
     );
     if (response.status === 404) return null;
     if (!response.ok) return undefined;
@@ -100,7 +106,7 @@ export function parseGithubRepo(value: unknown): GithubRepo | null {
   if (!isRecord(value)) return null;
 
   const id = finiteNumber(value.id);
-  const name = typeof value.name === 'string' && /^[A-Za-z0-9._-]{1,100}$/.test(value.name)
+  const name = typeof value.name === 'string' && REPO_NAME_RE.test(value.name)
     ? value.name
     : null;
   const htmlUrl = safeHttpUrl(value.html_url, ['github.com']);
@@ -146,10 +152,11 @@ export function parseGithubRepos(value: unknown): GithubRepo[] {
   return value.map(parseGithubRepo).filter((repo): repo is GithubRepo => repo !== null);
 }
 
+// The profile README repo (MacroMaster101/MacroMaster101) is not a project.
+export const isProfileRepo = (repo: { name: string }) => repo.name.toLowerCase() === GITHUB_OWNER.toLowerCase();
+
 export function countShippedProjects(repos: GithubRepo[]): number {
-  return repos.filter(
-    (repo) => !repo.fork && repo.name.toLowerCase() !== GITHUB_OWNER.toLowerCase(),
-  ).length;
+  return repos.filter((repo) => !repo.fork && !isProfileRepo(repo)).length;
 }
 
 export function parseGithubRepoCache(
@@ -206,10 +213,7 @@ export function fetchPublicGithubRepos(): Promise<GithubRepo[]> {
 async function requestPublicGithubRepos(): Promise<GithubRepo[]> {
   const response = await fetch(GITHUB_API, {
     signal: AbortSignal.timeout(REPOS_TIMEOUT_MS),
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
+    headers: GITHUB_API_HEADERS,
   });
   if (!response.ok) throw new Error(`GitHub API returned ${response.status}`);
   const repos = parseGithubRepos(await response.json());

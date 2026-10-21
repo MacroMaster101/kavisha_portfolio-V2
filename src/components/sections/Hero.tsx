@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Bot, Mail } from 'lucide-react';
 import { RobotBackdrop } from '../ui/RobotBackdrop';
 import { SPLINE_ROBOT } from '../../lib/splineScene';
+import { PulseDot } from '../ui/PulseDot';
 
 // Tracks a CSS media query. Used to mount the (expensive) Spline robot in exactly
 // ONE place per breakpoint — never two WebGL contexts at once.
@@ -315,10 +316,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full bg-green-500/10 border border-green-500/40 backdrop-blur-sm"
         >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-          </span>
+          <PulseDot className="h-2 w-2" />
           <span className="font-mono text-[11px] text-green-600 dark:text-green-400">Available for Internships</span>
         </motion.div>
 

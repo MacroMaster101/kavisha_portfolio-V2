@@ -4,17 +4,22 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Node 24 strips the types, so the client's validation is reused as-is.
+import {
+  GITHUB_API_HEADERS,
+  GITHUB_OWNER as GH_USER,
+  parseGithubReleaseResponse,
+  REPO_NAME_RE,
+} from '../src/lib/github.ts';
 
-const GH_USER = 'MacroMaster101';
 const OUT_PATH = fileURLToPath(new URL('../src/data/socialPreviews.ts', import.meta.url));
 const REQUEST_TIMEOUT_MS = 10_000;
 const CONCURRENCY = 5;
 const token = process.env.GITHUB_TOKEN;
 
 const apiHeaders = {
-  Accept: 'application/vnd.github+json',
+  ...GITHUB_API_HEADERS,
   'User-Agent': 'kavisha-portfolio-metadata-generator',
-  'X-GitHub-Api-Version': '2022-11-28',
   ...(token ? { Authorization: `Bearer ${token}` } : {}),
 };
 
@@ -54,28 +59,6 @@ function extractCustomPreview(html) {
   } catch {
     return null;
   }
-}
-
-function toLatestRelease(value) {
-  if (!value || typeof value !== 'object' || value.draft === true) return null;
-  const assets = Array.isArray(value.assets) ? value.assets : [];
-  const validAssets = assets.filter((asset) =>
-    asset && typeof asset.browser_download_url === 'string' &&
-    Number.isFinite(asset.download_count) && Number.isFinite(asset.size)
-  );
-  const primary = [...validAssets].sort((a, b) => b.size - a.size)[0];
-  const version = typeof value.tag_name === 'string' && value.tag_name
-    ? value.tag_name
-    : typeof value.name === 'string' && value.name
-      ? value.name
-      : 'latest';
-  const url = primary?.browser_download_url ?? value.html_url;
-  if (typeof url !== 'string' || !url.startsWith('https://github.com/')) return null;
-  return {
-    version: version.slice(0, 80),
-    url,
-    downloads: validAssets.reduce((sum, asset) => sum + Math.max(0, asset.download_count), 0),
-  };
 }
 
 async function mapWithConcurrency(items, worker) {
@@ -124,7 +107,7 @@ async function main() {
   }
 
   const publicRepos = repos.filter((repo) =>
-    repo && repo.private !== true && typeof repo.name === 'string' && /^[A-Za-z0-9._-]{1,100}$/.test(repo.name)
+    repo && repo.private !== true && typeof repo.name === 'string' && REPO_NAME_RE.test(repo.name)
   );
   const existing = await readExistingData();
   const previews = {};
@@ -161,7 +144,7 @@ async function main() {
       const result = await fetchJsonResult(
         `https://api.github.com/repos/${GH_USER}/${encodeURIComponent(repo.name)}/releases/latest`,
       );
-      if (result.ok) latestRelease = toLatestRelease(result.data);
+      if (result.ok) latestRelease = parseGithubReleaseResponse(result.data);
       else if (result.status === 404) latestRelease = null;
     } catch {
       // Most repositories have no releases; null is the intended representation.

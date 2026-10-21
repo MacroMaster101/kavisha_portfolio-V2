@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type AnchorHTMLAttributes } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Folder, Star, GitFork, Download } from 'lucide-react';
 import { Section } from '../ui/Section';
 import { Github } from '../ui/BrandIcons';
+import { GITHUB_URL } from '../../data/contact';
 import { PROJECT_METADATA, SOCIAL_PREVIEWS } from '../../data/socialPreviews';
 import {
   fetchLatestRelease,
   fetchPublicGithubRepos,
+  isProfileRepo,
   GITHUB_REPO_CACHE_KEY,
   readGithubRepoCache,
   safeHttpUrl,
@@ -437,6 +439,76 @@ const readCachedRepos = (): GithubRepo[] | null => {
   return repos ? mergeRepos(repos) : null;
 };
 
+// The pieces shared by the featured cards and the "Everything Else" grid cards.
+// `compact` is the grid's smaller variant.
+
+const primaryHref = (repo: GithubRepo) => repo.homepage || repo.html_url;
+
+function NewTabLink(props: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return <a target="_blank" rel="noopener noreferrer" {...props} />;
+}
+
+function TechStack({ repo, compact = false, className = '' }: { repo: GithubRepo; compact?: boolean; className?: string }) {
+  const stack = repoStack(repo);
+  if (stack.length === 0) return null;
+  return (
+    <ul
+      className={`flex flex-wrap gap-y-1 font-mono text-slate-500 dark:text-slate-500 ${
+        compact ? 'gap-x-3 text-[11px]' : 'gap-x-4 text-[12px]'
+      } ${className}`}
+    >
+      {stack.slice(0, compact ? 5 : 6).map(lang => (
+        <li key={lang}>{lang}</li>
+      ))}
+    </ul>
+  );
+}
+
+function ReleaseDownload({ release, compact = false, className = '' }: { release: LatestRelease; compact?: boolean; className?: string }) {
+  return (
+    <div className={`mt-5 flex items-center ${compact ? 'justify-between gap-2' : 'flex-wrap gap-x-3 gap-y-2'} ${className}`}>
+      <NewTabLink
+        href={release.url}
+        className={
+          compact
+            ? 'inline-flex items-center gap-1.5 rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold text-white hover:-translate-y-0.5 transition-transform'
+            : 'inline-flex items-center gap-2 rounded-md bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px] shadow-brand-primary/60 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px] hover:shadow-brand-primary/70 transition-all'
+        }
+      >
+        <Download size={compact ? 13 : 16} /> Download {release.version}
+      </NewTabLink>
+      {release.downloads > 0 && (
+        <span
+          className={`font-mono text-slate-500 ${
+            compact ? 'text-[11px] dark:text-slate-500 whitespace-nowrap' : 'text-xs dark:text-slate-400'
+          }`}
+        >
+          {formatDownloads(release.downloads)} downloads
+        </span>
+      )}
+    </div>
+  );
+}
+
+function RepoLinks({ repo, compact = false }: { repo: GithubRepo; compact?: boolean }) {
+  const size = compact ? 18 : 20;
+  const linkClass = compact
+    ? 'hover:text-brand-primary transition-colors'
+    : 'hover:text-brand-primary hover:-translate-y-0.5 transition-all';
+  return (
+    <>
+      <NewTabLink href={repo.html_url} aria-label="GitHub repo" className={linkClass}>
+        <Github size={size} />
+      </NewTabLink>
+      {repo.homepage && (
+        <NewTabLink href={repo.homepage} aria-label="Live demo" className={linkClass}>
+          <ExternalLink size={size} />
+        </NewTabLink>
+      )}
+    </>
+  );
+}
+
 export function Projects() {
   const [initialState] = useState(() => {
     const cached = readCachedRepos();
@@ -494,8 +566,7 @@ export function Projects() {
     .filter((r): r is GithubRepo => Boolean(r))
     .slice(0, 5);
   const featuredIds = new Set(featured.map(r => r.id));
-  // Exclude the "MacroMaster101" GitHub profile repo (it's just a README)
-  const rest = repos.filter(r => !featuredIds.has(r.id) && r.name !== 'MacroMaster101');
+  const rest = repos.filter(r => !featuredIds.has(r.id) && !isProfileRepo(r));
   const filteredRest =
     activeCategory === 'All' ? rest : rest.filter(r => getRepoCategories(r).includes(activeCategory));
 
@@ -523,14 +594,14 @@ export function Projects() {
   return (
     <>
       {/* Featured Projects */}
-      <Section id="projects" num="03." title="Some Things I've Built">
+      <Section id="projects" title="Some Things I've Built">
         {loading && (
           <p className="text-slate-500 text-center pb-8 font-mono text-sm" role="status">Refreshing public projects from GitHub…</p>
         )}
         {error && (
           <p className="text-slate-500 text-center pb-8 text-sm" role="status">
             Live GitHub refresh is unavailable; showing bundled project details.{' '}
-            <a href="https://github.com/MacroMaster101" className="text-brand-primary hover:underline" target="_blank" rel="noopener noreferrer">
+            <a href={GITHUB_URL} className="text-brand-primary hover:underline" target="_blank" rel="noopener noreferrer">
               Visit GitHub
             </a>
           </p>
@@ -540,7 +611,7 @@ export function Projects() {
           <div className="space-y-24 md:space-y-32">
             {featured.map((repo, idx) => {
               const isReverse = idx % 2 === 1;
-              const techStack = repoStack(repo);
+              const align = isReverse ? 'justify-start' : 'md:justify-end';
               return (
                 <motion.article
                   key={repo.id}
@@ -551,10 +622,8 @@ export function Projects() {
                   className="relative grid md:grid-cols-12 items-center gap-y-6"
                 >
                   {/* Image — fills 7 cols on desktop, full width on mobile */}
-                  <a
-                    href={repo.homepage || repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <NewTabLink
+                    href={primaryHref(repo)}
                     className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} md:row-start-1 z-0`}
                   >
                     {/* Soft brand glow behind the frame */}
@@ -569,7 +638,7 @@ export function Projects() {
                         className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-700"
                       />
                     </div>
-                  </a>
+                  </NewTabLink>
 
                   {/* Content — fills 6 cols on desktop, full width stacked below image on mobile */}
                   <div
@@ -577,58 +646,15 @@ export function Projects() {
                   >
                     <p className="font-mono text-brand-primary text-xs md:text-sm mb-2">Featured Project</p>
                     <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4 hover:text-brand-primary transition-colors">
-                      <a href={repo.homepage || repo.html_url} target="_blank" rel="noopener noreferrer">
-                        {formatName(repo.name)}
-                      </a>
+                      <NewTabLink href={primaryHref(repo)}>{formatName(repo.name)}</NewTabLink>
                     </h3>
                     <div className="md:bg-white/80 dark:md:bg-slate-900/80 md:backdrop-blur-md md:p-6 md:rounded-xl md:ring-1 md:ring-slate-200/70 dark:md:ring-white/10 md:shadow-[0_12px_40px_-12px_rgba(2,12,27,0.45)] dark:md:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
                       {repo.description || 'A project I built — check the repo for details.'}
                     </div>
-                    {techStack.length > 0 && (
-                      <ul className={`mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[12px] text-slate-500 dark:text-slate-500 ${isReverse ? 'justify-start' : 'md:justify-end'}`}>
-                        {techStack.slice(0, 6).map(lang => (
-                          <li key={lang}>{lang}</li>
-                        ))}
-                      </ul>
-                    )}
-                    {repo.latestRelease && (
-                      <div className={`mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 ${isReverse ? 'justify-start' : 'md:justify-end'}`}>
-                        <a
-                          href={repo.latestRelease.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-md bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px] shadow-brand-primary/60 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px] hover:shadow-brand-primary/70 transition-all"
-                        >
-                          <Download size={16} /> Download {repo.latestRelease.version}
-                        </a>
-                        {repo.latestRelease.downloads > 0 && (
-                          <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                            {formatDownloads(repo.latestRelease.downloads)} downloads
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div className={`mt-4 flex gap-4 text-slate-500 dark:text-slate-400 ${isReverse ? 'justify-start' : 'md:justify-end'}`}>
-                      <a
-                        href={repo.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="GitHub repo"
-                        className="hover:text-brand-primary hover:-translate-y-0.5 transition-all"
-                      >
-                        <Github size={20} />
-                      </a>
-                      {repo.homepage && (
-                        <a
-                          href={repo.homepage}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Live demo"
-                          className="hover:text-brand-primary hover:-translate-y-0.5 transition-all"
-                        >
-                          <ExternalLink size={20} />
-                        </a>
-                      )}
+                    <TechStack repo={repo} className={`mt-4 ${align}`} />
+                    {repo.latestRelease && <ReleaseDownload release={repo.latestRelease} className={align} />}
+                    <div className={`mt-4 flex gap-4 text-slate-500 dark:text-slate-400 ${align}`}>
+                      <RepoLinks repo={repo} />
                     </div>
                   </div>
                 </motion.article>
@@ -645,7 +671,7 @@ export function Projects() {
             <div className="text-center mb-4">
               <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">Everything Else I&apos;ve Shipped</h3>
               <a
-                href="https://github.com/MacroMaster101"
+                href={GITHUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-2 font-mono text-sm text-brand-primary hover:underline underline-offset-4"
@@ -683,7 +709,6 @@ export function Projects() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
               {visibleRest.map((repo, idx) => {
-                const techStack = repoStack(repo);
                 return (
                   <motion.article
                     key={repo.id}
@@ -695,10 +720,8 @@ export function Projects() {
                     whileHover={{ y: -7 }}
                     className="group relative flex flex-col rounded-md bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-transparent shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-shadow overflow-hidden"
                   >
-                    <a
-                      href={repo.homepage || repo.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <NewTabLink
+                      href={primaryHref(repo)}
                       className="relative block aspect-[2/1] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229]"
                     >
                       <ProjectImage
@@ -707,7 +730,7 @@ export function Projects() {
                         loading="lazy"
                         className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
                       />
-                    </a>
+                    </NewTabLink>
                     <header className="flex items-center justify-between px-6 pt-5 mb-4">
                       <Folder size={24} className="text-brand-primary" />
                       <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
@@ -717,62 +740,19 @@ export function Projects() {
                         {repo.forks_count > 0 && (
                           <span className="flex items-center gap-1 text-xs"><GitFork size={13} /> {repo.forks_count}</span>
                         )}
-                        <a
-                          href={repo.html_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="GitHub"
-                          className="hover:text-brand-primary transition-colors"
-                        >
-                          <Github size={18} />
-                        </a>
-                        {repo.homepage && (
-                          <a
-                            href={repo.homepage}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Live demo"
-                            className="hover:text-brand-primary transition-colors"
-                          >
-                            <ExternalLink size={18} />
-                          </a>
-                        )}
+                        <RepoLinks repo={repo} compact />
                       </div>
                     </header>
 
                     <div className="flex flex-col flex-1 px-6 pb-6">
                       <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-brand-primary transition-colors">
-                        <a href={repo.homepage || repo.html_url} target="_blank" rel="noopener noreferrer">
-                          {formatName(repo.name)}
-                        </a>
+                        <NewTabLink href={primaryHref(repo)}>{formatName(repo.name)}</NewTabLink>
                       </h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3 flex-1">
                         {repo.description || 'No description provided.'}
                       </p>
-                      {techStack.length > 0 && (
-                        <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500 dark:text-slate-500">
-                          {techStack.slice(0, 5).map(lang => (
-                            <li key={lang}>{lang}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {repo.latestRelease && (
-                        <div className="mt-5 flex items-center justify-between gap-2">
-                          <a
-                            href={repo.latestRelease.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold text-white hover:-translate-y-0.5 transition-transform"
-                          >
-                            <Download size={13} /> Download {repo.latestRelease.version}
-                          </a>
-                          {repo.latestRelease.downloads > 0 && (
-                            <span className="font-mono text-[11px] text-slate-500 dark:text-slate-500 whitespace-nowrap">
-                              {formatDownloads(repo.latestRelease.downloads)} downloads
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      <TechStack repo={repo} compact />
+                      {repo.latestRelease && <ReleaseDownload release={repo.latestRelease} compact />}
                     </div>
                   </motion.article>
                 );
