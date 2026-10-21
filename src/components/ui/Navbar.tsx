@@ -169,7 +169,6 @@ export function Navbar() {
   };
 
   return (
-    <>
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
@@ -264,8 +263,7 @@ export function Navbar() {
         </div>
 
         {/* Mobile + tablet controls (hidden on lg+ where desktop nav shows) */}
-        <div className="lg:hidden flex items-center gap-2">
-          <div className="relative">
+        <div className="relative lg:hidden">
             <button
               onClick={handleToggleTheme}
               aria-label="Toggle theme"
@@ -279,10 +277,8 @@ export function Navbar() {
               nextTheme={theme === 'dark' ? 'light' : 'dark'}
               compact
             />
-          </div>
         </div>
       </nav>
     </header>
-    </>
   );
 }

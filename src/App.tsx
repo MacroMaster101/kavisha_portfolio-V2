@@ -60,7 +60,7 @@ function App() {
         {loading && <Loader onFinish={finishLoading} onExitStart={revealContent} firstLoad={IS_FIRST_LOAD} />}
         <CustomCursor />
         {showContent && (
-          <div inert={loading ? true : undefined} aria-hidden={loading || undefined}>
+          <div inert={loading ? true : undefined}>
             <Portfolio interactiveReady={!loading} />
           </div>
         )}

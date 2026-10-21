@@ -25,7 +25,6 @@ interface BrainNode {
   tx: number;
   ty: number;
   phase: number;
-  hemisphere: -1 | 1;
 }
 
 interface BrainEdge {
@@ -109,7 +108,6 @@ function createBrainNetwork(compact: boolean) {
       tx: 0,
       ty: 0,
       phase: random() * Math.PI * 2,
-      hemisphere,
     });
   }
 
@@ -333,14 +331,15 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
       context.globalCompositeOperation = 'source-over';
 
       // The pulsing center line keeps the two calm hemispheres clearly separated.
-      const { centerX, centerY, radius } = brainFrame();
-      const fissureGlow = reduced ? 0.46 : 0.38 + (Math.sin(time * 0.002) + 1) * 0.1;
-      const gradient = context.createLinearGradient(centerX, centerY - radius, centerX, centerY + radius);
-      gradient.addColorStop(0, 'transparent');
-      gradient.addColorStop(0.18, dark ? `rgba(129,140,248,${fissureGlow})` : `rgba(79,70,229,${fissureGlow})`);
-      gradient.addColorStop(0.78, dark ? `rgba(168,85,247,${fissureGlow})` : `rgba(126,34,206,${fissureGlow})`);
-      gradient.addColorStop(1, 'transparent');
+      // It fades out as the brain morphs into the monogram.
       if (currentMorph < 0.94) {
+        const { centerX, centerY, radius } = brainFrame();
+        const fissureGlow = reduced ? 0.46 : 0.38 + (Math.sin(time * 0.002) + 1) * 0.1;
+        const gradient = context.createLinearGradient(centerX, centerY - radius, centerX, centerY + radius);
+        gradient.addColorStop(0, 'transparent');
+        gradient.addColorStop(0.18, dark ? `rgba(129,140,248,${fissureGlow})` : `rgba(79,70,229,${fissureGlow})`);
+        gradient.addColorStop(0.78, dark ? `rgba(168,85,247,${fissureGlow})` : `rgba(126,34,206,${fissureGlow})`);
+        gradient.addColorStop(1, 'transparent');
         context.save();
         context.globalAlpha = 1 - currentMorph;
         context.strokeStyle = gradient;

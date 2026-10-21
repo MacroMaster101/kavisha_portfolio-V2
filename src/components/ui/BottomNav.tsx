@@ -104,9 +104,6 @@ export function BottomNav() {
     };
   }, [hubOpen]);
 
-  const handleHubNav = () => {
-    setHubOpen(false);
-  };
 
   return (
     <div className="lg:hidden">
@@ -160,7 +157,7 @@ export function BottomNav() {
                     <a
                       key={id}
                       href={`#${id}`}
-                      onClick={handleHubNav}
+                      onClick={() => setHubOpen(false)}
                       aria-current={active ? 'location' : undefined}
                       className={`group aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all ${
                         active

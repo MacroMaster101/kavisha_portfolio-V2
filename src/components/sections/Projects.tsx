@@ -16,9 +16,6 @@ import {
   type LatestRelease,
 } from '../../lib/github';
 
-// Latest GitHub Release for a repo, distilled to what the card needs: a version label,
-// total downloads across all assets, and a direct download URL (primary asset, or the
-// release page if a release has no uploaded binaries — e.g. source-only tags).
 const formatName = (name: string) =>
   name.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
@@ -109,34 +106,21 @@ function getRepoCategories(repo: GithubRepo): ProjectCategory[] {
 const INITIAL_VISIBLE = 12;
 const LOAD_STEP = 3;
 
-// Names of repos we want pinned as "Featured" (in display order, lowercased).
-// Anything matching will appear in the featured section.
+// Repos pinned as "Featured", in display order (lowercase names).
 const FEATURED_NAMES = [
   'just-for-fun-website',
   'mazora-network',
   'travel_genie',
   'travel_genie_app',
   'vero_salon_website',
-].map(n => n.toLowerCase());
+];
 
 // A repo's UPLOADED social preview is served from repository-images.githubusercontent.com
 // (an unpredictable per-upload URL). It can't be derived client-side and the repo page is
-// CORS-blocked in the browser, so we resolve it at BUILD TIME: scripts/fetch-social-previews.mjs
-// reads each repo's og:image and writes the SOCIAL_PREVIEWS map. New repos with an uploaded
-// preview are picked up automatically on the next build — no manual editing.
-// Repos absent from the map fall back to GitHub's generated graph card.
-const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
-
-const repoImageCandidates = (repoName: string) => {
-  const key = repoName.toLowerCase();
-  // Resolution order, first that loads wins:
-  //   1. The repo's real uploaded social preview (SOCIAL_PREVIEWS, build-generated) —
-  //      the actual custom image, not the graph card.
-  // NOTE: we intentionally do NOT include GitHub's generated graph card here — it's an
-  // ugly white avatar/stats card that clashes with the design. Repos with none of the
-  // above get a clean branded placeholder (see ProjectImage) instead.
-  return unique([SOCIAL_PREVIEWS[key]]);
-};
+// CORS-blocked in the browser, so scripts/fetch-social-previews.mjs reads each repo's
+// og:image into the SOCIAL_PREVIEWS map, refreshed daily by
+// .github/workflows/social-previews.yml. Repos absent from the map get ProjectPlaceholder —
+// deliberately not GitHub's generated graph card, which clashes with the design.
 
 // Branded placeholder shown when a repo has no real preview image — far nicer than
 // GitHub's generated graph card. A brand-gradient panel with the repo name + folder.
@@ -163,24 +147,13 @@ function ProjectPlaceholder({ repoName, className }: { repoName: string; classNa
   );
 }
 
-function ProjectImage({
-  repoName,
-  alt,
-  className,
-  loading,
-}: {
-  repoName: string;
-  alt: string;
-  className: string;
-  loading?: 'lazy' | 'eager';
-}) {
-  const sources = repoImageCandidates(repoName);
-  const [srcIndex, setSrcIndex] = useState(0);
+function ProjectImage({ repoName, alt, className }: { repoName: string; alt: string; className: string }) {
+  const src = SOCIAL_PREVIEWS[repoName.toLowerCase()];
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  // No candidate image at all, or every candidate failed → branded placeholder.
-  if (sources.length === 0 || failed) {
+  // No uploaded preview, or it failed to load → branded placeholder.
+  if (!src || failed) {
     return <ProjectPlaceholder repoName={repoName} className={className} />;
   }
 
@@ -196,22 +169,13 @@ function ProjectImage({
       {/* GitHub social previews are 1280×640. The attributes give the browser the 2:1
           ratio before the image loads; CSS (w-full h-full) still controls the size. */}
       <img
-        src={sources[srcIndex]}
+        src={src}
         alt={alt}
         width={1280}
         height={640}
-        loading={loading}
+        loading="lazy"
         onLoad={() => setLoaded(true)}
-        onError={() => {
-          // Advance to the next candidate; if this was the last one, show the placeholder.
-          setSrcIndex(index => {
-            if (index >= sources.length - 1) {
-              setFailed(true);
-              return index;
-            }
-            return index + 1;
-          });
-        }}
+        onError={() => setFailed(true)}
         className={`${className} transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
       />
     </>
@@ -220,7 +184,8 @@ function ProjectImage({
 
 // Bundled fallback for unlucky first visits (GitHub API rate-limited).
 // Mirrors data shape from the GitHub API; gets replaced as soon as a real fetch succeeds.
-const FALLBACK_REPOS: GithubRepo[] = [
+// Languages and releases come from PROJECT_METADATA (the daily snapshot) in mergeRepos.
+const FALLBACK_REPOS: Omit<GithubRepo, 'allLanguages'>[] = [
   {
     id: -13,
     name: 'Mazora-Network',
@@ -231,7 +196,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'TypeScript',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-08-01T00:00:00Z',
-    allLanguages: ['TypeScript', 'CSS', 'PLpgSQL', 'JavaScript'],
   },
   {
     id: -14,
@@ -243,7 +207,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'TypeScript',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-08-01T00:00:00Z',
-    allLanguages: ['TypeScript', 'CSS', 'PLpgSQL', 'JavaScript'],
   },
   {
     id: -5,
@@ -255,7 +218,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'TypeScript',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-06-01T00:00:00Z',
-    allLanguages: ['TypeScript', 'CSS', 'JavaScript'],
   },
   {
     id: -6,
@@ -267,7 +229,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'JavaScript',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-05-22T18:07:50Z',
-    allLanguages: ['JavaScript'],
   },
   {
     id: -1,
@@ -279,7 +240,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'JavaScript',
     stargazers_count: 0, forks_count: 0, fork: true,
     updated_at: '2026-05-22T18:00:00Z',
-    allLanguages: ['JavaScript', 'TypeScript', 'CSS'],
   },
   {
     id: -7,
@@ -291,7 +251,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'JavaScript',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-05-22T13:29:09Z',
-    allLanguages: ['JavaScript'],
   },
   {
     id: -8,
@@ -303,7 +262,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'Python',
     stargazers_count: 0, forks_count: 0, fork: true,
     updated_at: '2026-05-22T13:15:42Z',
-    allLanguages: ['Python', 'HTML'],
   },
   {
     id: -9,
@@ -315,7 +273,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'Python',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-05-22T09:07:08Z',
-    allLanguages: ['Python', 'HTML'],
   },
   {
     id: -10,
@@ -327,7 +284,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'Java',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-05-26T07:06:52Z',
-    allLanguages: ['Java'],
   },
   {
     id: -2,
@@ -339,7 +295,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'Python',
     stargazers_count: 0, forks_count: 0, fork: true,
     updated_at: '2026-05-20T00:00:00Z',
-    allLanguages: ['Python', 'Jupyter Notebook'],
   },
   {
     id: -3,
@@ -351,7 +306,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'Java',
     stargazers_count: 0, forks_count: 0, fork: true,
     updated_at: '2026-05-19T00:00:00Z',
-    allLanguages: ['Java', 'TypeScript', 'CSS'],
   },
   {
     id: -4,
@@ -363,7 +317,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'TypeScript',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-05-18T00:00:00Z',
-    allLanguages: ['TypeScript', 'CSS', 'JavaScript'],
   },
   {
     id: -12,
@@ -375,7 +328,6 @@ const FALLBACK_REPOS: GithubRepo[] = [
     language: 'CSS',
     stargazers_count: 0, forks_count: 0, fork: false,
     updated_at: '2026-05-17T00:00:00Z',
-    allLanguages: ['CSS', 'JavaScript'],
   },
 ];
 
@@ -392,8 +344,8 @@ const mergeRepos = (repos: GithubRepo[], liveReleases?: ReadonlyMap<string, Late
       ...repo,
       description: REPO_DESCRIPTION_OVERRIDES[key] ?? repo.description,
       homepage: REPO_HOMEPAGE_OVERRIDES[key] ?? repo.homepage,
-      allLanguages: generated?.allLanguages?.length ? generated.allLanguages : repo.allLanguages,
-      latestRelease: generated?.latestRelease ?? repo.latestRelease ?? null,
+      allLanguages: generated?.allLanguages ?? [],
+      latestRelease: generated?.latestRelease ?? null,
     });
   }
 
@@ -409,29 +361,21 @@ const mergeRepos = (repos: GithubRepo[], liveReleases?: ReadonlyMap<string, Late
         : incoming.latestRelease ?? generated?.latestRelease ?? null,
       homepage: REPO_HOMEPAGE_OVERRIDES[key] ?? safeHttpUrl(incoming.homepage),
     };
-    byName.set(repo.name.toLowerCase(), {
-      ...byName.get(repo.name.toLowerCase()),
+    const previous = byName.get(key);
+    byName.set(key, {
+      ...previous,
       ...repo,
-      allLanguages: repo.allLanguages?.length
-        ? repo.allLanguages
-        : byName.get(repo.name.toLowerCase())?.allLanguages ?? [],
+      allLanguages: repo.allLanguages.length ? repo.allLanguages : previous?.allLanguages ?? [],
     });
   }
 
+  // Newest first. (Featured cards pick their repos by FEATURED_NAMES, so their place in
+  // this order doesn't matter.)
   return Array.from(byName.values())
     // Final privacy guard — drop anything marked private no matter the source
     // (live API, stale cache, or bundled fallback).
     .filter(repo => repo.private !== true)
-    .sort((a, b) => {
-      const featuredA = FEATURED_NAMES.indexOf(a.name.toLowerCase());
-      const featuredB = FEATURED_NAMES.indexOf(b.name.toLowerCase());
-      if (featuredA !== -1 || featuredB !== -1) {
-        if (featuredA === -1) return 1;
-        if (featuredB === -1) return -1;
-        return featuredA - featuredB;
-      }
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-    });
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 };
 
 const readCachedRepos = (): GithubRepo[] | null => {
@@ -528,23 +472,17 @@ export function Projects() {
     const releaseSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
     fetchPublicGithubRepos()
       .then(async data => {
-        // Copy before sorting: the array is shared with About.
-        const sorted = [...data].sort(
-          (a, b) =>
-            b.stargazers_count - a.stargazers_count ||
-            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-        );
         // Only repos already known to publish releases are re-checked live, which keeps
         // the unauthenticated API budget (60/hour per visitor) to a handful of requests.
         // Repos gaining their first release are picked up by the daily metadata refresh.
-        const releaseRepos = sorted.filter(repo => PROJECT_METADATA[repo.name.toLowerCase()]?.latestRelease);
+        const releaseRepos = data.filter(repo => PROJECT_METADATA[repo.name.toLowerCase()]?.latestRelease);
         const liveReleases = new Map<string, LatestRelease | null>();
         await Promise.all(releaseRepos.map(async repo => {
           const release = await fetchLatestRelease(repo.name, releaseSignal);
           if (release !== undefined) liveReleases.set(repo.name.toLowerCase(), release);
         }));
         if (controller.signal.aborted) return;
-        const mergedRepos = mergeRepos(sorted, liveReleases);
+        const mergedRepos = mergeRepos(data, liveReleases);
         try {
           localStorage.setItem(GITHUB_REPO_CACHE_KEY, JSON.stringify({ data: mergedRepos, timestamp: Date.now() }));
         } catch { /* ignore */ }
@@ -563,8 +501,7 @@ export function Projects() {
   // Split into featured + rest
   const featured = FEATURED_NAMES
     .map(n => repos.find(r => r.name.toLowerCase() === n))
-    .filter((r): r is GithubRepo => Boolean(r))
-    .slice(0, 5);
+    .filter((r): r is GithubRepo => Boolean(r));
   const featuredIds = new Set(featured.map(r => r.id));
   const rest = repos.filter(r => !featuredIds.has(r.id) && !isProfileRepo(r));
   const filteredRest =
@@ -634,7 +571,6 @@ export function Projects() {
                       <ProjectImage
                         repoName={repo.name}
                         alt={repo.name}
-                        loading="lazy"
                         className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-700"
                       />
                     </div>
@@ -727,7 +663,6 @@ export function Projects() {
                       <ProjectImage
                         repoName={repo.name}
                         alt={repo.name}
-                        loading="lazy"
                         className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
                       />
                     </NewTabLink>
