@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Application } from '@splinetool/runtime';
+import { SPLINE_WASM_PATH } from '../../lib/splineScene';
 
 // Minimal replacement for @splinetool/react-spline, which only forwards
 // `renderOnDemand` and `wasmPath` to the runtime. Spline runtime 2 otherwise
@@ -8,6 +9,7 @@ import { Application } from '@splinetool/runtime';
 // WebGL2 capability probe and WebGL failure detection in Hero.tsx. Forcing the
 // classic WebGL pipeline keeps the robot on the path those safeguards were built for.
 // The runtime sizes the canvas to its parent itself, so no resize wrapper is needed.
+// `wasmPath` keeps its WASM downloads on our origin instead of unpkg/cdn.spline.design.
 export default function SplineScene({
   scene,
   className,
@@ -30,7 +32,7 @@ export default function SplineScene({
     if (!canvas) return;
 
     let disposed = false;
-    const app = new Application(canvas, { renderer: 'webgl' });
+    const app = new Application(canvas, { renderer: 'webgl', wasmPath: SPLINE_WASM_PATH });
     app.load(scene)
       .then(() => {
         if (!disposed) onLoadRef.current?.(app);

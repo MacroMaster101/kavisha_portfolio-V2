@@ -1,6 +1,14 @@
-// Public Spline scene — interactive robot that follows the cursor.
-// To swap: go to spline.design → open a community scene → click "Export" → "Code Export" → copy the .splinecode URL.
-export const SPLINE_ROBOT = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
+import robotScene from '../assets/spline/robot.splinecode?url';
+
+// Interactive robot that follows the cursor, self-hosted (originally
+// https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode) so the site does not
+// depend on, or grant CSP access to, Spline's servers at runtime.
+// To swap: on spline.design open a scene → "Export" → "Code Export", download the
+// .splinecode file and replace src/assets/spline/robot.splinecode with it.
+export const SPLINE_ROBOT = robotScene;
+
+// Where the runtime loads its WASM modules from; vite.config.ts serves them here.
+export const SPLINE_WASM_PATH = `${import.meta.env.BASE_URL}spline`;
 
 // Warms the HTTP cache with the scene file (~1.2 MB, the largest part of the robot)
 // while the intro loader plays — 6 s on a first visit — instead of starting a cold

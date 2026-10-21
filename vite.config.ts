@@ -1,9 +1,46 @@
-import { defineConfig } from 'vite'
+import { readdirSync, readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+
+// Spline's runtime downloads its WASM modules (bevel, process, physics, …) from
+// unpkg.com and cdn.spline.design unless it is given a `wasmPath`. Serve them from
+// our own origin instead, straight out of the installed package so they always match
+// the runtime version, and keep those third-party hosts out of the CSP. navmesh.js is
+// included because the game-controls worker imports it from the same path.
+const SPLINE_BUILD = fileURLToPath(new URL('./node_modules/@splinetool/runtime/build/', import.meta.url))
+const SPLINE_PUBLIC_DIR = 'spline'
+
+function splineRuntimeAssets(): Plugin {
+  const files = () =>
+    readdirSync(SPLINE_BUILD).filter((name) => name.endsWith('.wasm') || name === 'navmesh.js')
+  const contentType = (name: string) => (name.endsWith('.wasm') ? 'application/wasm' : 'text/javascript')
+
+  return {
+    name: 'spline-runtime-assets',
+    configureServer(server) {
+      server.middlewares.use(`/${SPLINE_PUBLIC_DIR}/`, (req, res, next) => {
+        const name = decodeURIComponent((req.url ?? '').split('?')[0].replace(/^\//, ''))
+        if (!files().includes(name)) return next()
+        res.setHeader('Content-Type', contentType(name))
+        res.end(readFileSync(SPLINE_BUILD + name))
+      })
+    },
+    generateBundle() {
+      for (const name of files()) {
+        this.emitFile({
+          type: 'asset',
+          fileName: `${SPLINE_PUBLIC_DIR}/${name}`,
+          source: readFileSync(SPLINE_BUILD + name),
+        })
+      }
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), splineRuntimeAssets()],
   base: '/',
   build: {
     // Spline's physics/runtime chunks are intentionally lazy-loaded only after
