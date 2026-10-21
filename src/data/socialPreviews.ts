@@ -13,6 +13,7 @@ export const SOCIAL_PREVIEWS: Record<string, string> = {
   "kavisha_portfolio": "https://repository-images.githubusercontent.com/1133475431/2b60a04b-c065-4002-804b-4e9149ebb684",
   "kavisha_portfolio-v2": "https://repository-images.githubusercontent.com/1276894842/bb7b4bf3-c065-4692-84f2-520186cd3fa8",
   "mazora-network": "https://repository-images.githubusercontent.com/1297488187/e199c727-2daa-4923-bfef-71b855851ab3",
+  "pacman-search-visualizer": "https://repository-images.githubusercontent.com/1424504026/179842ac-b8c5-408a-a5c1-5924d95c4d8d",
   "salon_vero_app": "https://repository-images.githubusercontent.com/1264174720/7d262a4b-9cea-4372-9e5b-0c05f1c36fc5",
   "stremio_discord_rich_presence": "https://repository-images.githubusercontent.com/1258308482/5e5f4667-39b8-42a9-b39a-498e56bd0fa5",
   "travel_genie": "https://repository-images.githubusercontent.com/1219954621/614682d9-723c-4ef7-8402-4e198faef8b4",
@@ -78,8 +79,8 @@ export const PROJECT_METADATA: Record<string, {
     "allLanguages": [
       "Python",
       "HTML",
-      "CSS",
       "JavaScript",
+      "CSS",
       "Dockerfile"
     ],
     "latestRelease": null
@@ -176,9 +177,12 @@ export const PROJECT_METADATA: Record<string, {
     ],
     "latestRelease": null
   },
-  "pacman-search-cs188": {
+  "pacman-search-visualizer": {
     "allLanguages": [
-      "Python"
+      "Python",
+      "JavaScript",
+      "CSS",
+      "HTML"
     ],
     "latestRelease": null
   },
@@ -207,7 +211,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.13",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.13/Stremio-Discord-Presence-Setup-1.0.13.exe",
-      "downloads": 225
+      "downloads": 249
     }
   },
   "thilak_products_website": {
