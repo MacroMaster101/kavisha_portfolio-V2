@@ -62,7 +62,7 @@ The site is designed and developed by **Kavisha Liyanage**, a third-year SLIIT u
 | ⚛️ Interface | React 19, TypeScript 6, Tailwind CSS 4 |
 | ⚡ Tooling | Vite 8, PostCSS, ESLint, TSX |
 | 🎞️ Motion | Framer Motion, Canvas API, CSS animation |
-| 🧊 3D experience | React Spline, Spline Runtime |
+| 🧊 3D experience | Spline Runtime (scene and WASM self-hosted) |
 | 🐙 Project data | GitHub REST API, generated repository metadata, validated browser cache |
 | ☁️ Deployment | Vercel, Vercel Analytics, GitHub Actions |
 | 🧪 Quality | TypeScript strict mode, ESLint, Node test runner, npm audit |
@@ -84,7 +84,7 @@ The production bundle does not require GitHub access to render its core project 
 
 ### Requirements
 
-- Node.js 20.19+, 22.13+, or 24+
+- Node.js 24.x (`engines` in `package.json`)
 - npm 11
 
 ### Installation
@@ -117,7 +117,7 @@ The portfolio never exposes a GitHub access token in client-side code.
 - API responses and cached values are validated before rendering.
 - Private repositories, malformed URLs, expired caches, and unexpected owners are rejected.
 - Bundled fallback data keeps the project section available during API outages or rate limits.
-- The scheduled metadata workflow uses GitHub's repository-scoped built-in token.
+- The scheduled metadata workflow reads the API with GitHub's built-in token; pushing the refresh and opening and merging its release PRs uses the `RELEASE_TOKEN` fine-grained token.
 - Partial metadata request failures preserve the last valid generated values.
 
 An optional token can be used locally when regenerating metadata:
@@ -142,9 +142,10 @@ GITHUB_TOKEN=your_optional_token
 │   ├── components/
 │   │   ├── sections/           Portfolio content sections
 │   │   └── ui/                 Navigation, loader, cursor, and visual components
+│   ├── assets/                 Spline robot scene
 │   ├── contexts/               Theme state and preference handling
-│   ├── data/                   Generated repository metadata
-│   ├── lib/                    GitHub validation, caching, and fetching
+│   ├── data/                   Sections, contact links, generated repository metadata
+│   ├── lib/                    GitHub data, Spline scene loader, scrollspy
 │   ├── pages/                  Main page composition
 │   ├── App.tsx
 │   └── main.tsx
@@ -161,12 +162,13 @@ GITHUB_TOKEN=your_optional_token
 - 🧠 Neural loading experience: `src/components/ui/Loader.tsx`
 - 🎨 Brand colors and global styles: `src/index.css`
 - 🖼️ Logo and social artwork: `public/Logo.png` and `public/og-image.jpg`
-- 🤖 Spline scene and responsive robot framing: `src/components/sections/Hero.tsx`
+- 🧭 Sections, numbering, and navigation labels: `src/data/sections.ts`
+- 🤖 Spline scene: `src/assets/spline/robot.splinecode` (see `src/lib/splineScene.ts`); robot framing: `src/components/sections/Hero.tsx`
 
 ## 🔐 Privacy & Security
 
 - No authentication, database, admin panel, tracking cookies, or contact-form backend
-- Theme preference and validated public GitHub data are the only persistent browser data
+- The only persistent browser data: an explicitly chosen theme, validated public GitHub data, and a theme-hint dismissal flag (plus a per-tab flag that skips the intro on reload)
 - CSP, HSTS, referrer, permissions, framing, and MIME-sniffing protections
 - Permanent `www` → canonical-domain redirect
 - No browser-side secrets or private repository access

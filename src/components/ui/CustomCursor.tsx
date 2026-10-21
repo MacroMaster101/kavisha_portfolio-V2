@@ -30,7 +30,7 @@ export const CustomCursor = () => {
     if (!enabled) return;
     // mouseX/mouseY are motion values (set imperatively, no re-render). We only
     // flip the React `isVisible`/`isHovering` state on actual changes, and we read
-    // the latest visibility via a ref so this effect runs once (stable listeners).
+    // the latest visibility from a local variable so this effect runs once (stable listeners).
     let visible = false;
     const setVisibleOnce = (v: boolean) => {
       if (visible === v) return;

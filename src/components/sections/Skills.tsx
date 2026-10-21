@@ -50,7 +50,7 @@ const groups: SkillGroup[] = [
     title: 'Languages',
     items: [
       { name: 'Java', url: devicon('java'), darkBoost: true },
-      { name: 'Python', slug: 'python', color: '3776AB', lightColor: '3776AB' },
+      { name: 'Python', slug: 'python', color: '3776AB' },
       { name: 'JavaScript', slug: 'javascript', color: 'F7DF1E', lightColor: 'A18A00' },
       { name: 'TypeScript', slug: 'typescript', color: '3178C6' },
       { name: 'C#', url: devicon('csharp') },
@@ -186,8 +186,8 @@ function logoUrl(skill: Skill, mode: 'dark' | 'light' = 'dark') {
     : `https://cdn.simpleicons.org/${skill.slug}`;
 }
 
-// "Tesseract OCR" → "TO", "Seaborn" → "Se". Shown when a technology has no public
-// logo, or its logo fails to load, so a tile never renders with an empty icon slot.
+// "Tesseract OCR" → "TO", "Seaborn" → "Se". The fallback when a logo fails to load,
+// so a tile never renders with an empty icon slot.
 const monogram = (name: string) => {
   const words = name.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
   return words.length > 1 ? (words[0][0] + words[1][0]).toUpperCase() : name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2);
@@ -238,7 +238,7 @@ function SkillLogo({ skill }: { skill: Skill }) {
 
 export function Skills() {
   return (
-    <Section id="skills" num="02." title="My Toolkit">
+    <Section id="skills" title="My Toolkit">
       <p className="text-slate-500 dark:text-slate-400 max-w-2xl mb-14 text-[15px] leading-relaxed">
         Languages, frameworks, and tools I reach for when building real things.
       </p>

@@ -25,7 +25,6 @@ interface BrainNode {
   tx: number;
   ty: number;
   phase: number;
-  hemisphere: -1 | 1;
 }
 
 interface BrainEdge {
@@ -109,7 +108,6 @@ function createBrainNetwork(compact: boolean) {
       tx: 0,
       ty: 0,
       phase: random() * Math.PI * 2,
-      hemisphere,
     });
   }
 
@@ -122,47 +120,40 @@ function createBrainNetwork(compact: boolean) {
     nodes[nodeIndex].ty = targets[targetIndex].y;
   });
 
+  const edges = nearestEdges(
+    nodes,
+    (a, b) => Math.hypot(a.nx - b.nx, a.ny - b.ny, (a.nz - b.nz) * 0.7),
+    0.245,
+    compact ? 2 : 3,
+  );
+  const monogramEdges = nearestEdges(nodes, (a, b) => Math.hypot(a.tx - b.tx, a.ty - b.ty), 0.19, 2);
+
+  return { nodes, edges, monogramEdges };
+}
+
+// Links each node to up to `maxNeighbours` nearest nodes closer than `cutoff`, once per pair.
+function nearestEdges(
+  nodes: BrainNode[],
+  distance: (a: BrainNode, b: BrainNode) => number,
+  cutoff: number,
+  maxNeighbours: number,
+): BrainEdge[] {
   const edges: BrainEdge[] = [];
   const edgeKeys = new Set<string>();
   nodes.forEach((node, from) => {
-    const nearest = nodes
-      .map((candidate, to) => ({
-        to,
-        distance: Math.hypot(node.nx - candidate.nx, node.ny - candidate.ny, (node.nz - candidate.nz) * 0.7),
-      }))
-      .filter(({ to, distance }) => to !== from && distance < 0.245)
+    nodes
+      .map((candidate, to) => ({ to, distance: distance(node, candidate) }))
+      .filter(({ to, distance }) => to !== from && distance < cutoff)
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, compact ? 2 : 3);
-
-    nearest.forEach(({ to }) => {
-      const key = from < to ? `${from}:${to}` : `${to}:${from}`;
-      if (edgeKeys.has(key)) return;
-      edgeKeys.add(key);
-      edges.push({ from, to });
-    });
+      .slice(0, maxNeighbours)
+      .forEach(({ to }) => {
+        const key = from < to ? `${from}:${to}` : `${to}:${from}`;
+        if (edgeKeys.has(key)) return;
+        edgeKeys.add(key);
+        edges.push({ from, to });
+      });
   });
-
-  const monogramEdges: BrainEdge[] = [];
-  const monogramEdgeKeys = new Set<string>();
-  nodes.forEach((node, from) => {
-    const nearest = nodes
-      .map((candidate, to) => ({
-        to,
-        distance: Math.hypot(node.tx - candidate.tx, node.ty - candidate.ty),
-      }))
-      .filter(({ to, distance }) => to !== from && distance < 0.19)
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 2);
-
-    nearest.forEach(({ to }) => {
-      const key = from < to ? `${from}:${to}` : `${to}:${from}`;
-      if (monogramEdgeKeys.has(key)) return;
-      monogramEdgeKeys.add(key);
-      monogramEdges.push({ from, to });
-    });
-  });
-
-  return { nodes, edges, monogramEdges };
+  return edges;
 }
 
 function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: boolean; progress: number }) {
@@ -245,10 +236,15 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
       };
     };
 
+    // Where the brain sits in the canvas; shared by the projection and the fissure line.
+    const brainFrame = () => ({
+      centerX: width / 2,
+      centerY: height * 0.47,
+      radius: Math.min(width * (compact ? 0.43 : 0.34), height * (compact ? 0.285 : 0.36)),
+    });
+
     const projectBrain = (time: number) => {
-      const centerX = width / 2;
-      const centerY = height * 0.47;
-      const radius = Math.min(width * (compact ? 0.43 : 0.34), height * (compact ? 0.285 : 0.36));
+      const { centerX, centerY, radius } = brainFrame();
       const morphRatio = Math.max(0, Math.min(1, (progressRef.current - 54) / 34));
       currentMorph = morphRatio * morphRatio * (3 - 2 * morphRatio);
       const calm = 1 - currentMorph;
@@ -335,16 +331,15 @@ function NeuralBrain({ dark, reduced, progress }: { dark: boolean; reduced: bool
       context.globalCompositeOperation = 'source-over';
 
       // The pulsing center line keeps the two calm hemispheres clearly separated.
-      const centerX = width / 2;
-      const centerY = height * 0.47;
-      const radius = Math.min(width * (compact ? 0.43 : 0.34), height * (compact ? 0.285 : 0.36));
-      const fissureGlow = reduced ? 0.46 : 0.38 + (Math.sin(time * 0.002) + 1) * 0.1;
-      const gradient = context.createLinearGradient(centerX, centerY - radius, centerX, centerY + radius);
-      gradient.addColorStop(0, 'transparent');
-      gradient.addColorStop(0.18, dark ? `rgba(129,140,248,${fissureGlow})` : `rgba(79,70,229,${fissureGlow})`);
-      gradient.addColorStop(0.78, dark ? `rgba(168,85,247,${fissureGlow})` : `rgba(126,34,206,${fissureGlow})`);
-      gradient.addColorStop(1, 'transparent');
+      // It fades out as the brain morphs into the monogram.
       if (currentMorph < 0.94) {
+        const { centerX, centerY, radius } = brainFrame();
+        const fissureGlow = reduced ? 0.46 : 0.38 + (Math.sin(time * 0.002) + 1) * 0.1;
+        const gradient = context.createLinearGradient(centerX, centerY - radius, centerX, centerY + radius);
+        gradient.addColorStop(0, 'transparent');
+        gradient.addColorStop(0.18, dark ? `rgba(129,140,248,${fissureGlow})` : `rgba(79,70,229,${fissureGlow})`);
+        gradient.addColorStop(0.78, dark ? `rgba(168,85,247,${fissureGlow})` : `rgba(126,34,206,${fissureGlow})`);
+        gradient.addColorStop(1, 'transparent');
         context.save();
         context.globalAlpha = 1 - currentMorph;
         context.strokeStyle = gradient;
@@ -455,7 +450,7 @@ export function Loader({ onFinish, onExitStart, firstLoad = true }: { onFinish: 
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] isolate overflow-hidden bg-[#f6f7fb] text-slate-950 dark:bg-[#030014] dark:text-white"
+      className="fixed inset-0 z-[100] isolate overflow-hidden bg-page text-slate-950 dark:bg-page-dark dark:text-white"
       role="status"
       aria-live="polite"
       aria-label={`${activeStep.label}, ${progress}%`}

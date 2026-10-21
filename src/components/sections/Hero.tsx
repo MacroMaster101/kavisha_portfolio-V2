@@ -1,8 +1,10 @@
-import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import type { Application } from '@splinetool/runtime';
 import { ArrowUpRight, Bot, Mail } from 'lucide-react';
 import { RobotBackdrop } from '../ui/RobotBackdrop';
 import { SPLINE_ROBOT } from '../../lib/splineScene';
+import { PulseDot } from '../ui/PulseDot';
 
 // Tracks a CSS media query. Used to mount the (expensive) Spline robot in exactly
 // ONE place per breakpoint — never two WebGL contexts at once.
@@ -24,14 +26,7 @@ function useMediaQuery(query: string) {
 // runtime's WebGL pipeline (see the component for why).
 const Spline = lazy(() => import('../ui/SplineScene'));
 
-type RobotState = 'checking' | 'waiting' | 'ready' | 'failed';
-
-type SplineApp = {
-  play?: () => void;
-  stop?: () => void;
-  setGlobalEvents?: (global: boolean) => void;
-  setBackgroundColor?: (color: string) => void;
-};
+type RobotState = 'checking' | 'ready' | 'failed';
 
 // Spline uses WebGL2-only depth-buffer APIs. Some browsers expose a WebGL 1
 // fallback and then crash when the runtime calls clearBufferfv(), so require a
@@ -202,7 +197,6 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
         return;
       }
 
-      setRobotState('waiting');
       timer = window.setTimeout(() => setRobotState('ready'), 450);
     });
 
@@ -212,16 +206,8 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
     };
   }, [interactiveReady, reduceMotion]);
 
-  // setGlobalEvents(true) makes the robot's "look at cursor" behavior track the
-  // mouse across the WHOLE window (navbar, side rails, every corner), not just over
-  // the canvas.
-  const splineAppRef = useRef<SplineApp | null>(null);
-
-  const handleSplineFailure = useCallback(() => {
-    splineAppRef.current?.stop?.();
-    splineAppRef.current = null;
-    setRobotState('failed');
-  }, []);
+  // Unmounting SplineScene (state 'failed') disposes the runtime and its WebGL context.
+  const handleSplineFailure = useCallback(() => setRobotState('failed'), []);
 
   // Spline performs much of its rendering asynchronously, outside React's error
   // boundary. If a driver fails after the capability check, unmount it immediately.
@@ -244,18 +230,18 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
   }, [handleSplineFailure, robotState]);
 
   const handleSplineLoad = useCallback(
-    (app: SplineApp) => {
-      splineAppRef.current = app;
-      // The scene ships an opaque background colour, which paints the canvas as a solid
+    (app: Application) => {      // The scene ships an opaque background colour, which paints the canvas as a solid
       // square over the page. Clearing it to transparent lets the page (and the orbit
       // backdrop) show through, so the canvas has no visible rectangle and the robot
       // needs no edge mask hiding its hands and feet.
-      app.setBackgroundColor?.('transparent');
+      app.setBackgroundColor('transparent');
       // Deliberately no setZoom() here. This scene clamps zoom with its own limits and
       // re-frames its camera per screen size, so the call had no effect: framing was
       // measured identical at 0.22, 0.34, 0.48 and 0.92. Framing is driven by the size
       // of the box in the markup instead — see the robotStage() call sites.
-      app.setGlobalEvents?.(true);
+      // Makes the robot's "look at cursor" behavior track the mouse across the WHOLE
+      // window (navbar, side rails, every corner), not just over the canvas.
+      app.setGlobalEvents(true);
     },
     []
   );
@@ -315,10 +301,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full bg-green-500/10 border border-green-500/40 backdrop-blur-sm"
         >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-          </span>
+          <PulseDot className="h-2 w-2" />
           <span className="font-mono text-[11px] text-green-600 dark:text-green-400">Available for Internships</span>
         </motion.div>
 

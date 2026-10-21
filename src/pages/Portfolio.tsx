@@ -14,7 +14,7 @@ import { Contact } from '../components/sections/Contact';
 
 export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
   return (
-    <div className="relative bg-[#f6f7fb] dark:bg-[#030014] min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300 font-sans">
+    <div className="relative bg-page dark:bg-page-dark min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300">
       <a href="#main-content" className="fixed left-4 top-4 z-[200] -translate-y-24 rounded bg-brand-primary px-4 py-2 text-white focus:translate-y-0">
         Skip to content
       </a>

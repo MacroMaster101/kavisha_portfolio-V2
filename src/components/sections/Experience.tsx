@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { Briefcase, MapPin, Code2, Sparkles, Mail } from 'lucide-react';
 import { Section } from '../ui/Section';
+import { CV_URL } from '../../data/contact';
+import { PulseDot } from '../ui/PulseDot';
 
 const lookingFor = [
   'Software Engineering Intern',
@@ -36,7 +38,7 @@ const strengths = [
 
 export function Experience() {
   return (
-    <Section id="experience" num="04." title="Industry Experience">
+    <Section id="experience" title="Industry Experience">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -50,10 +52,7 @@ export function Experience() {
         {/* Header */}
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
-            </span>
+            <PulseDot className="h-3 w-3" />
             <p className="font-mono text-sm text-green-500 dark:text-green-400">Available for Internships</p>
           </div>
           <span className="hidden sm:inline text-slate-400 dark:text-slate-600">·</span>
@@ -129,7 +128,7 @@ export function Experience() {
             Get in touch
           </a>
           <a
-            href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
+            href={CV_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-0.5 transition-all"

@@ -1,45 +1,25 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Home, User, Wrench, FolderGit2, Briefcase, GraduationCap,
-  Award, BookOpen, Mail, FileText,
-  LayoutGrid, X,
-} from 'lucide-react';
+import { FileText, LayoutGrid, X } from 'lucide-react';
+import { CV_URL } from '../../data/contact';
+import { HOME, SECTIONS } from '../../data/sections';
+import { useActiveSection } from '../../lib/activeSection';
 
-// Sections that appear in the expandable Navigation Hub grid.
-// `id` matches the section anchor; 'hero' is the top of the page.
-const hubItems = [
-  { id: 'hero',           name: 'Home',    Icon: Home },
-  { id: 'about',          name: 'About',   Icon: User },
-  { id: 'skills',         name: 'Skills',  Icon: Wrench },
-  { id: 'projects',       name: 'Work',    Icon: FolderGit2 },
-  { id: 'experience',     name: 'Exp',     Icon: Briefcase },
-  { id: 'education',      name: 'Edu',     Icon: GraduationCap },
-  { id: 'certifications', name: 'Certs',   Icon: Award },
-  { id: 'blogs',          name: 'Writing', Icon: BookOpen },
-  { id: 'contact',        name: 'Contact', Icon: Mail },
-] as const;
-
-// Sections used for active-state detection, in page order. 'hero' is included so the
-// Home links light up while the visitor is still above About.
-const detectableIds = hubItems.map((i) => i.id);
+// Destinations in the expandable Navigation Hub grid: the top of the page, then every
+// section. Also the ids for active-state detection, so Home lights up above About.
+const hubItems = [HOME, ...SECTIONS];
+const hubIds = hubItems.map((item) => item.id);
 
 // Quick icons in the collapsed bar (left and right of the center menu button).
-// Icons clearly map to their destination, with a short label under each.
-const quickLeft = [
-  { id: 'hero',   name: 'Home',   Icon: Home },
-  { id: 'skills', name: 'Skills', Icon: Wrench },
-] as const;
-const quickRight = [
-  { id: 'projects', name: 'Work',    Icon: FolderGit2 },
-  { id: 'contact',  name: 'Contact', Icon: Mail },
-] as const;
+const pick = (...ids: string[]) => hubItems.filter((item) => ids.includes(item.id));
+const quickLeft = pick('hero', 'skills');
+const quickRight = pick('projects', 'contact');
 
 // Rendered for every quick item on both sides of the centre button. The two sides had
 // byte-identical markup copy-pasted, so a styling tweak to one left the other stale.
-type QuickItem = { id: string; name: string; Icon: (props: { size?: number }) => ReactNode };
+type QuickItem = { id: string; shortName: string; Icon: (props: { size?: number }) => ReactNode };
 
-function QuickLink({ id, name, Icon, active }: QuickItem & { active: boolean }) {
+function QuickLink({ id, shortName: name, Icon, active }: QuickItem & { active: boolean }) {
   return (
     <a
       href={`#${id}`}
@@ -57,48 +37,11 @@ function QuickLink({ id, name, Icon, active }: QuickItem & { active: boolean }) 
 }
 
 export function BottomNav() {
-  const [activeId, setActiveId] = useState<string>('hero');
+  const activeId = useActiveSection(hubIds, HOME.id);
   const [visible, setVisible] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
   const hubRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-
-  // Track which section is in view by measuring scroll position against section bounds.
-  // IntersectionObserver was unreliable for short sections (Skills, Projects, Experience),
-  // so we do a manual check: the "active" section is the last one whose top has crossed
-  // a line 30% down the viewport.
-  useEffect(() => {
-    const detect = () => {
-      const sections = detectableIds
-        .map((id) => document.getElementById(id))
-        .filter((el): el is HTMLElement => Boolean(el));
-
-      if (sections.length === 0) return;
-
-      // Detection point: 30% down from the top of the viewport. The last section whose
-      // top has crossed above this line is the active one.
-      const detectionLine = window.innerHeight * 0.3;
-
-      let current = sections[0].id;
-      for (const section of sections) {
-        const rect = section.getBoundingClientRect();
-        if (rect.top <= detectionLine) {
-          current = section.id;
-        } else {
-          break;
-        }
-      }
-      setActiveId(current);
-    };
-
-    detect();
-    window.addEventListener('scroll', detect, { passive: true });
-    window.addEventListener('resize', detect);
-    return () => {
-      window.removeEventListener('scroll', detect);
-      window.removeEventListener('resize', detect);
-    };
-  }, []);
 
   // Show the bottom nav only once the About section has entered the viewport.
   // Hides again if the user scrolls back to the hero.
@@ -161,9 +104,6 @@ export function BottomNav() {
     };
   }, [hubOpen]);
 
-  const handleHubNav = () => {
-    setHubOpen(false);
-  };
 
   return (
     <div className="lg:hidden">
@@ -211,13 +151,13 @@ export function BottomNav() {
               <p className="font-mono text-[9px] text-slate-500 mt-0.5 mb-3.5">EXPLORE PORTFOLIO SECTIONS</p>
 
               <div className="grid grid-cols-3 gap-2.5">
-                {hubItems.map(({ id, name, Icon }) => {
+                {hubItems.map(({ id, shortName: name, Icon }) => {
                   const active = activeId === id;
                   return (
                     <a
                       key={id}
-                      href={id === 'hero' ? '#hero' : `#${id}`}
-                      onClick={handleHubNav}
+                      href={`#${id}`}
+                      onClick={() => setHubOpen(false)}
                       aria-current={active ? 'location' : undefined}
                       className={`group aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all ${
                         active
@@ -233,7 +173,7 @@ export function BottomNav() {
 
                 {/* CV — spans full width */}
                 <a
-                  href={`${import.meta.env.BASE_URL}Kavisha_Liyanage_CV.pdf`}
+                  href={CV_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="col-span-3 flex items-center justify-center gap-2 py-3 rounded-2xl border border-brand-primary/40 bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 transition-all"
