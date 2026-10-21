@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Section } from '../ui/Section';
-import { countShippedProjects, fetchPublicGithubRepos } from '../../lib/github';
+import { countShippedProjects, fetchPublicGithubRepos, readGithubRepoCache } from '../../lib/github';
 
 const FALLBACK_PROJECT_COUNT = 19;
 
@@ -21,21 +21,20 @@ const skills = [
 ];
 
 export function About() {
-  const [projectsShipped, setProjectsShipped] = useState(FALLBACK_PROJECT_COUNT);
+  const [cachedRepos] = useState(readGithubRepoCache);
+  const [projectsShipped, setProjectsShipped] = useState(() =>
+    cachedRepos ? countShippedProjects(cachedRepos) : FALLBACK_PROJECT_COUNT,
+  );
 
+  // Shares Projects' request (see fetchPublicGithubRepos), and skips it when cached.
   useEffect(() => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 8000);
-    fetchPublicGithubRepos(controller.signal)
-      .then((repos) => setProjectsShipped(countShippedProjects(repos)))
-      .catch(() => undefined)
-      .finally(() => window.clearTimeout(timeout));
-
-    return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, []);
+    if (cachedRepos) return;
+    let active = true;
+    fetchPublicGithubRepos()
+      .then((repos) => { if (active) setProjectsShipped(countShippedProjects(repos)); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [cachedRepos]);
 
   const stats = [
     { value: String(projectsShipped), label: 'Projects shipped' },
