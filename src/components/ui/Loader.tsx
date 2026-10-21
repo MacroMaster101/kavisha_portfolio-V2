@@ -422,7 +422,9 @@ export function Loader({ onFinish, onExitStart, firstLoad = true }: { onFinish: 
     let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
     const tick = (now: number) => {
-      const ratio = Math.min(1, (now - startedAt) / runTime);
+      // The first frame's timestamp can precede startedAt; a negative ratio would make
+      // Math.pow() below return NaN and animate the progress bars to scaleX(NaN).
+      const ratio = Math.max(0, Math.min(1, (now - startedAt) / runTime));
       const eased = ratio < 0.82
         ? Math.pow(ratio / 0.82, 0.88) * 0.9
         : 0.9 + ((ratio - 0.82) / 0.18) * 0.1;
