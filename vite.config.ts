@@ -38,9 +38,31 @@ function splineRuntimeAssets(): Plugin {
   }
 }
 
+// Spline's runtime bundles msgpackr, which speeds up decoding by compiling record
+// readers with `Function()` once a record shape repeats. Our CSP has no 'unsafe-eval',
+// so that call is blocked (a DevTools "CSP blocks eval" issue) and msgpackr falls back
+// by setting its inline-read threshold to Infinity. Start it at Infinity instead, so the
+// blocked call is never attempted — decoding is identical to the CSP fallback path.
+const MSGPACKR_THRESHOLD = /(\.name="MessagePack 0xC1";var [\w$]+=!1,[\w$]+=)2,/
+
+function splineNoEval(): Plugin {
+  return {
+    name: 'spline-no-eval',
+    apply: 'build',
+    transform(code, id) {
+      if (!id.includes('@splinetool/runtime/build/') || !code.includes('MessagePack 0xC1')) return null
+      if (!MSGPACKR_THRESHOLD.test(code)) {
+        this.warn('msgpackr threshold not found in the Spline runtime; CSP eval issue will return')
+        return null
+      }
+      return { code: code.replace(MSGPACKR_THRESHOLD, '$11/0,'), map: null }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), splineRuntimeAssets()],
+  plugins: [react(), splineRuntimeAssets(), splineNoEval()],
   base: '/',
   build: {
     // Spline's physics/runtime chunks are intentionally lazy-loaded only after
