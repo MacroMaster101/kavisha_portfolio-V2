@@ -2,16 +2,23 @@ import { useState } from 'react';
 import { Section } from '../ui/Section';
 import { motion } from 'framer-motion';
 
-interface Skill {
+// A logo comes either from Simple Icons (slug + brand colour) or from a direct URL.
+interface SimpleIconSkill {
   name: string;
-  slug?: string; // simple-icons slug (cdn.simpleicons.org)
-  color?: string; // hex without # — used in dark mode (also used in light if lightColor not set)
+  slug: string; // simple-icons slug (cdn.simpleicons.org)
+  color: string; // hex without # — used in dark mode (also used in light if lightColor not set)
   lightColor?: string; // optional override hex for light mode (when `color` is too pale on white)
-  url?: string; // full URL override — used when simple-icons doesn't have the logo
-  darkUrl?: string; // separate artwork for dark mode when the project ships one
-  darkInvert?: boolean; // render a `url` logo as white in dark mode (for dark-only artwork)
-  darkBoost?: boolean; // brighten a multi-colour `url` logo in dark mode (keeps brand hues)
 }
+
+interface UrlSkill {
+  name: string;
+  url: string; // used when simple-icons doesn't have the logo
+  darkUrl?: string; // separate artwork for dark mode when the project ships one
+  darkInvert?: boolean; // render the logo as white in dark mode (for dark-only artwork)
+  darkBoost?: boolean; // brighten a multi-colour logo in dark mode (keeps brand hues)
+}
+
+type Skill = SimpleIconSkill | UrlSkill;
 
 interface SkillGroup {
   title: string;
@@ -176,14 +183,10 @@ const groups: SkillGroup[] = [
   },
 ];
 
-function logoUrl(skill: Skill, mode: 'dark' | 'light' = 'dark') {
-  if (mode === 'dark' && skill.darkUrl) return skill.darkUrl;
-  if (skill.url) return skill.url;
-  if (!skill.slug) return '';
+function logoUrl(skill: Skill, mode: 'dark' | 'light') {
+  if ('url' in skill) return (mode === 'dark' && skill.darkUrl) || skill.url;
   const color = mode === 'light' ? (skill.lightColor ?? skill.color) : skill.color;
-  return color
-    ? `https://cdn.simpleicons.org/${skill.slug}/${color}`
-    : `https://cdn.simpleicons.org/${skill.slug}`;
+  return `https://cdn.simpleicons.org/${skill.slug}/${color}`;
 }
 
 // "Tesseract OCR" → "TO", "Seaborn" → "Se". The fallback when a logo fails to load,
@@ -198,7 +201,7 @@ function SkillLogo({ skill }: { skill: Skill }) {
   const light = logoUrl(skill, 'light');
   const dark = logoUrl(skill, 'dark');
 
-  if (failed || (!light && !dark)) {
+  if (failed) {
     return (
       <span
         aria-hidden="true"
@@ -230,7 +233,7 @@ function SkillLogo({ skill }: { skill: Skill }) {
         height={32}
         loading="lazy"
         onError={() => setFailed(true)}
-        className={`${imgClass} hidden dark:block ${skill.darkInvert ? 'brightness-0 invert' : ''} ${skill.darkBoost ? 'brightness-200' : ''}`}
+        className={`${imgClass} hidden dark:block ${'url' in skill && skill.darkInvert ? 'brightness-0 invert' : ''} ${'url' in skill && skill.darkBoost ? 'brightness-200' : ''}`}
       />
     </>
   );

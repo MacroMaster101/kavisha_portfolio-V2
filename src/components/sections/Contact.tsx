@@ -48,7 +48,7 @@ export function Contact() {
           className="inline-flex flex-col items-center gap-1 font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-brand-primary transition-colors"
         >
           <span>Designed &amp; Built by Kavisha Lakshan</span>
-          <span className="opacity-70">© 2026 · v2</span>
+          <span className="opacity-70">© {new Date().getFullYear()} · v2</span>
         </a>
       </footer>
     </>
