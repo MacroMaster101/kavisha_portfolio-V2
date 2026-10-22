@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   countShippedProjects,
+  fetchLatestRelease,
+  fetchPublicGithubRepos,
+  isProfileRepo,
   parseGithubRepo,
   parseGithubRepoCache,
   parseGithubReleaseResponse,
@@ -119,4 +122,81 @@ test('counts shipped projects without forks or the profile repository', () => {
   const profileRepo = parseGithubRepo({ ...validRepo, id: 44, name: 'MacroMaster101', html_url: 'https://github.com/MacroMaster101/MacroMaster101' });
   assert.ok(project && fork && profileRepo);
   assert.equal(countShippedProjects([project, fork, profileRepo]), 1);
+});
+
+test('rejects hosts outside an allow-list, invalid names, bad dates, and accepts a trailing slash', () => {
+  assert.equal(safeHttpUrl('https://evil.example/x', ['github.com']), null);
+  assert.equal(parseGithubRepo({ ...validRepo, name: '../escape' }), null);
+  assert.equal(parseGithubRepo({ ...validRepo, updated_at: 'not a date' }), null);
+  assert.equal(parseGithubRepo({ ...validRepo, html_url: 'https://github.com/MacroMaster101/public-project/' })?.name, 'public-project');
+});
+
+test('re-validates release data carried in cached repositories', () => {
+  const release = { version: 'v1', url: 'https://github.com/MacroMaster101/public-project/releases/tag/v1', downloads: 5 };
+  assert.deepEqual(parseGithubRepo({ ...validRepo, latestRelease: release })?.latestRelease, release);
+  assert.equal(parseGithubRepo({ ...validRepo, latestRelease: { ...release, url: 'https://evil.example/x' } })?.latestRelease, null);
+  assert.equal(parseGithubRepo({ ...validRepo, latestRelease: { ...release, downloads: -1 } })?.latestRelease, null);
+});
+
+test('names a release by tag, then name, then "latest", and skips assets without a usable size', () => {
+  const page = 'https://github.com/MacroMaster101/app/releases/tag/x';
+  assert.equal(parseGithubReleaseResponse({ name: 'Spring build', html_url: page, assets: [] })?.version, 'Spring build');
+  assert.equal(parseGithubReleaseResponse({ html_url: page, assets: [] })?.version, 'latest');
+  const release = parseGithubReleaseResponse({
+    tag_name: 'v1',
+    html_url: page,
+    assets: [
+      { browser_download_url: 'https://github.com/MacroMaster101/app/releases/download/v1/a.zip', size: Infinity, download_count: 7 },
+      { browser_download_url: 'https://github.com/MacroMaster101/app/releases/download/v1/b.zip', size: 10, download_count: 2 },
+    ],
+  });
+  assert.deepEqual(release, { version: 'v1', url: 'https://github.com/MacroMaster101/app/releases/download/v1/b.zip', downloads: 2 });
+});
+
+test('recognises the profile README repository case-insensitively', () => {
+  assert.equal(isProfileRepo({ name: 'macromaster101' }), true);
+  assert.equal(isProfileRepo({ name: 'public-project' }), false);
+});
+
+// Stubs global fetch for one test, recording the URLs it was called with.
+function stubFetch(t: { after: (fn: () => void) => void }, respond: (url: string) => Response | Promise<Response>) {
+  const original = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    calls.push(url);
+    return respond(url);
+  }) as typeof fetch;
+  t.after(() => { globalThis.fetch = original; });
+  return calls;
+}
+
+test('fetchLatestRelease: null without a release, undefined when GitHub cannot answer', async (t) => {
+  const signal = new AbortController().signal;
+  const calls = stubFetch(t, (url) => {
+    if (url.includes('/none/')) return new Response('', { status: 404 });
+    if (url.includes('/limited/')) return new Response('', { status: 403 });
+    return Response.json({ tag_name: 'v2', html_url: 'https://github.com/MacroMaster101/app/releases/tag/v2', assets: [] });
+  });
+  assert.equal(await fetchLatestRelease('none', signal), null);
+  assert.equal(await fetchLatestRelease('limited', signal), undefined);
+  assert.equal((await fetchLatestRelease('app', signal))?.version, 'v2');
+  assert.equal(await fetchLatestRelease('../evil', signal), undefined);
+  assert.equal(calls.length, 3, 'an invalid repo name never reaches the network');
+});
+
+test('fetchPublicGithubRepos: callers share one request, and a failed one is retried', async (t) => {
+  let fail = true;
+  const calls = stubFetch(t, () => (fail ? new Response('', { status: 500 }) : Response.json([validRepo])));
+  const first = fetchPublicGithubRepos();
+  assert.equal(fetchPublicGithubRepos(), first, 'a second caller gets the same request');
+  await assert.rejects(first);
+  assert.equal(calls.length, 1);
+
+  fail = false;
+  const repos = await fetchPublicGithubRepos();
+  assert.equal(calls.length, 2, 'the failed request was forgotten');
+  assert.equal(repos[0].name, 'public-project');
+  await fetchPublicGithubRepos();
+  assert.equal(calls.length, 2, 'a successful request is reused');
 });

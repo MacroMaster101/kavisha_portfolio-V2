@@ -22,7 +22,7 @@ const strengths = [
   {
     Icon: Code2,
     title: 'Project-tested skills',
-    body: 'Shipped 5+ end-to-end projects spanning web, mobile, and ML — TravelGenie (web + app), DengueRisk, and a secure campus E-Voting system.',
+    body: 'Shipped end-to-end projects spanning web, mobile, and ML — including TravelGenie (web + app), DengueRisk, and a secure campus E-Voting system.',
   },
   {
     Icon: Sparkles,
