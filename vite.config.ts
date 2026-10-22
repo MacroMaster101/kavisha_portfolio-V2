@@ -60,9 +60,30 @@ function splineNoEval(): Plugin {
   }
 }
 
+// Site details that index.html repeats across its meta tags, share cards and JSON-LD,
+// written there as %SITE_URL%, %SITE_TITLE% and %SHARE_DESCRIPTION%. (robots.txt,
+// sitemap.xml and vercel.json are served as-is and still spell out the URL.)
+const SITE: Record<string, string> = {
+  SITE_URL: 'https://kavisha.online/',
+  SITE_TITLE: 'Kavisha Liyanage — Software Engineering & AI Portfolio',
+  SHARE_DESCRIPTION: 'Full-stack web, mobile, and machine-learning projects by Kavisha Liyanage.',
+}
+
+function siteMetadata(): Plugin {
+  return {
+    name: 'site-metadata',
+    // Before Vite's own %ENV% replacement, which would warn about these names.
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html) =>
+        html.replace(/%(SITE_URL|SITE_TITLE|SHARE_DESCRIPTION)%/g, (_, key: string) => SITE[key].replaceAll('&', '&amp;')),
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), splineRuntimeAssets(), splineNoEval()],
+  plugins: [react(), splineRuntimeAssets(), splineNoEval(), siteMetadata()],
   base: '/',
   build: {
     // Spline's physics/runtime chunks are intentionally lazy-loaded only after

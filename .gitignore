@@ -9,7 +9,6 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-ssr
 *.local
 .env
 .env.*
@@ -20,8 +19,6 @@ dist-ssr
 
 # Local deployment and tool state
 .vercel/
-.netlify/
-.wrangler/
 coverage/
 .eslintcache
 .vite/

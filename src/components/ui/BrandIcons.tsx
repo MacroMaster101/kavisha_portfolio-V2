@@ -1,10 +1,10 @@
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 
 interface BrandIconProps extends Omit<SVGProps<SVGSVGElement>, 'size'> {
   size?: number | string;
 }
 
-function Base({ size = 24, children, ...props }: BrandIconProps & { children: React.ReactNode }) {
+function Base({ size = 24, children, ...props }: BrandIconProps & { children: ReactNode }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
