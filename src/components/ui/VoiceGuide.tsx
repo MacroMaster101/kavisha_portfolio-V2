@@ -1,5 +1,7 @@
-import { useState, type ReactNode } from 'react';
-import { Headphones, Loader2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Headphones, Loader2, Pause, Play, SkipBack, SkipForward, Sparkles, X } from 'lucide-react';
+import { completeHint, HINT_DELAY, hintDue, useHint } from '../../lib/hints';
 import { clipIndex, PLAYLIST } from '../../lib/narrationClips';
 import { useNarration, useNarrationProgress } from '../../contexts/useNarration';
 import { NarrationCaptions } from './NarrationCaptions';
@@ -106,11 +108,20 @@ function SeekRow({ className = '' }: { className?: string }) {
 // auto-playing tour; once any clip is loaded it becomes one player box: live captions on
 // top (switchable with CC), the controls, and the seek bar. It sits above the mobile
 // bottom nav and bottom-centre on desktop, clear of both side rails.
-export function VoiceGuide() {
+export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) {
   const { currentId, status, autoPlay, startTour, togglePause, next, prev, stop, setAutoPlay } = useNarration();
   const [captions, setCaptions] = useState(true);
   const index = clipIndex(currentId);
   const clip = PLAYLIST[index];
+
+  // "New: listen to a guided tour" nudge (lib/hints), after the theme hint if that's due.
+  const [hintDelay] = useState(() => (hintDue('theme') ? HINT_DELAY.voiceGuide : HINT_DELAY.voiceGuideAlone));
+  const [showHint, closeHint] = useHint('voice-guide', hintDelay, interactiveReady && !clip);
+  // Listening to any clip means the visitor has found the guide: no more hints.
+  const playing = Boolean(clip);
+  useEffect(() => {
+    if (playing) completeHint('voice-guide');
+  }, [playing]);
 
   if (PLAYLIST.length === 0) return null;
 
@@ -132,14 +143,43 @@ export function VoiceGuide() {
   return (
     <div className="fixed bottom-[88px] lg:bottom-6 inset-x-3 z-40 flex justify-center pointer-events-none">
       {!clip ? (
-        <button
-          type="button"
-          onClick={startTour}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-brand-primary/40 bg-white/80 dark:bg-[#0c0c1c]/80 backdrop-blur-xl px-4 py-2.5 font-mono text-xs text-brand-primary shadow-[0_8px_32px_-8px_rgba(2,12,27,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-brand-primary/10 hover:-translate-y-0.5 transition-all"
-        >
-          <Headphones size={15} />
-          Voice guide
-        </button>
+        <div className="pointer-events-auto relative">
+          <AnimatePresence>
+            {showHint && (
+              <div className="absolute bottom-full left-1/2 mb-3 -translate-x-1/2">
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative flex items-center gap-2 whitespace-nowrap rounded-md bg-brand-primary px-3 py-2 font-mono text-[12px] text-white shadow-xl shadow-brand-primary/40"
+                >
+                  <Sparkles size={13} />
+                  New: listen to a guided tour
+                  <button
+                    type="button"
+                    onClick={closeHint}
+                    aria-label="Dismiss"
+                    className="-mr-1 ml-1 flex h-4 w-4 items-center justify-center rounded transition-colors hover:bg-white/20"
+                  >
+                    <X size={11} />
+                  </button>
+                  {/* Caret pointing down to the pill */}
+                  <span className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-brand-primary" />
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+          {showHint && <span className="pointer-events-none absolute inset-0 rounded-full border border-brand-primary/60 animate-ping" />}
+          <button
+            type="button"
+            onClick={startTour}
+            className="relative flex items-center gap-2 rounded-full border border-brand-primary/40 bg-white/80 dark:bg-[#0c0c1c]/80 backdrop-blur-xl px-4 py-2.5 font-mono text-xs text-brand-primary shadow-[0_8px_32px_-8px_rgba(2,12,27,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-brand-primary/10 hover:-translate-y-0.5 transition-all"
+          >
+            <Headphones size={15} />
+            Voice guide
+          </button>
+        </div>
       ) : (
         <div
           role="region"
