@@ -170,7 +170,7 @@ GITHUB_TOKEN=your_optional_token
 ## 🔐 Privacy & Security
 
 - No authentication, database, admin panel, tracking cookies, or contact-form backend
-- The only persistent browser data: an explicitly chosen theme, validated public GitHub data, and a theme-hint dismissal flag (plus a per-tab flag that skips the intro on reload)
+- The only persistent browser data: an explicitly chosen theme, validated public GitHub data, and which first-visit hints (theme, voice guide) have been seen or used (plus a per-tab flag that skips the intro on reload)
 - CSP, HSTS, referrer, permissions, framing, and MIME-sniffing protections
 - Permanent `www` → canonical-domain redirect
 - No browser-side secrets or private repository access

@@ -5,17 +5,12 @@ import { useTheme } from '../../contexts/useTheme';
 import { CV_URL } from '../../data/contact';
 import { SECTIONS } from '../../data/sections';
 import { useActiveSection } from '../../lib/activeSection';
-
-const THEME_HINT_KEY = 'theme-hint-seen';
-
-const markHintSeen = () => {
-  try { localStorage.setItem(THEME_HINT_KEY, '1'); } catch { /* storage unavailable */ }
-};
+import { HINT_DELAY, useHint } from '../../lib/hints';
 
 // The theme toggle appears twice — once in the desktop bar, once in the mobile bar —
 // and both carry the same first-visit nudge. These two pieces were copy-pasted between
 // them, so a tweak to one silently left the other behind. `compact` covers the only
-// real difference: the mobile bar renders a smaller tooltip with no dismiss button.
+// real difference: the mobile bar renders a smaller tooltip.
 function ThemeHintPulse({ show }: { show: boolean }) {
   return (
     <AnimatePresence>
@@ -79,9 +74,8 @@ function ThemeHintTooltip({
 
 const sectionIds = SECTIONS.map((section) => section.id);
 
-export function Navbar() {
+export function Navbar({ interactiveReady }: { interactiveReady: boolean }) {
   const [scrolled, setScrolled] = useState(false);
-  const [showThemeHint, setShowThemeHint] = useState(false);
   // Scrollspy for the desktop links. While the hero still fills the screen (no section
   // crossed yet), nothing is highlighted.
   const activeId = useActiveSection(sectionIds, '');
@@ -93,75 +87,8 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Show "Try [other] mode" tooltip once per visitor — fires only after 10s of idle
-  // (no mouse / key / touch) AND only while the user is still in the hero/header area
-  // (hasn't scrolled past one viewport). If they leave the hero, the hint is dropped.
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(THEME_HINT_KEY)) return;
-    } catch { /* localStorage blocked — show the hint anyway */ }
-
-    let idleTimer: ReturnType<typeof setTimeout>;
-    let hideTimer: ReturnType<typeof setTimeout>;
-    let shown = false;
-    let cancelled = false;
-
-    const show = () => {
-      if (shown || cancelled) return;
-      // Final guard — don't surface the hint if the user has scrolled past the hero
-      if (window.scrollY > window.innerHeight * 0.5) return;
-      shown = true;
-      setShowThemeHint(true);
-      // Auto-dismiss 10s after it appears
-      hideTimer = setTimeout(() => {
-        setShowThemeHint(false);
-        markHintSeen();
-      }, 10000);
-    };
-
-    const resetIdle = () => {
-      if (shown || cancelled) return;
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(show, 10000);
-    };
-
-    const onScroll = () => {
-      // Scrolling past ~half the viewport = user has left the hero region.
-      // Cancel the hint permanently for this session.
-      if (window.scrollY > window.innerHeight * 0.5) {
-        cancelled = true;
-        clearTimeout(idleTimer);
-        if (shown) {
-          // Already showing — just dismiss it
-          clearTimeout(hideTimer);
-          setShowThemeHint(false);
-        }
-        markHintSeen();
-        return;
-      }
-      // Still in hero — count this as activity (reset idle countdown)
-      resetIdle();
-    };
-
-    // Start the idle countdown
-    resetIdle();
-
-    const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'touchstart', 'click'];
-    activityEvents.forEach(ev => window.addEventListener(ev, resetIdle, { passive: true }));
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    return () => {
-      clearTimeout(idleTimer);
-      clearTimeout(hideTimer);
-      activityEvents.forEach(ev => window.removeEventListener(ev, resetIdle));
-      window.removeEventListener('scroll', onScroll);
-    };
-  }, []);
-
-  const dismissHint = () => {
-    setShowThemeHint(false);
-    markHintSeen();
-  };
+  // "Try [other] mode" nudge for visitors who haven't switched theme yet (lib/hints).
+  const [showThemeHint, dismissHint] = useHint('theme', HINT_DELAY.theme, interactiveReady);
 
   const handleToggleTheme = () => {
     dismissHint();
@@ -278,6 +205,7 @@ export function Navbar() {
               show={showThemeHint}
               nextTheme={theme === 'dark' ? 'light' : 'dark'}
               compact
+              onDismiss={dismissHint}
             />
         </div>
       </nav>
