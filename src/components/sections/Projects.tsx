@@ -25,6 +25,21 @@ const formatDownloads = (n: number) =>
 
 const CATEGORIES = ['All', 'Full Stack', 'Web', 'Mobile App', 'AI/ML', 'Discord Bot', 'Portfolio', 'Other'] as const;
 type Category = typeof CATEGORIES[number];
+
+// What the voice guide says for a featured project or a category filter, so they light
+// up as they are named (see lib/narrationHighlights).
+const SPOKEN_PROJECTS: Record<string, string> = {
+  'just-for-fun-website': 'Just For Fun',
+  'mazora-network': 'Mazora Network',
+  travel_genie: 'TravelGenie',
+  travel_genie_app: 'TravelGenie',
+  vero_salon_website: 'Vero Salon',
+};
+const SPOKEN_CATEGORIES: Partial<Record<Category, string>> = {
+  'Full Stack': 'full-stack apps',
+  'AI/ML': 'machine-learning work',
+  'Discord Bot': 'Discord bots',
+};
 type ProjectCategory = Exclude<Category, 'All'>;
 
 // GitHub's language API only returns source languages, so these manifest-checked
@@ -552,6 +567,7 @@ export function Projects() {
               return (
                 <motion.article
                   key={repo.id}
+                  data-narration-term={SPOKEN_PROJECTS[repo.name.toLowerCase()] ?? formatName(repo.name)}
                   initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
@@ -602,10 +618,10 @@ export function Projects() {
 
       {/* Other Noteworthy Projects */}
       {rest.length > 0 && (
-        <section className="py-12 md:py-16">
+        <section className="py-12 md:py-16" data-narration-scope="projects">
           <div className="w-full max-w-[1000px] mx-auto px-6 sm:px-10">
             <div className="text-center mb-4">
-              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">Everything Else I&apos;ve Shipped</h3>
+              <h3 data-narration-term="everything else" className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 rounded">Everything Else I&apos;ve Shipped</h3>
               <a
                 href={GITHUB_URL}
                 target="_blank"
@@ -617,12 +633,13 @@ export function Projects() {
             </div>
 
             {/* Category filter pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8">
+            <div data-narration-term="filter by category" className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 rounded-full">
               {CATEGORIES.map(cat => {
                 const active = activeCategory === cat;
                 return (
                   <button
                     key={cat}
+                    data-narration-term={SPOKEN_CATEGORIES[cat]}
                     onClick={() => handleCategory(cat)}
                     aria-pressed={active}
                     className={`px-4 py-1.5 text-[13px] font-mono rounded-full border transition-all ${
@@ -648,6 +665,7 @@ export function Projects() {
                 return (
                   <motion.article
                     key={repo.id}
+                    data-narration-term={formatName(repo.name)}
                     layout
                     initial={false}
                     whileInView={{ opacity: 1, y: 0 }}

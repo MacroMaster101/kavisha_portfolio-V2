@@ -105,6 +105,38 @@ html.dark {
   outline-offset: 3px;
 }
 
+/* Voice guide: spotlight the section being narrated (NarrationContext sets
+   data-narrating) with an accent bar and a soft glow along its left edge. */
+section[id] {
+  transition: box-shadow 0.5s ease;
+}
+section[data-narrating] {
+  box-shadow:
+    inset 3px 0 0 var(--brand-primary),
+    inset 180px 0 160px -160px color-mix(in oklab, var(--brand-primary) 22%, transparent);
+}
+
+/* Voice guide: an element lights up while its name is spoken (lib/narrationHighlights).
+   Outline + glow only, so cards keep their own background. */
+[data-narration-hit] {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 3px;
+  box-shadow: 0 0 28px -6px color-mix(in oklab, var(--brand-primary) 70%, transparent);
+  animation: narration-hit 0.3s ease-out;
+}
+@keyframes narration-hit {
+  from {
+    outline-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* The "Now narrating" sound bars next to a section's listen button. */
+@keyframes narration-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

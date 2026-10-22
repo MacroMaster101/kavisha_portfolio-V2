@@ -176,7 +176,7 @@ export function Navbar() {
           : 'h-[90px] bg-page/70 dark:bg-page-dark/80 backdrop-blur-md border-b border-slate-200/40 dark:border-transparent'
       }`}
     >
-      <nav className="h-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 flex items-center justify-between">
+      <nav className="h-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-6 xl:px-12 flex items-center justify-between gap-4">
         {/* Logo */}
         <a
           href="#hero"
@@ -189,9 +189,11 @@ export function Navbar() {
           </span>
         </a>
 
-        {/* Desktop nav — shown from lg+ only (8 nav items + Resume + toggle don't fit on tablet) */}
-        <div className="hidden lg:flex items-center gap-2">
-          <ol className="flex items-center gap-1">
+        {/* Desktop nav — shown from lg+ only (8 nav items + Resume + toggle don't fit on tablet).
+            lg–xl (1024–1279px) is a compact version: no section numbers, tighter spacing.
+            The full version needs ~1190px. */}
+        <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+          <ol className="flex items-center xl:gap-1">
             {SECTIONS.map((item, idx) => {
               const active = activeId === item.id;
               return (
@@ -204,13 +206,13 @@ export function Navbar() {
                   <a
                     href={`#${item.id}`}
                     aria-current={active ? 'location' : undefined}
-                    className={`group relative flex items-baseline gap-1.5 px-3 py-2 text-[13px] transition-colors ${
+                    className={`group relative flex items-baseline gap-1.5 px-2 xl:px-3 py-2 text-[13px] transition-colors ${
                       active
                         ? 'text-brand-primary'
                         : 'text-slate-700 dark:text-slate-300 hover:text-brand-primary'
                     }`}
                   >
-                    <span className="font-mono text-brand-primary text-xs">{item.num}</span>
+                    <span className="hidden xl:inline font-mono text-brand-primary text-xs">{item.num}</span>
                     <span className="font-medium">{item.navName}</span>
                     {/* Sliding underline that animates between active links */}
                     {active && (
@@ -233,12 +235,12 @@ export function Navbar() {
             href={CV_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-4 px-4 py-2 text-[13px] font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0] hover:shadow-brand-primary/30 transition-all"
+            className="ml-2 xl:ml-4 px-3 xl:px-4 py-2 text-[13px] font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0] hover:shadow-brand-primary/30 transition-all"
           >
             Resume
           </motion.a>
 
-          <div className="relative ml-2">
+          <div className="relative ml-1 xl:ml-2">
             <motion.button
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
