@@ -108,6 +108,7 @@ Open **[http://localhost:5173](http://localhost:5173)**.
 | `npm run lint` | Run ESLint across the repository |
 | `npm test` | Run the GitHub data validation and cache tests |
 | `npm run social-previews` | Refresh repository previews, languages, and release metadata |
+| `npm run narration` | Render missing voice-guide clips with ElevenLabs (needs `ELEVENLABS_API_KEY`) |
 
 ## 🐙 Project Data
 
@@ -137,7 +138,8 @@ GITHUB_TOKEN=your_optional_token
 ├── .env.example                 Optional build-only token template
 ├── public/                      Logo, portrait, résumé, SEO, and social assets
 ├── scripts/
-│   └── fetch-social-previews.mjs
+│   ├── fetch-social-previews.mjs
+│   └── generate-narration.mjs
 ├── src/
 │   ├── components/
 │   │   ├── sections/           Portfolio content sections

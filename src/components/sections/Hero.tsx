@@ -289,7 +289,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen overflow-hidden flex items-start lg:items-center px-6 sm:px-10 pt-28 pb-16 lg:pt-24"
+      className="relative min-h-screen overflow-hidden flex items-start lg:items-center px-6 sm:px-10 pt-28 md:pt-24 pb-16"
     >
 
       <div className="relative w-full max-w-[1100px] mx-auto z-10 flex flex-col lg:grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10 lg:gap-16 items-center">
@@ -354,7 +354,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
                 setZoom (its zoom limits clamp it), so the relationship is not monotonic:
                 measured at a 390px viewport, a 280px box shows head-to-knees while a
                 296px box cuts to a head close-up. 280px is the tuned maximum. */}
-            {robotStage('relative mx-auto aspect-square w-full max-w-[clamp(220px,58vw,280px)] overflow-hidden')}
+            {robotStage('relative mx-auto aspect-square w-full max-w-[clamp(220px,58vw,280px)] md:max-w-[220px] overflow-hidden')}
           </motion.div>
         )}
 
@@ -368,6 +368,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           Third-year{' '}
           <a
             href="https://sliit.lk"
+            data-narration-term="Sri Lanka Institute of Information Technology"
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-primary hover:underline underline-offset-4"

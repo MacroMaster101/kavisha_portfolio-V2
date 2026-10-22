@@ -2,6 +2,8 @@ import { Navbar } from '../components/ui/Navbar';
 import { SideRails } from '../components/ui/SideRails';
 import { PageBackground } from '../components/ui/PageBackground';
 import { BottomNav } from '../components/ui/BottomNav';
+import { VoiceGuide } from '../components/ui/VoiceGuide';
+import { NarrationProvider } from '../contexts/NarrationContext';
 import { Hero } from '../components/sections/Hero';
 import { About } from '../components/sections/About';
 import { Skills } from '../components/sections/Skills';
@@ -14,6 +16,7 @@ import { Contact } from '../components/sections/Contact';
 
 export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
   return (
+    <NarrationProvider>
     <div className="relative bg-page dark:bg-page-dark min-h-screen text-slate-900 dark:text-slate-300 selection:bg-brand-primary/20 transition-colors duration-300">
       <a href="#main-content" className="fixed left-4 top-4 z-[200] -translate-y-24 rounded bg-brand-primary px-4 py-2 text-white focus:translate-y-0">
         Skip to content
@@ -21,6 +24,8 @@ export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
       <PageBackground animate={interactiveReady} />
       <Navbar />
       <SideRails />
+      {/* Before BottomNav so the navigation hub's backdrop covers it. */}
+      <VoiceGuide />
       <BottomNav />
       <main id="main-content" tabIndex={-1} className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0 focus:outline-none">
         <Hero interactiveReady={interactiveReady} />
@@ -34,5 +39,6 @@ export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
         <Contact />
       </main>
     </div>
+    </NarrationProvider>
   );
 }

@@ -3,6 +3,7 @@ import { Mail } from 'lucide-react';
 import { EMAIL, GITHUB_URL } from '../../data/contact';
 import { sectionNum } from '../../data/sections';
 import { SocialLinks } from '../ui/SocialLinks';
+import { NarrateButton } from '../ui/NarrateButton';
 
 export function Contact() {
   return (
@@ -15,7 +16,10 @@ export function Contact() {
           transition={{ duration: 0.6 }}
           className="max-w-[640px] mx-auto text-center"
         >
-          <p className="font-mono text-brand-primary text-sm mb-4">{sectionNum('contact')} What&apos;s Next?</p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <p className="font-mono text-brand-primary text-sm">{sectionNum('contact')} What&apos;s Next?</p>
+            <NarrateButton id="contact" name="Get In Touch" />
+          </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 dark:text-slate-100 mb-6 tracking-tight">
             Get In Touch
           </h2>
@@ -25,6 +29,7 @@ export function Contact() {
           </p>
           <a
             href={`mailto:${EMAIL}`}
+            data-narration-term="Say Hello"
             className="group inline-flex items-center gap-2.5 px-8 py-4 text-sm md:text-base font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-1 hover:shadow-[6px_6px_0_0] hover:shadow-brand-primary/30 transition-all"
           >
             <Mail size={16} />
