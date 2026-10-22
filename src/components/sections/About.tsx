@@ -88,10 +88,10 @@ export function About() {
           <p>
             I build full-stack web, mobile, and machine-learning products with a focus on useful interfaces,
             dependable backends, and real-world problem solving. My recent work includes{' '}
-            <span className="text-brand-primary">Mazora Network</span>, a production community platform;{' '}
-            <span className="text-brand-primary">Vero Salon</span>, a complete booking system;{' '}
-            <span className="text-brand-primary">TravelGenie</span>, an AI-powered travel planner; and{' '}
-            <span className="text-brand-primary">DengueRisk</span>, a public-health prediction project.
+            <span data-narration-term="Mazora Network" className="text-brand-primary rounded-sm">Mazora Network</span>, a production community platform;{' '}
+            <span data-narration-term="Vero Salon" className="text-brand-primary rounded-sm">Vero Salon</span>, a complete booking system;{' '}
+            <span data-narration-term="TravelGenie" className="text-brand-primary rounded-sm">TravelGenie</span>, an AI-powered travel planner; and{' '}
+            <span data-narration-term="DengueRisk" className="text-brand-primary rounded-sm">DengueRisk</span>, a public-health prediction project.
           </p>
           <p>
             Right now I&apos;m actively looking for a first internship where I can contribute to a real engineering team,

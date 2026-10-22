@@ -11,6 +11,14 @@ const lookingFor = [
   'Backend Engineering Intern',
 ];
 
+// What the voice guide says for each role, so it lights up as it is named.
+const SPOKEN_ROLES: Record<string, string> = {
+  'Software Engineering Intern': 'software engineering',
+  'AI / Machine Learning Intern': 'AI and machine learning',
+  'Full-Stack Developer Intern': 'full-stack',
+  'Backend Engineering Intern': 'backend internships',
+};
+
 const stack = [
   'React', 'Next.js', 'React Native', 'Expo', 'Electron', 'Node.js', 'Express', 'Spring Boot',
   'Flask', 'Java', 'Python', 'JavaScript', 'TypeScript', 'C# / .NET', 'PostgreSQL', 'Supabase',
@@ -77,6 +85,7 @@ export function Experience() {
           {strengths.map(({ Icon, title, body }, idx) => (
             <motion.div
               key={title}
+              data-narration-term={idx === 0 ? 'shipping real projects' : undefined}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
@@ -96,7 +105,7 @@ export function Experience() {
             <h4 className="font-mono text-xs text-brand-primary mb-3 uppercase tracking-widest">Roles I&apos;m open to</h4>
             <ul className="space-y-2">
               {lookingFor.map(role => (
-                <li key={role} className="flex items-center gap-2 text-[14px] text-slate-700 dark:text-slate-300">
+                <li key={role} data-narration-term={SPOKEN_ROLES[role]} className="flex w-fit items-center gap-2 rounded text-[14px] text-slate-700 dark:text-slate-300">
                   <span className="text-brand-primary text-xs">▹</span>
                   {role}
                 </li>

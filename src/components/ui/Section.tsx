@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { sectionNum } from '../../data/sections';
+import { NarrateButton } from './NarrateButton';
 
 interface SectionProps {
   id: string;
@@ -24,6 +25,7 @@ export function Section({ id, title, children }: SectionProps) {
             </span>
           </h2>
           <span className="flex-1 h-px bg-slate-300 dark:bg-slate-700 ml-2 shrink-0 min-w-[20px]" />
+          <NarrateButton id={id} name={title} />
         </header>
         {children}
       </div>

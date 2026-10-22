@@ -38,30 +38,9 @@ function QuickLink({ id, shortName: name, Icon, active }: QuickItem & { active: 
 
 export function BottomNav() {
   const activeId = useActiveSection(hubIds, HOME.id);
-  const [visible, setVisible] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
   const hubRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-
-  // Show the bottom nav only once the About section has entered the viewport.
-  // Hides again if the user scrolls back to the hero.
-  useEffect(() => {
-    const checkVisibility = () => {
-      const about = document.getElementById('about');
-      if (!about) return;
-      const aboutTop = about.getBoundingClientRect().top;
-      // About has started entering the viewport (top is at or above the bottom edge).
-      setVisible(aboutTop < window.innerHeight * 0.85);
-    };
-
-    checkVisibility();
-    window.addEventListener('scroll', checkVisibility, { passive: true });
-    window.addEventListener('resize', checkVisibility);
-    return () => {
-      window.removeEventListener('scroll', checkVisibility);
-      window.removeEventListener('resize', checkVisibility);
-    };
-  }, []);
 
   // Lock body scroll while the hub overlay is open.
   useEffect(() => {
@@ -187,15 +166,10 @@ export function BottomNav() {
         )}
       </AnimatePresence>
 
-      {/* ===== Collapsed bottom bar ===== */}
-      <nav
-        aria-label="Section navigation"
-        aria-hidden={!visible}
-        inert={!visible}
-        className={`fixed bottom-3 inset-x-3 z-50 transition-all duration-300 ${
-          visible ? 'translate-y-0 opacity-100' : 'translate-y-[140%] opacity-0 pointer-events-none'
-        }`}
-      >
+      {/* ===== Collapsed bottom bar =====
+          Always shown below lg: it is the only navigation on phones and tablets (the top
+          bar there holds just the logo and theme toggle). */}
+      <nav aria-label="Section navigation" className="fixed bottom-3 inset-x-3 z-50">
         <div className="relative mx-auto max-w-[420px]">
           <div className="
             relative flex items-center justify-around

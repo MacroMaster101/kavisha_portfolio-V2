@@ -7,11 +7,21 @@ interface Edu {
   location: string;
   description: string;
   badges?: string[];
+  /** What the voice guide says for this entry, so it lights up as it is named. */
+  spoken: string;
 }
+
+// What the voice guide says for each badge.
+const SPOKEN_BADGES: Record<string, string> = {
+  'AI Specialization': 'Artificial Intelligence',
+  'IEEE Member': 'I triple E',
+  'Physical Science': 'Physical Science',
+};
 
 const education: Edu[] = [
   {
     degree: 'B.Sc. (Hons) in Information Technology',
+    spoken: 'Bachelor of Science Honours',
     institution: 'Sri Lanka Institute of Information Technology (SLIIT)',
     period: '2024 — Present',
     location: 'Malabe, Sri Lanka',
@@ -21,6 +31,7 @@ const education: Edu[] = [
   },
   {
     degree: 'G.C.E. Advanced Level',
+    spoken: 'Advanced Levels',
     institution: "St. Mary's National College, Veyangoda",
     period: '2021 — 2023',
     location: 'Veyangoda, Sri Lanka',
@@ -30,6 +41,7 @@ const education: Edu[] = [
   },
   {
     degree: 'G.C.E. Ordinary Level',
+    spoken: 'Ordinary Levels',
     institution: "St. Mary's National College, Veyangoda",
     period: '2020',
     location: 'Veyangoda, Sri Lanka',
@@ -47,7 +59,7 @@ export function Education() {
             <span className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white dark:bg-page-dark border-2 border-brand-primary group-hover:scale-125 transition-transform" />
 
             <p className="font-mono text-sm text-brand-primary mb-1">{edu.period}</p>
-            <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug">
+            <h3 data-narration-term={edu.spoken} className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug w-fit rounded">
               {edu.degree}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -61,6 +73,7 @@ export function Education() {
                 {edu.badges.map(b => (
                   <li
                     key={b}
+                    data-narration-term={SPOKEN_BADGES[b]}
                     className="px-3 py-1 text-xs font-mono rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
                   >
                     {b}

@@ -5,7 +5,7 @@ import { BookOpen } from 'lucide-react';
 export function Blogs() {
   return (
     <Section id="blogs" title="Things I've Written">
-      <PlaceholderCard Icon={BookOpen} heading="Project breakdowns and engineering notes — soon." status="Coming Soon">
+      <PlaceholderCard Icon={BookOpen} heading="Project breakdowns and engineering notes — soon." status="Coming Soon" spoken="coming soon">
         Planning to share learnings on AI, full-stack development, and software engineering — including
         write-ups on the projects I&apos;m shipping.
       </PlaceholderCard>

@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "test": "tsx --test tests/**/*.test.ts",
     "preview": "vite preview",
-    "social-previews": "node --env-file-if-exists=.env scripts/fetch-social-previews.mjs"
+    "social-previews": "node --env-file-if-exists=.env scripts/fetch-social-previews.mjs",
+    "narration": "node --env-file-if-exists=.env scripts/generate-narration.mjs"
   },
   "dependencies": {
     "@splinetool/runtime": "^2.0.90",

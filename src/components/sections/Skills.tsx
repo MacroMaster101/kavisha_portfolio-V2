@@ -183,6 +183,19 @@ const groups: SkillGroup[] = [
   },
 ];
 
+// What the voice guide says for a skill or group, where it differs from the label on
+// the page (see lib/narrationHighlights). Unlisted ones are spoken as labelled.
+const SPOKEN: Record<string, string> = {
+  'C#': 'C#|C sharp',
+  'Mobile & Desktop': 'mobile and desktop',
+  Backend: 'backends|backend',
+  'Databases & ORMs': 'databases',
+  'AI & Data': 'AI and data',
+  'DevOps & Cloud': 'DevOps and cloud|DevOps',
+  Tools: 'developer tools',
+  'Media & Design': 'media and design',
+};
+
 function logoUrl(skill: Skill, mode: 'dark' | 'light') {
   if ('url' in skill) return (mode === 'dark' && skill.darkUrl) || skill.url;
   const color = mode === 'light' ? (skill.lightColor ?? skill.color) : skill.color;
@@ -250,7 +263,10 @@ export function Skills() {
         {groups.map(group => (
           <div key={group.title}>
             <div className="flex items-center gap-3 mb-5">
-              <h3 className="font-mono text-sm text-brand-primary whitespace-nowrap">
+              <h3
+                data-narration-term={SPOKEN[group.title] ?? group.title}
+                className="font-mono text-sm text-brand-primary whitespace-nowrap rounded"
+              >
                 {group.title}
               </h3>
               <span className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
@@ -260,6 +276,7 @@ export function Skills() {
               {group.items.map((skill, idx) => (
                 <motion.li
                   key={skill.name}
+                  data-narration-term={SPOKEN[skill.name] ?? skill.name}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
