@@ -22,10 +22,10 @@ export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
         Skip to content
       </a>
       <PageBackground animate={interactiveReady} />
-      <Navbar />
+      <Navbar interactiveReady={interactiveReady} />
       <SideRails />
       {/* Before BottomNav so the navigation hub's backdrop covers it. */}
-      <VoiceGuide />
+      <VoiceGuide interactiveReady={interactiveReady} />
       <BottomNav />
       <main id="main-content" tabIndex={-1} className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0 focus:outline-none">
         <Hero interactiveReady={interactiveReady} />
