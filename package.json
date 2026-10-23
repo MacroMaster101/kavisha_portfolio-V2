@@ -20,10 +20,10 @@
     "narration": "node --env-file-if-exists=.env scripts/generate-narration.mjs"
   },
   "dependencies": {
-    "@splinetool/runtime": "^2.0.90",
+    "@splinetool/runtime": "^2.0.108",
     "@vercel/analytics": "^2.0.1",
-    "framer-motion": "^14.3.0",
-    "lucide-react": "^1.58.0",
+    "framer-motion": "^14.6.0",
+    "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
@@ -41,7 +41,7 @@
     "tailwindcss": "^4.3.0",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.71.2",
-    "vite": "^8.3.4"
+    "typescript-eslint": "^8.72.0",
+    "vite": "^8.3.5"
   }
 }
