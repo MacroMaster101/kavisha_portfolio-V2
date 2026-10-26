@@ -20,7 +20,7 @@
     "narration": "node --env-file-if-exists=.env scripts/generate-narration.mjs"
   },
   "dependencies": {
-    "@splinetool/runtime": "^2.0.108",
+    "@splinetool/runtime": "^2.0.111",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^14.6.0",
     "lucide-react": "^1.61.0",
