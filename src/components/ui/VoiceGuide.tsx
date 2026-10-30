@@ -107,7 +107,8 @@ function SeekRow({ className = '' }: { className?: string }) {
 // Floating voice-guide player. Idle, it is a single "Voice guide" pill that starts the
 // auto-playing tour; once any clip is loaded it becomes one player box: live captions on
 // top (switchable with CC), the controls, and the seek bar. It sits above the mobile
-// bottom nav and bottom-centre on desktop, clear of both side rails.
+// bottom nav and bottom-centre on desktop, clear of both side rails and above the
+// footer text at the end of the page.
 export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) {
   const { currentId, status, autoPlay, startTour, togglePause, next, prev, stop, setAutoPlay } = useNarration();
   const [captions, setCaptions] = useState(true);
@@ -141,7 +142,7 @@ export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) 
   );
 
   return (
-    <div className="fixed bottom-[88px] lg:bottom-6 inset-x-3 z-40 flex justify-center pointer-events-none">
+    <div className="fixed bottom-[88px] lg:bottom-[92px] inset-x-3 z-40 flex justify-center pointer-events-none">
       {!clip ? (
         <div className="pointer-events-auto relative">
           <AnimatePresence>
