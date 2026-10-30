@@ -34,8 +34,11 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
+      # Only what ships to visitors blocks a merge. A new advisory in dev tooling
+      # (lint, build) would otherwise turn every PR red overnight, including the
+      # automated release. Those still show up as Dependabot alerts.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Build
         run: npm run build
