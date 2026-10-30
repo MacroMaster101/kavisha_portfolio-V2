@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Headphones, Loader2, Pause, Play, SkipBack, SkipForward, Sparkles, X } from 'lucide-react';
 import { completeHint, HINT_DELAY, hintDue, useHint } from '../../lib/hints';
@@ -104,13 +104,46 @@ function SeekRow({ className = '' }: { className?: string }) {
   );
 }
 
+const DESKTOP_REST_BOTTOM = 24;
+const DESKTOP_CLEARANCE = 8;
+
+// The desktop player's distance from the viewport bottom: its resting spot, or just above
+// anything marked data-voice-guide-clear (the hero buttons, the footer text) that crosses
+// the strip where it rests. The footer mounts late, so this queries on every check.
+function useDesktopBottom() {
+  const [desktopBottom, setDesktopBottom] = useState(DESKTOP_REST_BOTTOM);
+  useEffect(() => {
+    const detect = () => {
+      const stripTop = window.innerHeight - 70;
+      const stripBottom = window.innerHeight - 16;
+      let next = DESKTOP_REST_BOTTOM;
+      for (const el of document.querySelectorAll('[data-voice-guide-clear]')) {
+        const { top, bottom } = el.getBoundingClientRect();
+        if (top < stripBottom && bottom > stripTop) {
+          next = Math.max(next, Math.round(window.innerHeight - top + DESKTOP_CLEARANCE));
+        }
+      }
+      setDesktopBottom(next);
+    };
+    detect();
+    window.addEventListener('scroll', detect, { passive: true });
+    window.addEventListener('resize', detect);
+    return () => {
+      window.removeEventListener('scroll', detect);
+      window.removeEventListener('resize', detect);
+    };
+  }, []);
+  return desktopBottom;
+}
+
 // Floating voice-guide player. Idle, it is a single "Voice guide" pill that starts the
 // auto-playing tour; once any clip is loaded it becomes one player box: live captions on
 // top (switchable with CC), the controls, and the seek bar. It sits above the mobile
-// bottom nav and bottom-centre on desktop, clear of both side rails and above the
-// footer text at the end of the page.
+// bottom nav and bottom-centre on desktop, clear of both side rails, moving up only while
+// it would cover the hero buttons or the footer text.
 export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) {
   const { currentId, status, autoPlay, startTour, togglePause, next, prev, stop, setAutoPlay } = useNarration();
+  const desktopBottom = useDesktopBottom();
   const [captions, setCaptions] = useState(true);
   const index = clipIndex(currentId);
   const clip = PLAYLIST[index];
@@ -142,7 +175,10 @@ export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) 
   );
 
   return (
-    <div className="fixed bottom-[88px] lg:bottom-[92px] inset-x-3 z-40 flex justify-center pointer-events-none">
+    <div
+      style={{ '--voice-guide-bottom': `${desktopBottom}px` } as CSSProperties}
+      className="fixed bottom-[88px] lg:bottom-[var(--voice-guide-bottom)] inset-x-3 z-40 flex justify-center pointer-events-none transition-[bottom] duration-200"
+    >
       {!clip ? (
         <div className="pointer-events-auto relative">
           <AnimatePresence>

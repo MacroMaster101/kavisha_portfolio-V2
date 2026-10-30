@@ -50,6 +50,7 @@ export function Contact() {
           href={`${GITHUB_URL}/kavisha_portfolio-V2`}
           target="_blank"
           rel="noopener noreferrer"
+          data-voice-guide-clear
           className="inline-flex flex-col items-center gap-1 font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-brand-primary transition-colors"
         >
           <span>Designed &amp; Built by Kavisha Lakshan</span>
