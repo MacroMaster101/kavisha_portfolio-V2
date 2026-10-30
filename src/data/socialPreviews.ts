@@ -4,7 +4,7 @@
 export const SOCIAL_PREVIEWS: Record<string, string> = {
   "brakmasra": "https://repository-images.githubusercontent.com/1342726548/2bf13ceb-3238-4d75-b504-fc74781c8e76",
   "denguerisk": "https://repository-images.githubusercontent.com/1179074622/29e5b9d1-125a-41a8-97c2-28b88cb7a99f",
-  "discord_music_bot": "https://repository-images.githubusercontent.com/1111201356/c97a3b09-2120-4148-b682-4cf1b5d8427b",
+  "discord_music_bot": "https://repository-images.githubusercontent.com/1111201356/c545f90d-3b7c-4640-9b29-e36576f33be3",
   "discord-j4fn-server-bot": "https://repository-images.githubusercontent.com/1101810861/81d473c6-818c-4b83-9f94-344aa7bc6b62",
   "discord-youtube-status-bot": "https://repository-images.githubusercontent.com/1246466961/27512341-f653-40e8-be94-04e6dbb8135f",
   "home-tutor": "https://repository-images.githubusercontent.com/1249950903/c3c387dc-44a7-4b82-8724-ae922b902cbc",
@@ -70,8 +70,8 @@ export const PROJECT_METADATA: Record<string, {
       "Dockerfile"
     ],
     "latestRelease": {
-      "version": "v1.2.0",
-      "url": "https://github.com/MacroMaster101/discord_music_bot/releases/tag/v1.2.0",
+      "version": "v1.4.0",
+      "url": "https://github.com/MacroMaster101/discord_music_bot/releases/tag/v1.4.0",
       "downloads": 0
     }
   },
@@ -211,7 +211,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.13",
       "url": "https://github.com/MacroMaster101/Stremio_Discord_Rich_Presence/releases/download/v1.0.13/Stremio-Discord-Presence-Setup-1.0.13.exe",
-      "downloads": 265
+      "downloads": 350
     }
   },
   "thilak_products_website": {
@@ -247,7 +247,7 @@ export const PROJECT_METADATA: Record<string, {
     "latestRelease": {
       "version": "v1.0.3",
       "url": "https://github.com/MacroMaster101/valheim-auto-cleanup/releases/download/v1.0.3/ValheimAutoCleanup-1.0.3.zip",
-      "downloads": 12
+      "downloads": 13
     }
   },
   "vero_salon_website": {
