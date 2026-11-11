@@ -6,6 +6,9 @@ import { Loader } from './components/ui/Loader';
 import { Portfolio } from './pages/Portfolio';
 import { Analytics } from '@vercel/analytics/react';
 import { warmSplineScene } from './lib/splineScene';
+import { initScrollRestore, restoreScroll } from './lib/scrollRestore';
+
+initScrollRestore();
 
 // Distinguish the genuine first visit of a tab session from later refreshes so the intro
 // can run longer the first time and snappier afterwards. Computed once per page load at
@@ -53,6 +56,11 @@ function App() {
   // the loader fully unmounts, so Spline/WebGL and the page-wide background animations
   // don't spin up during the fade.
   const revealContent = useCallback(() => setShowContent(true), []);
+
+  // Back to where the visitor was before a refresh, once the content has rendered.
+  useEffect(() => {
+    if (showContent) return restoreScroll();
+  }, [showContent]);
 
   return (
     <ThemeProvider>

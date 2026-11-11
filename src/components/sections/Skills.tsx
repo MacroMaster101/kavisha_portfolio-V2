@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, X } from 'lucide-react';
 import { Section } from '../ui/Section';
-import { motion } from 'framer-motion';
+import { REPO_STACKS, repoDisplayName } from '../../data/repoStacks';
+import { SKILL_NOTES } from '../../data/skillNotes';
 
 // A logo comes either from Simple Icons (slug + brand colour) or from a direct URL.
 interface SimpleIconSkill {
@@ -209,7 +213,7 @@ const monogram = (name: string) => {
   return words.length > 1 ? (words[0][0] + words[1][0]).toUpperCase() : name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2);
 };
 
-function SkillLogo({ skill }: { skill: Skill }) {
+function SkillLogo({ skill, large = false }: { skill: Skill; large?: boolean }) {
   const [failed, setFailed] = useState(false);
   const light = logoUrl(skill, 'light');
   const dark = logoUrl(skill, 'dark');
@@ -218,14 +222,14 @@ function SkillLogo({ skill }: { skill: Skill }) {
     return (
       <span
         aria-hidden="true"
-        className="w-8 h-8 flex items-center justify-center rounded-md bg-brand-primary/10 ring-1 ring-brand-primary/30 font-mono text-[11px] font-bold text-brand-primary group-hover:scale-110 transition-transform"
+        className={`${large ? 'w-11 h-11 text-sm' : 'w-8 h-8 text-[11px]'} flex items-center justify-center rounded-md bg-brand-primary/10 ring-1 ring-brand-primary/30 font-mono font-bold text-brand-primary group-hover:scale-110 transition-transform`}
       >
         {monogram(skill.name)}
       </span>
     );
   }
 
-  const imgClass = 'w-8 h-8 object-contain group-hover:scale-110 transition-transform';
+  const imgClass = `${large ? 'w-11 h-11' : 'w-8 h-8'} object-contain group-hover:scale-110 transition-transform`;
   return (
     <>
       {/* Light-mode variant (hidden in dark) */}
@@ -252,11 +256,178 @@ function SkillLogo({ skill }: { skill: Skill }) {
   );
 }
 
+// Skill names that appear under a different name in the repo stacks.
+const STACK_ALIASES: Record<string, string[]> = {
+  'Tesseract OCR': ['Tesseract.js'],
+  SQL: ['PostgreSQL', 'MySQL', 'MS SQL Server'],
+};
+
+interface Usage {
+  /** Repos whose stack includes the skill. */
+  repos: string[];
+  /** Tools most often used alongside it in those repos. */
+  pairs: string[];
+}
+
+function usageOf(name: string): Usage {
+  const keys = STACK_ALIASES[name] ?? [name];
+  const repos = Object.keys(REPO_STACKS).filter((repo) => REPO_STACKS[repo].some((t) => keys.includes(t)));
+  const counts = new Map<string, number>();
+  for (const repo of repos) {
+    for (const tool of REPO_STACKS[repo]) {
+      if (!keys.includes(tool) && tool !== name) counts.set(tool, (counts.get(tool) ?? 0) + 1);
+    }
+  }
+  const pairs = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([tool]) => tool);
+  return { repos, pairs };
+}
+
+const USAGE = new Map(groups.flatMap((g) => g.items).map((s) => [s.name, usageOf(s.name)]));
+
+interface ActiveSkill {
+  skill: Skill;
+  group: string;
+}
+
+// The panel a toolkit card opens: what the tool is for, which of my projects use it, and
+// what it usually ships with. A bottom sheet on phones, a centred card
+// on larger screens. The logo flies in from the card (shared layoutId).
+function SkillDetail({ active, onClose }: { active: ActiveSkill; onClose: () => void }) {
+  const { skill, group } = active;
+  const usage = USAGE.get(skill.name) ?? { repos: [], pairs: [] };
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      opener?.focus();
+    };
+  }, [onClose]);
+
+  const seeProjects = () => {
+    onClose();
+    document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return createPortal(
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-sm dark:bg-[#04040e]/70"
+      />
+      <div className="pointer-events-none fixed inset-0 z-[71] flex items-end justify-center p-3 sm:items-center sm:p-6">
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="skill-detail-title"
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 30, scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          className="pointer-events-auto relative w-full max-w-md overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_24px_64px_-12px_rgba(2,12,27,0.45)] dark:border-brand-primary/25 dark:bg-[#0c0c1c]"
+        >
+          {/* Accent glow */}
+          <span className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-primary/20 blur-3xl" />
+
+          <div className="relative p-6">
+            <div className="flex items-start gap-4">
+              <motion.div
+                layoutId={`skill-logo-${skill.name}`}
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80"
+              >
+                <SkillLogo skill={skill} large />
+              </motion.div>
+              <div className="min-w-0 flex-1 pt-1">
+                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-primary">{group}</p>
+                <h3 id="skill-detail-title" className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+                  {skill.name}
+                </h3>
+              </div>
+              <button
+                ref={closeRef}
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="-mr-2 -mt-2 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {SKILL_NOTES[skill.name] && (
+              <p className="mt-5 text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">{SKILL_NOTES[skill.name]}</p>
+            )}
+
+            {usage.repos.length > 0 && (
+              <>
+                <div className="mt-6">
+                  <p className="font-mono text-[12px] text-slate-500 dark:text-slate-400">Where I&apos;ve used it</p>
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {usage.repos.map((repo, i) => (
+                      <motion.li
+                        key={repo}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + i * 0.04 }}
+                        className="rounded-full border border-brand-primary/30 bg-brand-primary/5 px-2.5 py-1 text-[12px] text-brand-primary"
+                      >
+                        {repoDisplayName(repo)}
+                      </motion.li>
+                    ))}
+                  </ul>
+                </div>
+
+                {usage.pairs.length > 0 && (
+                  <div className="mt-5">
+                    <p className="font-mono text-[12px] text-slate-500 dark:text-slate-400">Often paired with</p>
+                    <ul className="mt-2 flex flex-wrap gap-1.5">
+                      {usage.pairs.map((tool) => (
+                        <li
+                          key={tool}
+                          className="rounded-md bg-slate-100 px-2 py-1 font-mono text-[11px] text-slate-700 dark:bg-white/[0.06] dark:text-slate-300"
+                        >
+                          {tool}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={seeProjects}
+                  className="mt-6 inline-flex items-center gap-1.5 font-mono text-[13px] text-brand-primary hover:underline underline-offset-4"
+                >
+                  See the projects <ArrowRight size={14} />
+                </button>
+              </>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    </>,
+    document.body,
+  );
+}
+
 export function Skills() {
+  const [active, setActive] = useState<ActiveSkill | null>(null);
+  const close = useCallback(() => setActive(null), []);
+
   return (
     <Section id="skills" title="My Toolkit">
       <p className="text-slate-500 dark:text-slate-400 max-w-2xl mb-14 text-[15px] leading-relaxed">
-        Languages, frameworks, and tools I reach for when building real things.
+        Languages, frameworks, and tools I reach for when building real things.{' '}
+        <span className="text-slate-500">Tap any card to see where I&apos;ve used it.</span>
       </p>
 
       <div className="space-y-14">
@@ -273,29 +444,45 @@ export function Skills() {
             </div>
 
             <ul className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {group.items.map((skill, idx) => (
-                <motion.li
-                  key={skill.name}
-                  data-narration-term={SPOKEN[skill.name] ?? skill.name}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.25) }}
-                  whileHover={{ y: -3 }}
-                  className="group flex flex-col items-center justify-center gap-2 p-3 rounded-md bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/60 hover:shadow-[0_8px_20px_-12px] hover:shadow-brand-primary/40 transition-all"
-                >
-                  <div className="w-9 h-9 flex items-center justify-center">
-                    <SkillLogo skill={skill} />
-                  </div>
-                  <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 text-center group-hover:text-brand-primary transition-colors">
-                    {skill.name}
-                  </span>
-                </motion.li>
-              ))}
+              {group.items.map((skill, idx) => {
+                return (
+                  <motion.li
+                    key={skill.name}
+                    data-narration-term={SPOKEN[skill.name] ?? skill.name}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.25) }}
+                    whileHover={{ y: -3 }}
+                    className="rounded-md"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActive({ skill, group: group.title })}
+                      aria-haspopup="dialog"
+                      aria-label={`${skill.name}: details`}
+                      className="group relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden p-3 rounded-md bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-primary/60 hover:shadow-[0_8px_20px_-12px] hover:shadow-brand-primary/40 transition-all cursor-pointer"
+                    >
+                      {/* Hover sheen */}
+                      <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-brand-primary/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                      <motion.div layoutId={`skill-logo-${skill.name}`} className="w-9 h-9 flex items-center justify-center">
+                        <SkillLogo skill={skill} />
+                      </motion.div>
+                      <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 text-center group-hover:text-brand-primary transition-colors">
+                        {skill.name}
+                      </span>
+                    </button>
+                  </motion.li>
+                );
+              })}
             </ul>
           </div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {active && <SkillDetail key={active.skill.name} active={active} onClose={close} />}
+      </AnimatePresence>
     </Section>
   );
 }

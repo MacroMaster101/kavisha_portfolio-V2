@@ -302,7 +302,7 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full bg-green-500/10 border border-green-500/40 backdrop-blur-sm"
         >
           <PulseDot className="h-2 w-2" />
-          <span className="font-mono text-[11px] text-green-600 dark:text-green-400">Available for Internships</span>
+          <span className="font-mono text-[11px] text-green-800 dark:text-green-400">Available for Internships</span>
         </motion.div>
 
         {/* Hi, my name is */}
@@ -387,18 +387,18 @@ export function Hero({ interactiveReady }: { interactiveReady: boolean }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
           data-voice-guide-clear
-          className="mt-10 md:mt-12 flex flex-col sm:flex-row gap-3"
+          className="mt-10 md:mt-12 flex flex-col sm:flex-row sm:flex-wrap gap-3"
         >
           <a
             href="#projects"
-            className="group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm md:text-base font-mono font-medium text-white bg-brand-primary rounded hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px] hover:shadow-brand-primary/60 transition-all"
+            className="group inline-flex items-center justify-center gap-2 whitespace-nowrap px-7 lg:px-5 xl:px-7 py-4 text-sm md:text-base lg:text-sm xl:text-base font-mono font-medium text-white bg-brand-primary rounded hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px] hover:shadow-brand-primary/60 transition-all"
           >
             Check out my work
             <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </a>
           <a
             href="#contact"
-            className="group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm md:text-base font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-1 transition-all"
+            className="group inline-flex items-center justify-center gap-2 whitespace-nowrap px-7 lg:px-5 xl:px-7 py-4 text-sm md:text-base lg:text-sm xl:text-base font-mono font-medium text-brand-primary border border-brand-primary rounded hover:bg-brand-primary/10 hover:-translate-y-1 transition-all"
           >
             <Mail size={16} />
             Get in touch

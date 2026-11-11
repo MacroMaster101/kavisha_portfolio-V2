@@ -20,8 +20,15 @@
   --brand-primary-glow: rgba(99, 102, 241, 0.5);
   --brand-secondary: #a855f7;
   /* Page backgrounds (bg-page / dark:bg-page-dark). index.html's theme-color repeats them. */
-  --page-bg: #f6f7fb;
+  --page-bg: #eceff6;
   --page-bg-dark: #030014;
+}
+
+/* Light theme: one shade deeper indigo, so accent text (section numbers, links, labels)
+   and white-on-indigo buttons keep at least 4.5:1 contrast on the tinted page. */
+:root.light {
+  --brand-primary: #4f46e5;
+  --brand-primary-glow: rgba(79, 70, 229, 0.35);
 }
 
 @layer base {
@@ -104,6 +111,11 @@ html.dark {
   outline: 2px solid var(--brand-primary);
   outline-offset: 3px;
 }
+/* The chat composer shows focus on its whole rounded box (focus-within ring in
+   ChatAssistant), so the textarea itself skips the square outline. */
+.chat-input:focus-visible {
+  outline: none;
+}
 
 /* Voice guide: spotlight the section being narrated (NarrationContext sets
    data-narrating) with an accent bar and a soft glow along its left edge. */
@@ -135,6 +147,174 @@ section[data-narrating] {
 @keyframes narration-bar {
   0%, 100% { transform: scaleY(0.35); }
   50% { transform: scaleY(1); }
+}
+
+/* Chat bot avatar (components/ui/BotAvatar): floats, blinks, and scans while thinking. */
+.bot-avatar { overflow: visible; }
+.bot-avatar__body { animation: bot-float 3.2s ease-in-out infinite; }
+.bot-avatar__eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bot-blink 4.5s ease-in-out infinite;
+}
+.bot-avatar__halo,
+.bot-avatar__tip { animation: bot-antenna 2.4s ease-in-out infinite; }
+.bot-avatar--thinking .bot-avatar__eyes { animation: bot-scan 0.9s ease-in-out infinite; }
+.bot-avatar--thinking .bot-avatar__halo,
+.bot-avatar--thinking .bot-avatar__tip { animation-duration: 0.7s; }
+@keyframes bot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+@keyframes bot-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.12); }
+}
+@keyframes bot-antenna {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+@keyframes bot-scan {
+  0%, 100% { transform: translateX(-1.6px); }
+  50% { transform: translateX(1.6px); }
+}
+/* The launcher's slowly turning gradient ring. */
+@keyframes bot-ring {
+  to { transform: rotate(360deg); }
+}
+
+/* Robot buddy (components/ui/RobotBuddy): the chat bot's full-body robot. Every part
+   pivots in the SVG's own 64x80 coordinates. Outer groups hold a pose and transition;
+   inner groups loop. */
+.robot { overflow: visible; }
+.robot g,
+.robot ellipse,
+.robot rect { transform-box: view-box; }
+.robot__legs { transform-origin: 32px 74px; transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1); }
+.robot__upper { transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1); }
+.robot__head { transform-origin: 32px 36px; transition: transform 0.6s ease; }
+.robot__eyes { transition: transform 0.35s ease; }
+.robot__leg--l { transform-origin: 26.75px 55px; }
+.robot__leg--r { transform-origin: 37.25px 55px; }
+.robot__arm--l { transform-origin: 14px 40px; }
+.robot__arm--r { transform-origin: 50px 40px; }
+.robot .robot__eye { transform-origin: center; transform-box: fill-box; transition: transform 0.25s ease; }
+.robot__shadow { transform-origin: 32px 77px; transition: transform 0.5s ease, opacity 0.5s ease; }
+.robot__blush { opacity: 0; transition: opacity 0.4s ease; }
+.robot__core { transition: opacity 0.4s ease; }
+
+/* Awake: float, blink, antenna glow, arms sway a little. */
+.robot[data-pose='awake'] .robot__bob,
+.robot[data-pose='wave'] .robot__bob { animation: robot-float 3s ease-in-out infinite; }
+.robot[data-pose='awake'] .robot__eye,
+.robot[data-pose='wave'] .robot__eye { animation: bot-blink 4.2s ease-in-out infinite; }
+.robot[data-pose='awake'] .robot__arm--l { animation: robot-sway 3s ease-in-out infinite; }
+.robot[data-pose='awake'] .robot__arm--r { animation: robot-sway 3s ease-in-out infinite reverse; }
+.robot[data-pose='awake'] .robot__blush,
+.robot[data-pose='wave'] .robot__blush { opacity: 0.55; }
+.robot:not([data-pose='sleep']):not([data-pose='peek']) .robot__halo,
+.robot:not([data-pose='sleep']):not([data-pose='peek']) .robot__tip { animation: bot-antenna 2.2s ease-in-out infinite; }
+
+/* Wave: right arm up and waving, head tilted toward the visitor. */
+.robot[data-pose='wave'] .robot__arm--r { animation: robot-wave 0.5s ease-in-out infinite alternate; }
+.robot[data-pose='wave'] .robot__head { transform: rotate(-6deg); }
+.robot[data-pose='wave'] .robot__eyes { transform: translateX(0); }
+
+/* Sleep: sits down on the dock, head droops, eyes shut, slow breathing, the chest
+   light pulses like a charging LED. */
+.robot[data-pose='sleep'] .robot__legs,
+.robot[data-pose='peek'] .robot__legs { transform: scaleY(0.55); }
+.robot[data-pose='sleep'] .robot__upper,
+.robot[data-pose='peek'] .robot__upper { transform: translateY(7px); }
+.robot[data-pose='sleep'] .robot__head { transform: rotate(11deg) translateY(1px); }
+.robot[data-pose='peek'] .robot__head { transform: rotate(5deg); }
+.robot[data-pose='sleep'] .robot__eyes,
+.robot[data-pose='peek'] .robot__eyes { transform: translateX(0) translateY(2px); }
+.robot[data-pose='sleep'] .robot__eye,
+.robot[data-pose='peek'] .robot__eye--l { transform: scaleY(0.14); }
+.robot[data-pose='sleep'] .robot__bob,
+.robot[data-pose='peek'] .robot__bob { animation: robot-breathe 3.6s ease-in-out infinite; }
+.robot[data-pose='sleep'] .robot__core,
+.robot[data-pose='peek'] .robot__core { animation: robot-charge 2.4s ease-in-out infinite; }
+.robot[data-pose='sleep'] .robot__tip { opacity: 0.35; }
+.robot[data-pose='sleep'] .robot__halo { opacity: 0; }
+.robot[data-pose='sleep'] .robot__shadow { transform: scaleX(1.2); opacity: 0.3; }
+
+/* Thinking (an answer streaming): eyes scan, antenna pulses fast. */
+.robot--thinking .robot__eyes { animation: robot-scan 0.9s ease-in-out infinite; }
+.robot--thinking .robot__halo,
+.robot--thinking .robot__tip { animation-duration: 0.6s !important; }
+
+@keyframes robot-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes robot-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes robot-wave { from { transform: rotate(-130deg); } to { transform: rotate(-170deg); } }
+@keyframes robot-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.025, 0.975) translateY(1px); } }
+@keyframes robot-charge { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes robot-scan { 0%, 100% { transform: translateX(-2px); } 50% { transform: translateX(2px); } }
+.robot__bob { transform-origin: 32px 74px; }
+
+/* Sleep "z"s drifting up from the robot's head. */
+.robot-zzz span {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--brand-primary);
+  opacity: 0;
+  animation: robot-zzz 3s ease-in infinite;
+}
+@keyframes robot-zzz {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6) rotate(-10deg); }
+  20% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(14px, -26px) scale(1.15) rotate(12deg); }
+}
+
+/* The charging dock under the sleeping robot. */
+@keyframes robot-dock {
+  0%, 100% { opacity: 0.55; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.08); }
+}
+
+/* Marquee outline text (components/ui/VelocityMarquee). */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(100 116 139 / 0.6);
+}
+.dark .text-outline { -webkit-text-stroke-color: rgb(148 163 184 / 0.35); }
+
+/* Cursor spotlight for project cards (sections/Projects). The card sets --mx / --my to
+   the pointer position; ::before is a soft wash of light across the surface and ::after
+   lights up the border nearest the pointer (a 1px ring cut out with a mask). */
+.spotlight {
+  --mx: 50%;
+  --my: 50%;
+}
+.spotlight::before,
+.spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 2;
+}
+.spotlight::before {
+  background: radial-gradient(420px circle at var(--mx) var(--my), color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 45%);
+}
+.spotlight::after {
+  padding: 1px;
+  background: radial-gradient(240px circle at var(--mx) var(--my), var(--brand-primary), rgb(34 211 238 / 0.5) 35%, transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+/* Mouse only: on touch screens a tap would leave it stuck on. */
+@media (hover: hover) and (pointer: fine) {
+  .spotlight:hover::before,
+  .spotlight:hover::after {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

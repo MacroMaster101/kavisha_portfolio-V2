@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 // uses the feature or closes the hint — after either, never again. They are staggered
 // (see HINT_DELAY) so two never show at once.
 
-export type HintName = 'theme' | 'voice-guide';
+export type HintName = 'theme' | 'voice-guide' | 'chat';
 
 const MAX_VISITS = 3;
 const SHOW_MS = 8000;
@@ -13,6 +13,15 @@ const SHOW_MS = 8000;
 // When each hint appears, in ms after the page becomes interactive (the intro loader
 // gone). The voice guide waits for the theme hint to finish when that one is due.
 export const HINT_DELAY = { theme: 2500, voiceGuide: 2500 + SHOW_MS + 1500, voiceGuideAlone: 3500 };
+
+/** The chat teaser comes last, after whichever earlier hints are due this visit. */
+export function chatHintDelay() {
+  const theme = hintDue('theme');
+  const voice = hintDue('voice-guide');
+  if (voice) return (theme ? HINT_DELAY.voiceGuide : HINT_DELAY.voiceGuideAlone) + SHOW_MS + 1500;
+  if (theme) return HINT_DELAY.theme + SHOW_MS + 1500;
+  return HINT_DELAY.voiceGuideAlone;
+}
 
 interface HintState {
   visits?: number;

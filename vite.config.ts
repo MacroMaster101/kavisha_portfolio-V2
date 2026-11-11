@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Spline's runtime downloads its WASM modules (bevel, process, physics, …) from
@@ -81,9 +81,53 @@ function siteMetadata(): Plugin {
   }
 }
 
+// On Vercel, api/chat.ts serves the chatbot. `vite dev` doesn't run api/, so this mounts
+// the same handler on the dev server, with the API key read from .env (never VITE_-
+// prefixed, so it stays out of the browser bundle).
+function chatApiDev(): Plugin {
+  return {
+    name: 'chat-api-dev',
+    apply: 'serve',
+    configureServer(server) {
+      const env = loadEnv(server.config.mode, process.cwd(), '')
+      for (const key of ['OPENAI_API_KEY', 'CHAT_MODEL']) {
+        if (env[key] && !process.env[key]) process.env[key] = env[key]
+      }
+
+      server.middlewares.use('/api/chat', async (req, res) => {
+        try {
+          const { handleChatRequest } = (await server.ssrLoadModule(
+            '/server/chat/handler.ts',
+          )) as typeof import('./server/chat/handler.js')
+          const chunks: Buffer[] = []
+          for await (const chunk of req) chunks.push(chunk as Buffer)
+          const headers = new Headers()
+          for (const [name, value] of Object.entries(req.headers)) {
+            if (value !== undefined) headers.set(name, Array.isArray(value) ? value.join(', ') : value)
+          }
+          const request = new Request(`http://${req.headers.host}${req.originalUrl ?? '/api/chat'}`, {
+            method: req.method,
+            headers,
+            body: req.method === 'GET' || req.method === 'HEAD' ? undefined : Buffer.concat(chunks),
+          })
+          const response = await handleChatRequest(request)
+          res.statusCode = response.status
+          response.headers.forEach((value, name) => res.setHeader(name, value))
+          if (response.body) for await (const chunk of response.body) res.write(chunk)
+          res.end()
+        } catch (error) {
+          server.config.logger.error(`chat-api-dev: ${error instanceof Error ? error.stack : String(error)}`)
+          res.statusCode = 500
+          res.end()
+        }
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), splineRuntimeAssets(), splineNoEval(), siteMetadata()],
+  plugins: [react(), splineRuntimeAssets(), splineNoEval(), siteMetadata(), chatApiDev()],
   base: '/',
   build: {
     // Spline's physics/runtime chunks are intentionally lazy-loaded only after

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Section } from '../ui/Section';
 import { countShippedProjects, fetchPublicGithubRepos, readGithubRepoCache } from '../../lib/github';
 import { PulseDot } from '../ui/PulseDot';
+import { Portrait } from '../ui/Portrait';
 
 const FALLBACK_PROJECT_COUNT = 19;
 
@@ -130,29 +131,20 @@ export function About() {
 
         {/* Right column: portrait with floating tech badges */}
         <div className="relative w-full max-w-[320px] mx-auto md:mx-0 md:justify-self-end pt-6 pb-10 px-6">
-          <div className="group relative">
-            {/* Offset border frame */}
-            <div className="absolute inset-0 translate-x-4 translate-y-4 border-2 border-brand-primary rounded transition-transform duration-300 group-hover:translate-x-3 group-hover:translate-y-3" />
-
-            {/* Image with subtle brand tint on hover */}
-            <div className="relative rounded overflow-hidden">
-              <div className="absolute inset-0 bg-brand-primary/25 dark:bg-brand-primary/35 mix-blend-multiply group-hover:bg-transparent transition-colors duration-300 z-10" />
-              <img
-                src={`${import.meta.env.BASE_URL}portrait.webp`}
-                alt="Kavisha Liyanage"
-                width="800"
-                height="1067"
-                loading="lazy"
-                decoding="async"
-                className="block w-full h-auto rounded group-hover:scale-[1.02] transition-transform duration-300"
-              />
-            </div>
-
-            {techBadges.map(({ label, position, duration, delay, icon }) => (
+          <Portrait src={`${import.meta.env.BASE_URL}portrait.webp`} alt="Kavisha Liyanage">
+            {techBadges.map(({ label, position, duration, delay, icon }, i) => (
               <motion.div
                 key={label}
+                initial={{ opacity: 0, scale: 0.6 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.4 }}
                 animate={FLOAT}
-                transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{
+                  y: { duration, delay, repeat: Infinity, ease: 'easeInOut' },
+                  opacity: { duration: 0.3, delay: 0.9 + i * 0.12 },
+                  scale: { type: 'spring', stiffness: 420, damping: 18, delay: 0.9 + i * 0.12 },
+                }}
+                whileHover={{ scale: 1.08 }}
                 className={`absolute ${position} z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/10 dark:shadow-black/40`}
               >
                 {icon}
@@ -160,27 +152,36 @@ export function About() {
               </motion.div>
             ))}
 
+            {/* Availability, on the photo's dark backdrop so it reads in both themes */}
             <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.4, delay: 1.1 }}
+              className="absolute top-3 right-3 z-20 flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/55 px-2.5 py-1 backdrop-blur-md"
+            >
+              <PulseDot className="h-2 w-2" />
+              <span className="font-mono text-[10px] text-green-300">Available</span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, amount: 0.4 }}
               animate={FLOAT}
-              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+              transition={{
+                y: { duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 },
+                opacity: { duration: 0.3, delay: 1.3 },
+                scale: { type: 'spring', stiffness: 420, damping: 18, delay: 1.3 },
+              }}
+              whileHover={{ scale: 1.08 }}
               className="absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-primary text-white shadow-lg shadow-brand-primary/40"
             >
               <span className="text-[10px]">✦</span>
               <span className="font-mono text-[11px] font-medium">AI / ML</span>
             </motion.div>
-          </div>
+          </Portrait>
 
-          {/* Available pulse dot at top */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="absolute -top-1 right-2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/40 backdrop-blur-sm"
-          >
-            <PulseDot className="h-2 w-2" />
-            <span className="font-mono text-[10px] text-green-600 dark:text-green-400">Available</span>
-          </motion.div>
         </div>
       </div>
     </Section>
