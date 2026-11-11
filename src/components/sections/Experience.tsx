@@ -61,7 +61,7 @@ export function Experience() {
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
             <PulseDot className="h-3 w-3" />
-            <p className="font-mono text-sm text-green-500 dark:text-green-400">Available for Internships</p>
+            <p className="font-mono text-sm text-green-700 dark:text-green-400">Available for Internships</p>
           </div>
           <span className="hidden sm:inline text-slate-400 dark:text-slate-600">·</span>
           <p className="flex items-center gap-2 font-mono text-sm text-slate-500 dark:text-slate-400">

@@ -3,6 +3,8 @@ import { SideRails } from '../components/ui/SideRails';
 import { PageBackground } from '../components/ui/PageBackground';
 import { BottomNav } from '../components/ui/BottomNav';
 import { VoiceGuide } from '../components/ui/VoiceGuide';
+import { ChatAssistant } from '../components/ui/ChatAssistant';
+import { VelocityMarquee } from '../components/ui/VelocityMarquee';
 import { NarrationProvider } from '../contexts/NarrationContext';
 import { Hero } from '../components/sections/Hero';
 import { About } from '../components/sections/About';
@@ -26,9 +28,11 @@ export function Portfolio({ interactiveReady }: { interactiveReady: boolean }) {
       <SideRails />
       {/* Before BottomNav so the navigation hub's backdrop covers it. */}
       <VoiceGuide interactiveReady={interactiveReady} />
+      <ChatAssistant interactiveReady={interactiveReady} />
       <BottomNav />
       <main id="main-content" tabIndex={-1} className="relative lg:px-[100px] xl:px-[120px] pb-24 lg:pb-0 focus:outline-none">
         <Hero interactiveReady={interactiveReady} />
+        <VelocityMarquee />
         <About />
         <Skills />
         <Projects />

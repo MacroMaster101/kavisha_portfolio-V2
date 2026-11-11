@@ -19,12 +19,13 @@ export function SideRails() {
         />
       </motion.aside>
 
-      {/* Right rail — vertical email */}
+      {/* Right rail — vertical email. Its line ends at the chat bot below it
+          (ChatAssistant), which sits centred under the rail. */}
       <motion.aside
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.6, duration: 0.8 }}
-        className="hidden lg:flex fixed right-10 xl:right-12 bottom-0 z-30 flex-col items-center gap-6 after:content-[''] after:block after:w-px after:h-24 after:bg-slate-400 dark:after:bg-slate-500"
+        className="hidden lg:flex fixed right-10 xl:right-12 bottom-[108px] z-30 flex-col items-center gap-6 after:content-[''] after:block after:w-px after:h-16 after:bg-slate-400 dark:after:bg-slate-500"
       >
         <a
           href={`mailto:${EMAIL}`}

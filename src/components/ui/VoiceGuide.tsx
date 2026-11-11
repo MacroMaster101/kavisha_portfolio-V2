@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Headphones, Loader2, Pause, Play, SkipBack, SkipForward, Sparkles, X } from 'lucide-react';
 import { completeHint, HINT_DELAY, hintDue, useHint } from '../../lib/hints';
@@ -106,47 +106,88 @@ function SeekRow({ className = '' }: { className?: string }) {
 
 const DESKTOP_REST_BOTTOM = 24;
 const DESKTOP_CLEARANCE = 8;
+/** Space kept between the shifted player and what it moved aside for. */
+const DESKTOP_SIDE_GAP = 24;
+/** The right rail and the chat bot below it: the player never slides into them. */
+const DESKTOP_RIGHT_RESERVE = 104;
 
-// The desktop player's distance from the viewport bottom: its resting spot, or just above
-// anything marked data-voice-guide-clear (the hero buttons, the footer text) that crosses
-// the strip where it rests. The footer mounts late, so this queries on every check.
-function useDesktopBottom() {
-  const [desktopBottom, setDesktopBottom] = useState(DESKTOP_REST_BOTTOM);
+interface DesktopPlacement {
+  bottom: number;
+  shift: number;
+}
+
+const REST: DesktopPlacement = { bottom: DESKTOP_REST_BOTTOM, shift: 0 };
+
+// Where the desktop player sits. It rests bottom-centre. When the hero buttons (marked
+// data-voice-guide-clear) are under it, it slides right into the free space beside them,
+// rising above them only when there's no room there. The footer text (marked
+// data-voice-guide-clear="above") always sends it up, centred over the text. Overlap is judged on the marked element's children (the buttons themselves,
+// not the full-width row around them). The footer mounts late, so this queries each time.
+function useDesktopPlacement(wrapperRef: RefObject<HTMLDivElement | null>, contentKey: unknown) {
+  const [placement, setPlacement] = useState(REST);
   useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const apply = (next: DesktopPlacement) =>
+      setPlacement((prev) => (prev.bottom === next.bottom && prev.shift === next.shift ? prev : next));
+
     const detect = () => {
-      const stripTop = window.innerHeight - 70;
-      const stripBottom = window.innerHeight - 16;
-      let next = DESKTOP_REST_BOTTOM;
-      for (const el of document.querySelectorAll('[data-voice-guide-clear]')) {
-        const { top, bottom } = el.getBoundingClientRect();
-        if (top < stripBottom && bottom > stripTop) {
-          next = Math.max(next, Math.round(window.innerHeight - top + DESKTOP_CLEARANCE));
-        }
-      }
-      setDesktopBottom(next);
+      const box = wrapper.firstElementChild;
+      if (!box || window.innerWidth < 1024) return apply(REST);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const { width, height } = box.getBoundingClientRect();
+      // The wrapper centres the box, so its resting span doesn't depend on any shift.
+      const left = (vw - width) / 2;
+      const right = left + width;
+      const stripTop = vh - DESKTOP_REST_BOTTOM - height - DESKTOP_CLEARANCE;
+      const stripBottom = vh - DESKTOP_REST_BOTTOM + DESKTOP_CLEARANCE;
+
+      const parts = [...document.querySelectorAll<HTMLElement>('[data-voice-guide-clear]')]
+        .flatMap((el) => {
+          const above = el.dataset.voiceGuideClear === 'above';
+          return (el.children.length ? [...el.children] : [el]).map((part) => ({ rect: part.getBoundingClientRect(), above }));
+        })
+        .filter(({ rect: r }) => r.width > 0 && r.top < stripBottom && r.bottom > stripTop);
+      const blocking = parts.filter(({ rect: r }) => r.left < right + DESKTOP_CLEARANCE && r.right > left - DESKTOP_CLEARANCE);
+      if (blocking.length === 0) return apply(REST);
+      const lift = () =>
+        apply({ bottom: Math.round(vh - Math.min(...blocking.map(({ rect }) => rect.top)) + DESKTOP_CLEARANCE), shift: 0 });
+
+      // data-voice-guide-clear="above" (the footer) always lifts the player over it.
+      if (blocking.some(({ above }) => above)) return lift();
+      const shift = Math.ceil(Math.max(...parts.map(({ rect }) => rect.right)) + DESKTOP_SIDE_GAP - left);
+      if (right + shift <= vw - DESKTOP_RIGHT_RESERVE) return apply({ bottom: DESKTOP_REST_BOTTOM, shift });
+      lift();
     };
+
     detect();
+    // The pill and the player differ in size, and captions change the player's height.
+    const observer = new ResizeObserver(detect);
+    observer.observe(wrapper);
     window.addEventListener('scroll', detect, { passive: true });
     window.addEventListener('resize', detect);
     return () => {
+      observer.disconnect();
       window.removeEventListener('scroll', detect);
       window.removeEventListener('resize', detect);
     };
-  }, []);
-  return desktopBottom;
+  }, [wrapperRef, contentKey]);
+  return placement;
 }
 
 // Floating voice-guide player. Idle, it is a single "Voice guide" pill that starts the
 // auto-playing tour; once any clip is loaded it becomes one player box: live captions on
 // top (switchable with CC), the controls, and the seek bar. It sits above the mobile
-// bottom nav and bottom-centre on desktop, clear of both side rails, moving up only while
-// it would cover the hero buttons or the footer text.
+// bottom nav and bottom-centre on desktop, clear of both side rails, stepping aside (or,
+// failing that, up) while it would cover the hero buttons or the footer text.
 export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) {
   const { currentId, status, autoPlay, startTour, togglePause, next, prev, stop, setAutoPlay } = useNarration();
-  const desktopBottom = useDesktopBottom();
   const [captions, setCaptions] = useState(true);
   const index = clipIndex(currentId);
   const clip = PLAYLIST[index];
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const desktop = useDesktopPlacement(wrapperRef, Boolean(clip));
 
   // "New: listen to a guided tour" nudge (lib/hints), after the theme hint if that's due.
   const [hintDelay] = useState(() => (hintDue('theme') ? HINT_DELAY.voiceGuide : HINT_DELAY.voiceGuideAlone));
@@ -176,8 +217,9 @@ export function VoiceGuide({ interactiveReady }: { interactiveReady: boolean }) 
 
   return (
     <div
-      style={{ '--voice-guide-bottom': `${desktopBottom}px` } as CSSProperties}
-      className="fixed bottom-[88px] lg:bottom-[var(--voice-guide-bottom)] inset-x-3 z-40 flex justify-center pointer-events-none transition-[bottom] duration-200"
+      ref={wrapperRef}
+      style={{ '--voice-guide-bottom': `${desktop.bottom}px`, '--voice-guide-shift': `${desktop.shift}px` } as CSSProperties}
+      className="fixed bottom-[88px] lg:bottom-[var(--voice-guide-bottom)] lg:translate-x-[var(--voice-guide-shift)] inset-x-3 z-40 flex justify-center pointer-events-none transition-[bottom,translate] duration-300 ease-out"
     >
       {!clip ? (
         <div className="pointer-events-auto relative">

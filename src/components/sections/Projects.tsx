@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, type AnchorHTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
-import { ExternalLink, Folder, Star, GitFork, Download } from 'lucide-react';
+import { useState, useEffect, useRef, type AnchorHTMLAttributes, type PointerEvent } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform, type Variants } from 'framer-motion';
+import { ArrowUpRight, ExternalLink, Folder, FolderOpen, Star, GitFork, Download } from 'lucide-react';
 import { Section } from '../ui/Section';
 import { Github } from '../ui/BrandIcons';
 import { GITHUB_URL } from '../../data/contact';
 import { PROJECT_METADATA, SOCIAL_PREVIEWS } from '../../data/socialPreviews';
+import { REPO_STACKS } from '../../data/repoStacks';
 import {
   fetchLatestRelease,
   fetchPublicGithubRepos,
@@ -41,33 +42,6 @@ const SPOKEN_CATEGORIES: Partial<Record<Category, string>> = {
   'Discord Bot': 'Discord bots',
 };
 type ProjectCategory = Exclude<Category, 'All'>;
-
-// GitHub's language API only returns source languages, so these manifest-checked
-// stacks keep project chips aligned with the actual frameworks/tools in each repo.
-// Ordered most-significant first: featured cards show 6 chips, grid cards show 5.
-const REPO_STACKS: Record<string, string[]> = {
-  'just-for-fun-website': ['Next.js', 'TypeScript', 'Supabase', 'Prisma', 'Neon', 'PostgreSQL', 'Tailwind CSS', 'Spline', 'Nodemailer'],
-  'travel_genie': ['React', 'Vite', 'Node.js', 'Express', 'PostgreSQL', 'Sequelize', 'Flask', 'Scikit-learn', 'Pandas', 'Leaflet', 'Google Maps API', 'SQLAlchemy'],
-  'travel_genie_app': ['Expo', 'React Native', 'Node.js', 'Express', 'MongoDB', 'Mongoose', 'JWT', 'Cloudinary', 'React Navigation'],
-  'web-voting-system': ['Spring Boot', 'Spring Security', 'React', 'Vite', 'MS SQL Server', 'JWT', 'Hibernate / JPA', 'Recharts'],
-  'mazora-network': ['Next.js', 'TypeScript', 'Tailwind CSS', 'Drizzle ORM', 'Supabase', 'Zod', 'PostgreSQL', 'Vercel Cron'],
-  'vero_salon_website': ['Next.js', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Zod', 'React Hook Form', 'Resend', 'Vitest', 'Playwright'],
-  'salon_vero_app': ['Expo', 'React Native', 'TypeScript', 'Supabase', 'Expo Router', 'Reanimated', 'Zod', 'Jest'],
-  'brakmasra': ['Next.js', 'TypeScript', 'Supabase', 'Drizzle ORM', 'Tailwind CSS', 'Zod', 'PostgreSQL', 'Vitest'],
-  'weekly-report-dashboard': ['Next.js', 'TypeScript', 'Prisma', 'Neon', 'NextAuth', 'Recharts', 'Tailwind CSS', 'Zod'],
-  'thilak_products_website': ['Next.js', 'TypeScript', 'Prisma', 'Supabase', 'PostgreSQL', 'Resend', 'Tailwind CSS', 'Playwright'],
-  'skillbridge-lk': ['React', 'Vite', 'Express', 'Supabase', 'Tailwind CSS', 'React Hook Form', 'Zod', 'React Router'],
-  'stremio_discord_rich_presence': ['Electron', 'Node.js', 'Discord RPC', 'electron-builder', 'NSIS', 'GitHub Actions'],
-  'valheim-auto-cleanup': ['C#', '.NET', 'BepInEx', 'Harmony', 'Unity', 'xUnit'],
-  'job-hunting-tracker': ['JavaScript', 'HTML', 'CSS', 'SheetJS', 'Tesseract.js', 'Gemini API', 'OpenAI API'],
-  'kavisha_portfolio-v2': ['React', 'TypeScript', 'Vite', 'Tailwind CSS', 'Framer Motion', 'Spline', 'Vercel'],
-  'kavisha_portfolio': ['HTML', 'CSS', 'JavaScript'],
-  'discord_music_bot': ['Node.js', 'Discord.js', 'Docker', 'yt-dlp', 'FFmpeg', 'Cloudflare Tunnel', 'AWS EC2', 'GitHub Actions'],
-  'discord-youtube-status-bot': ['Python', 'Discord.py', 'Flask', 'aiohttp', 'Docker', 'GitHub Actions'],
-  'discord-j4fn-server-bot': ['Python', 'Discord.py', 'Flask', 'Docker', 'Cloudflare Tunnel', 'AWS EC2', 'GitHub Actions'],
-  'home-tutor': ['Java', 'Servlets', 'JSP / JSTL', 'Maven', 'Tomcat'],
-  'denguerisk': ['Python', 'Pandas', 'Scikit-learn', 'NumPy', 'Matplotlib', 'Seaborn', 'Jupyter'],
-};
 
 const REPO_DESCRIPTION_OVERRIDES: Record<string, string> = {
   'kavisha_portfolio-v2': 'Personal portfolio built with React 19, TypeScript, Vite, Tailwind CSS, Framer Motion, and Spline 3D, with a live GitHub project and release feed.',
@@ -468,6 +442,204 @@ function RepoLinks({ repo, compact = false }: { repo: GithubRepo; compact?: bool
   );
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+// Feeds the pointer position to a .spotlight element (index.css) as --mx / --my.
+function trackSpotlight(e: PointerEvent<HTMLElement>) {
+  if (e.pointerType !== 'mouse') return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+  e.currentTarget.style.setProperty('--my', `${e.clientY - rect.top}px`);
+}
+
+// One light streak across a project image on hover.
+function HoverSweep() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-1/3 -translate-x-[150%] -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 ease-out group-hover:translate-x-[400%]"
+    />
+  );
+}
+
+// A featured project. As it scrolls into view the image wipes open from its outer edge
+// and the text slides in from the other side, one line after another; the image then
+// drifts a little against the page (parallax). On hover the image zooms, a light streak
+// crosses it, and the frame and description light up around the pointer.
+// Everything that moves is 2D, so text stays sharp. Reduced motion keeps plain fades.
+function FeaturedProject({ repo, idx }: { repo: GithubRepo; idx: number }) {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLElement>(null);
+  const isReverse = idx % 2 === 1;
+  const align = isReverse ? 'justify-start' : 'md:justify-end';
+  // The text column sits right of the image, or left when reversed: it slides in from there.
+  const side = isReverse ? -1 : 1;
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const imageY = useTransform(scrollYProgress, [0, 1], [36, -36]);
+
+  const wipe: Variants = reduce
+    ? { hidden: { opacity: 0 }, shown: { opacity: 1, transition: { duration: 0.5 } } }
+    : {
+        hidden: { clipPath: isReverse ? 'inset(0% 0% 0% 100% round 12px)' : 'inset(0% 100% 0% 0% round 12px)' },
+        shown: { clipPath: 'inset(0% 0% 0% 0% round 12px)', transition: { duration: 1.05, ease: EASE } },
+      };
+  const zoomOut: Variants = reduce
+    ? {}
+    : { hidden: { scale: 1.18 }, shown: { scale: 1, transition: { duration: 1.4, ease: EASE } } };
+  const column: Variants = { hidden: {}, shown: { transition: { staggerChildren: 0.08, delayChildren: reduce ? 0 : 0.3 } } };
+  const line: Variants = reduce
+    ? { hidden: { opacity: 0 }, shown: { opacity: 1 } }
+    : { hidden: { opacity: 0, x: side * 36 }, shown: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE } } };
+  const rule: Variants = reduce
+    ? {}
+    : { hidden: { scaleX: 0 }, shown: { scaleX: 1, transition: { duration: 0.6, delay: 0.5, ease: EASE } } };
+
+  return (
+    <motion.article
+      ref={ref}
+      data-narration-term={SPOKEN_PROJECTS[repo.name.toLowerCase()] ?? formatName(repo.name)}
+      // Runs the reveal for its children: the clipped image can't report itself in view.
+      initial="hidden"
+      whileInView="shown"
+      viewport={{ once: true, amount: 0.25 }}
+      className="relative grid md:grid-cols-12 items-center gap-y-6"
+    >
+      {/* Image — fills 7 cols on desktop, full width on mobile */}
+      <motion.div
+        style={reduce ? undefined : { y: imageY }}
+        className={`relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} md:row-start-1 z-0`}
+      >
+        <NewTabLink href={primaryHref(repo)} onPointerMove={trackSpotlight} className="group relative block">
+          {/* Soft brand glow behind the frame */}
+          <div className="absolute -inset-2 rounded-2xl bg-brand-primary/15 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          {/* object-contain keeps the WHOLE social-preview visible (no cropping);
+              the dark brand-gradient panel makes any letterbox margin look intentional. */}
+          <motion.div
+            variants={wipe}
+            className="spotlight relative aspect-[2/1] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229] ring-1 ring-slate-200/70 dark:ring-white/10 shadow-[0_12px_40px_-12px_rgba(2,12,27,0.5)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)] group-hover:ring-brand-primary/40 transition-shadow duration-500"
+          >
+            <motion.div variants={zoomOut} className="absolute inset-0">
+              <ProjectImage
+                repoName={repo.name}
+                alt={repo.name}
+                className="w-full h-full object-contain group-hover:scale-[1.05] transition-transform duration-700 ease-out"
+              />
+            </motion.div>
+            <HoverSweep />
+            {/* "Open" tag that rises in on hover */}
+            <span className="pointer-events-none absolute bottom-3 right-3 z-[3] inline-flex translate-y-2 items-center gap-1 rounded-full bg-slate-950/70 px-3 py-1 font-mono text-[11px] text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+              Open <ArrowUpRight size={12} />
+            </span>
+          </motion.div>
+        </NewTabLink>
+      </motion.div>
+
+      {/* Content — fills 6 cols on desktop, full width stacked below image on mobile */}
+      <motion.div
+        variants={column}
+        className={`relative md:col-span-6 ${isReverse ? 'md:col-start-1 md:text-left' : 'md:col-start-7 md:text-right'} md:row-start-1 z-10`}
+      >
+        <motion.p
+          variants={line}
+          className={`flex items-center gap-3 font-mono text-brand-primary text-xs md:text-sm mb-2 ${isReverse ? '' : 'md:justify-end'}`}
+        >
+          <span className={isReverse ? '' : 'md:order-3'}>{String(idx + 1).padStart(2, '0')}</span>
+          <motion.span
+            aria-hidden
+            variants={rule}
+            className={`h-px w-8 bg-gradient-to-r from-brand-primary to-cyan-400 ${isReverse ? 'origin-left' : 'origin-left md:order-2 md:origin-right'}`}
+          />
+          <span className={isReverse ? '' : 'md:order-1'}>Featured Project</span>
+        </motion.p>
+        <motion.h3
+          variants={line}
+          className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4 hover:text-brand-primary transition-colors"
+        >
+          <NewTabLink href={primaryHref(repo)}>{formatName(repo.name)}</NewTabLink>
+        </motion.h3>
+        <motion.div
+          variants={line}
+          onPointerMove={trackSpotlight}
+          className="spotlight relative md:bg-white/80 dark:md:bg-slate-900/80 md:backdrop-blur-md md:p-6 rounded-xl md:ring-1 md:ring-slate-200/70 dark:md:ring-white/10 md:shadow-[0_12px_40px_-12px_rgba(2,12,27,0.45)] dark:md:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed"
+        >
+          {repo.description || 'A project I built — check the repo for details.'}
+        </motion.div>
+        <motion.div variants={line}>
+          <TechStack repo={repo} className={`mt-4 ${align}`} />
+        </motion.div>
+        {repo.latestRelease && (
+          <motion.div variants={line}>
+            <ReleaseDownload release={repo.latestRelease} className={align} />
+          </motion.div>
+        )}
+        <motion.div variants={line} className={`mt-4 flex gap-4 text-slate-500 dark:text-slate-400 ${align}`}>
+          <RepoLinks repo={repo} />
+        </motion.div>
+      </motion.div>
+    </motion.article>
+  );
+}
+
+// A card in the "Everything else" grid. It fades up into view, lifts on hover, and a
+// spotlight follows the pointer across its surface and border. The image zooms with a
+// light streak, a gradient rule draws in under it, and the folder opens.
+function ProjectCard({ repo, idx }: { repo: GithubRepo; idx: number }) {
+  return (
+    <motion.article
+      data-narration-term={formatName(repo.name)}
+      layout
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.5, delay: (idx % 3) * 0.08, ease: EASE }}
+      whileHover={{ y: -7 }}
+      onPointerMove={trackSpotlight}
+      className="spotlight group relative flex flex-col rounded-md bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-transparent shadow-sm hover:shadow-2xl hover:shadow-brand-primary/15 transition-shadow overflow-hidden"
+    >
+      <NewTabLink
+        href={primaryHref(repo)}
+        className="relative block aspect-[2/1] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229]"
+      >
+        <ProjectImage
+          repoName={repo.name}
+          alt={repo.name}
+          className="w-full h-full object-contain object-center group-hover:scale-[1.06] transition-transform duration-700 ease-out"
+        />
+        <HoverSweep />
+        {/* Gradient rule drawing in along the image's foot */}
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[2px] origin-left scale-x-0 bg-gradient-to-r from-brand-primary via-cyan-400 to-brand-secondary transition-transform duration-500 ease-out group-hover:scale-x-100" />
+      </NewTabLink>
+      <header className="flex items-center justify-between px-6 pt-5 mb-4">
+        <span className="relative h-6 w-6 text-brand-primary">
+          <Folder size={24} className="absolute inset-0 transition-all duration-300 group-hover:scale-75 group-hover:opacity-0" />
+          <FolderOpen size={24} className="absolute inset-0 scale-75 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100" />
+        </span>
+        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+          {repo.stargazers_count > 0 && (
+            <span className="flex items-center gap-1 text-xs"><Star size={13} /> {repo.stargazers_count}</span>
+          )}
+          {repo.forks_count > 0 && (
+            <span className="flex items-center gap-1 text-xs"><GitFork size={13} /> {repo.forks_count}</span>
+          )}
+          <RepoLinks repo={repo} compact />
+        </div>
+      </header>
+
+      <div className="flex flex-col flex-1 px-6 pb-6">
+        <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-brand-primary transition-colors">
+          <NewTabLink href={primaryHref(repo)}>{formatName(repo.name)}</NewTabLink>
+        </h4>
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3 flex-1">
+          {repo.description || 'No description provided.'}
+        </p>
+        <TechStack repo={repo} compact />
+        {repo.latestRelease && <ReleaseDownload release={repo.latestRelease} compact />}
+      </div>
+    </motion.article>
+  );
+}
+
 export function Projects() {
   const [initialState] = useState(() => {
     const cached = readCachedRepos();
@@ -561,57 +733,9 @@ export function Projects() {
 
         {featured.length > 0 && (
           <div className="space-y-24 md:space-y-32">
-            {featured.map((repo, idx) => {
-              const isReverse = idx % 2 === 1;
-              const align = isReverse ? 'justify-start' : 'md:justify-end';
-              return (
-                <motion.article
-                  key={repo.id}
-                  data-narration-term={SPOKEN_PROJECTS[repo.name.toLowerCase()] ?? formatName(repo.name)}
-                  initial={false}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.6 }}
-                  className="relative grid md:grid-cols-12 items-center gap-y-6"
-                >
-                  {/* Image — fills 7 cols on desktop, full width on mobile */}
-                  <NewTabLink
-                    href={primaryHref(repo)}
-                    className={`group relative md:col-span-7 ${isReverse ? 'md:col-start-6' : 'md:col-start-1'} md:row-start-1 z-0`}
-                  >
-                    {/* Soft brand glow behind the frame */}
-                    <div className="absolute -inset-2 rounded-2xl bg-brand-primary/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                    {/* object-contain keeps the WHOLE social-preview visible (no cropping);
-                        the dark brand-gradient panel makes any letterbox margin look intentional. */}
-                    <div className="relative aspect-[2/1] rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229] ring-1 ring-slate-200/70 dark:ring-white/10 shadow-[0_12px_40px_-12px_rgba(2,12,27,0.5)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)] group-hover:ring-brand-primary/40 transition-all duration-500">
-                      <ProjectImage
-                        repoName={repo.name}
-                        alt={repo.name}
-                        className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-700"
-                      />
-                    </div>
-                  </NewTabLink>
-
-                  {/* Content — fills 6 cols on desktop, full width stacked below image on mobile */}
-                  <div
-                    className={`relative md:col-span-6 ${isReverse ? 'md:col-start-1 md:text-left' : 'md:col-start-7 md:text-right'} md:row-start-1 z-10`}
-                  >
-                    <p className="font-mono text-brand-primary text-xs md:text-sm mb-2">Featured Project</p>
-                    <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4 hover:text-brand-primary transition-colors">
-                      <NewTabLink href={primaryHref(repo)}>{formatName(repo.name)}</NewTabLink>
-                    </h3>
-                    <div className="md:bg-white/80 dark:md:bg-slate-900/80 md:backdrop-blur-md md:p-6 md:rounded-xl md:ring-1 md:ring-slate-200/70 dark:md:ring-white/10 md:shadow-[0_12px_40px_-12px_rgba(2,12,27,0.45)] dark:md:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
-                      {repo.description || 'A project I built — check the repo for details.'}
-                    </div>
-                    <TechStack repo={repo} className={`mt-4 ${align}`} />
-                    {repo.latestRelease && <ReleaseDownload release={repo.latestRelease} className={align} />}
-                    <div className={`mt-4 flex gap-4 text-slate-500 dark:text-slate-400 ${align}`}>
-                      <RepoLinks repo={repo} />
-                    </div>
-                  </div>
-                </motion.article>
-              );
-            })}
+            {featured.map((repo, idx) => (
+              <FeaturedProject key={repo.id} repo={repo} idx={idx} />
+            ))}
           </div>
         )}
       </Section>
@@ -661,55 +785,9 @@ export function Projects() {
             )}
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-              {visibleRest.map((repo, idx) => {
-                return (
-                  <motion.article
-                    key={repo.id}
-                    data-narration-term={formatName(repo.name)}
-                    layout
-                    initial={false}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.1 }}
-                    transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
-                    whileHover={{ y: -7 }}
-                    className="group relative flex flex-col rounded-md bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-transparent shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-shadow overflow-hidden"
-                  >
-                    <NewTabLink
-                      href={primaryHref(repo)}
-                      className="relative block aspect-[2/1] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#161229]"
-                    >
-                      <ProjectImage
-                        repoName={repo.name}
-                        alt={repo.name}
-                        className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
-                      />
-                    </NewTabLink>
-                    <header className="flex items-center justify-between px-6 pt-5 mb-4">
-                      <Folder size={24} className="text-brand-primary" />
-                      <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                        {repo.stargazers_count > 0 && (
-                          <span className="flex items-center gap-1 text-xs"><Star size={13} /> {repo.stargazers_count}</span>
-                        )}
-                        {repo.forks_count > 0 && (
-                          <span className="flex items-center gap-1 text-xs"><GitFork size={13} /> {repo.forks_count}</span>
-                        )}
-                        <RepoLinks repo={repo} compact />
-                      </div>
-                    </header>
-
-                    <div className="flex flex-col flex-1 px-6 pb-6">
-                      <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-brand-primary transition-colors">
-                        <NewTabLink href={primaryHref(repo)}>{formatName(repo.name)}</NewTabLink>
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3 flex-1">
-                        {repo.description || 'No description provided.'}
-                      </p>
-                      <TechStack repo={repo} compact />
-                      {repo.latestRelease && <ReleaseDownload release={repo.latestRelease} compact />}
-                    </div>
-                  </motion.article>
-                );
-              })}
+              {visibleRest.map((repo, idx) => (
+                <ProjectCard key={repo.id} repo={repo} idx={idx} />
+              ))}
             </div>
 
             {(remaining > 0 || visibleCount > INITIAL_VISIBLE) && (
